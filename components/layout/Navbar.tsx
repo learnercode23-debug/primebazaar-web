@@ -143,9 +143,8 @@ export default function Navbar() {
           <div className="flex items-center h-14 sm:h-16 gap-2 sm:gap-3">
 
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center">
-              <span className="text-white font-black text-lg sm:text-xl hidden sm:block">primebazaar</span>
-              <span className="text-white font-black text-lg sm:hidden">P</span>
+            <Link href="/" className="flex-shrink-0 flex items-center gap-0">
+              <span className="text-white font-black text-base sm:text-xl">primebazaar</span>
               <span className="text-amazon-yellow text-xl sm:text-2xl font-black leading-none">.</span>
             </Link>
 
@@ -229,8 +228,15 @@ export default function Navbar() {
                 )}
               </div>
 
-              <div className="hidden sm:block"><NotificationBell /></div>
+              {/* Notification bell — visible on all screen sizes */}
+              <NotificationBell />
+
               <Link href="/wishlist" className="hidden md:flex items-center text-white hover:ring-1 hover:ring-white rounded p-2"><FiHeart className="text-xl" /></Link>
+
+              {/* Mobile user icon */}
+              <Link href={user ? '/profile' : '/login'} className="sm:hidden flex items-center text-white p-2 rounded hover:ring-1 hover:ring-white">
+                <FiUser className="text-xl" />
+              </Link>
 
               {/* Cart */}
               <Link href="/cart" className="relative flex items-center text-white hover:ring-1 hover:ring-white rounded p-2">
@@ -242,7 +248,7 @@ export default function Navbar() {
                 )}
               </Link>
 
-              {/* Hamburger */}
+              {/* Hamburger — desktop only (mobile uses bottom nav) */}
               <button onClick={() => setMobileOpen(!mobileOpen)} className="sm:hidden text-white p-2 rounded hover:ring-1 hover:ring-white" aria-label="Menu">
                 {mobileOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
               </button>
