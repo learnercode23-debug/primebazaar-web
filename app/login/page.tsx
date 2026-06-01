@@ -2,79 +2,174 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
-import { FiEye, FiEyeOff, FiArrowLeft, FiMail, FiLock, FiZap } from 'react-icons/fi'
+import { FiEye, FiEyeOff, FiArrowLeft, FiMail, FiLock, FiZap, FiSmartphone } from 'react-icons/fi'
 import axios from 'axios'
 
-type Step = 'email' | 'new-user' | 'password'
+type Step = 'email' | 'new-user' | 'password' | 'phone-otp'
+
+function isPhone(input: string) {
+  const cleaned = input.replace(/[\s\-().]/g, '')
+  return /^\+?[0-9]{7,15}$/.test(cleaned) && !input.includes('@')
+}
+
+function toE164(phone: string) {
+  const cleaned = phone.replace(/[\s\-().]/g, '')
+  if (cleaned.startsWith('+')) return cleaned
+  if (cleaned.startsWith('0')) return '+977' + cleaned.slice(1)
+  if (cleaned.startsWith('977')) return '+' + cleaned
+  return '+977' + cleaned   // default Nepal
+}
 
 export default function LoginPage() {
   const { login } = useAuth()
   const router = useRouter()
 
-  const [step, setStep]       = useState<Step>('email')
-  const [email, setEmail]     = useState('')
+  const [step, setStep]         = useState<Step>('email')
+  const [input, setInput]       = useState('')
   const [userName, setUserName] = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading]   = useState(false)
 
+  // Phone OTP state
+  const [phone, setPhone]           = useState('')
+  const [otp, setOtp]               = useState(['', '', '', '', '', ''])
+  const [resendTimer, setResendTimer] = useState(0)
+  const [devOtp, setDevOtp]         = useState<string | null>(null)
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  useEffect(() => {
+    if (resendTimer <= 0) return
+    const t = setTimeout(() => setResendTimer((p) => p - 1), 1000)
+    return () => clearTimeout(t)
+  }, [resendTimer])
+
+  // ── Step 1: Continue ────────────────────────────────────────────────────
   async function handleContinue(e: React.FormEvent) {
     e.preventDefault()
-    if (!email) return
+    if (!input.trim()) return
     setLoading(true)
-    try {
-      const res = await axios.get(`/api/auth/check-email?email=${encodeURIComponent(email)}`)
-      if (res.data.exists) {
-        setUserName(res.data.name || '')
-        setStep('password')
-      } else {
-        setStep('new-user')
+
+    if (isPhone(input)) {
+      // Phone OTP flow
+      const e164 = toE164(input.trim())
+      setPhone(e164)
+      try {
+        const res = await axios.post('/api/auth/otp/send', { phone: e164 })
+        setDevOtp(res.data.devOtp || null)
+        setStep('phone-otp')
+        setResendTimer(60)
+        toast.success('OTP sent to your mobile!')
+      } catch (err: unknown) {
+        const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to send OTP'
+        toast.error(msg)
       }
-    } catch {
-      setStep('password')
-    } finally {
-      setLoading(false)
+    } else {
+      // Email flow
+      try {
+        const res = await axios.get(`/api/auth/check-email?email=${encodeURIComponent(input)}`)
+        if (res.data.exists) {
+          setUserName(res.data.name || '')
+          setStep('password')
+        } else {
+          setStep('new-user')
+        }
+      } catch {
+        setStep('password')
+      }
     }
+    setLoading(false)
   }
 
+  // ── Email sign in ────────────────────────────────────────────────────────
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     try {
-      await login(email, password)
+      await login(input, password)
       toast.success(`Welcome back${userName ? ', ' + userName.split(' ')[0] : ''}!`)
       router.push('/')
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Incorrect password'
-      toast.error(msg)
+      toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Incorrect password')
     } finally {
       setLoading(false)
     }
   }
 
-  function quickLogin(e: string, p: string) {
-    setEmail(e); setPassword(p); setStep('password')
+  // ── Phone OTP digit input ─────────────────────────────────────────────
+  function handleOtpDigit(val: string, idx: number) {
+    if (val.length === 6 && /^\d{6}$/.test(val)) {
+      setOtp(val.split(''))
+      inputRefs.current[5]?.focus()
+      return
+    }
+    const digit = val.replace(/\D/g, '').slice(-1)
+    const next = [...otp]; next[idx] = digit; setOtp(next)
+    if (digit && idx < 5) inputRefs.current[idx + 1]?.focus()
   }
+  function handleOtpBack(idx: number) {
+    if (!otp[idx] && idx > 0) {
+      const next = [...otp]; next[idx - 1] = ''; setOtp(next)
+      inputRefs.current[idx - 1]?.focus()
+    } else {
+      const next = [...otp]; next[idx] = ''; setOtp(next)
+    }
+  }
+
+  // ── Verify OTP ───────────────────────────────────────────────────────
+  async function handleVerifyOtp() {
+    const code = otp.join('')
+    if (code.length < 6) { toast.error('Enter all 6 digits'); return }
+    setLoading(true)
+    try {
+      const res = await axios.post('/api/auth/otp/verify', { phone, otp: code })
+      toast.success(res.data.isNewUser ? 'Account created! Welcome!' : 'Welcome back!')
+      router.push('/')
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Invalid OTP')
+      setOtp(['', '', '', '', '', ''])
+      inputRefs.current[0]?.focus()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Resend OTP ───────────────────────────────────────────────────────
+  async function handleResend() {
+    if (resendTimer > 0) return
+    try {
+      const res = await axios.post('/api/auth/otp/send', { phone })
+      setDevOtp(res.data.devOtp || null)
+      setOtp(['', '', '', '', '', ''])
+      setResendTimer(60)
+      toast.success('New OTP sent!')
+    } catch {
+      toast.error('Failed to resend OTP')
+    }
+  }
+
+  function quickLogin(e: string, p: string) {
+    setInput(e); setPassword(p); setStep('password')
+  }
+
+  const inputIsPhone = isPhone(input)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 flex flex-col items-center justify-center py-12 px-4">
 
-      {/* Logo */}
       <Link href="/" className="mb-8 flex items-center gap-1 group">
-        <span className="text-3xl font-black text-gray-900 tracking-tight group-hover:text-violet-700 transition-colors">
-          primebazaar
-        </span>
+        <span className="text-3xl font-black text-gray-900 tracking-tight group-hover:text-violet-700 transition-colors">primebazaar</span>
         <span className="text-violet-600 text-4xl font-black leading-none">.</span>
       </Link>
 
       <div className="w-full max-w-sm">
 
-        {/* ── STEP 1: Email ─────────────────────────────────── */}
+        {/* ── STEP 1: Email or Phone ─────────────────────────────── */}
         {step === 'email' && (
           <div className="bg-white rounded-2xl border border-violet-100 shadow-lg shadow-violet-100/50 p-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-1">Sign in</h1>
@@ -82,36 +177,43 @@ export default function LoginPage() {
 
             <form onSubmit={handleContinue} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Email or mobile number
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email or mobile number</label>
                 <div className="relative">
-                  <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  {inputIsPhone
+                    ? <FiSmartphone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-violet-500 text-sm" />
+                    : <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  }
                   <input
                     type="text"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all"
-                    placeholder="you@example.com"
+                    placeholder="you@email.com or 98XXXXXXXX"
                     autoFocus
                     required
                   />
                 </div>
+                {inputIsPhone && (
+                  <p className="text-xs text-violet-600 mt-1.5 flex items-center gap-1">
+                    <FiSmartphone className="text-xs" />
+                    We&apos;ll send a 6-digit OTP to <strong>+977 {input.replace(/\D/g,'')}</strong>
+                  </p>
+                )}
               </div>
 
               <button
                 type="submit"
-                disabled={loading || !email}
+                disabled={loading || !input}
                 className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200"
               >
-                {loading ? 'Checking...' : 'Continue'}
+                {loading ? 'Please wait…' : inputIsPhone ? 'Send OTP →' : 'Continue'}
               </button>
             </form>
 
             <p className="text-xs text-gray-400 text-center mt-4 leading-5">
               By continuing, you agree to Primebazaar&apos;s{' '}
-              <Link href="/terms" className="underline hover:text-violet-600">Conditions of Use</Link>{' '}
-              and <Link href="/privacy" className="underline hover:text-violet-600">Privacy Notice</Link>.
+              <Link href="/terms" className="underline hover:text-violet-600">Terms</Link> and{' '}
+              <Link href="/privacy" className="underline hover:text-violet-600">Privacy Notice</Link>.
             </p>
 
             <div className="relative my-5">
@@ -119,14 +221,10 @@ export default function LoginPage() {
               <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">New to Primebazaar?</span></div>
             </div>
 
-            <Link
-              href="/register"
-              className="block w-full text-center border-2 border-violet-200 text-violet-700 font-semibold py-3 rounded-xl hover:bg-violet-50 transition-all text-sm"
-            >
+            <Link href="/register" className="block w-full text-center border-2 border-violet-200 text-violet-700 font-semibold py-3 rounded-xl hover:bg-violet-50 transition-all text-sm">
               Create your Primebazaar account
             </Link>
 
-            {/* Demo quick login */}
             <div className="mt-6 p-4 bg-violet-50 border border-violet-100 rounded-xl">
               <p className="text-xs font-bold text-violet-700 mb-2 flex items-center gap-1">
                 <FiZap className="text-amber-500" /> Demo accounts
@@ -137,11 +235,8 @@ export default function LoginPage() {
                   ['Seller', 'tech@seller.com', 'seller123'],
                   ['Admin', 'admin@primebazaar.com', 'admin123'],
                 ].map(([role, e, p]) => (
-                  <button
-                    key={role}
-                    onClick={() => quickLogin(e, p)}
-                    className="w-full text-left text-xs text-violet-600 hover:text-violet-800 hover:underline flex items-center gap-2"
-                  >
+                  <button key={role} onClick={() => quickLogin(e, p)}
+                    className="w-full text-left text-xs text-violet-600 hover:text-violet-800 hover:underline flex items-center gap-2">
                     <span className="font-semibold w-16">{role}</span>
                     <span className="text-gray-500">{e}</span>
                   </button>
@@ -151,52 +246,39 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* ── STEP 2a: New user ─────────────────────────────── */}
+        {/* ── STEP 2a: New user (email) ─────────────────────────── */}
         {step === 'new-user' && (
           <div className="bg-white rounded-2xl border border-violet-100 shadow-lg shadow-violet-100/50 p-8">
             <button onClick={() => setStep('email')} className="flex items-center gap-1.5 text-violet-600 text-sm font-medium mb-6 hover:text-violet-800 transition-colors">
               <FiArrowLeft /> Back
             </button>
-
             <div className="w-14 h-14 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">👋</span>
             </div>
             <h1 className="text-xl font-bold text-gray-900 text-center mb-1">Looks like you&apos;re new here!</h1>
             <p className="text-sm text-gray-500 text-center mb-6">
-              We couldn&apos;t find an account for<br />
-              <span className="font-semibold text-gray-700">{email}</span>
+              No account found for<br /><span className="font-semibold text-gray-700">{input}</span>
             </p>
-
-            <Link
-              href={`/register?email=${encodeURIComponent(email)}`}
-              className="block w-full text-center bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200 mb-3"
-            >
+            <Link href={`/register?email=${encodeURIComponent(input)}`}
+              className="block w-full text-center bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200 mb-3">
               Create your Primebazaar account
             </Link>
-
-            <button
-              onClick={() => { setEmail(''); setStep('email') }}
-              className="block w-full text-center text-violet-600 hover:text-violet-800 text-sm font-medium py-2 transition-colors"
-            >
+            <button onClick={() => { setInput(''); setStep('email') }}
+              className="block w-full text-center text-violet-600 hover:text-violet-800 text-sm font-medium py-2 transition-colors">
               Sign in with another email
             </button>
           </div>
         )}
 
-        {/* ── STEP 2b: Password ─────────────────────────────── */}
+        {/* ── STEP 2b: Password (email) ─────────────────────────── */}
         {step === 'password' && (
           <div className="bg-white rounded-2xl border border-violet-100 shadow-lg shadow-violet-100/50 p-8">
             <button onClick={() => { setStep('email'); setPassword('') }} className="flex items-center gap-1.5 text-violet-600 text-sm font-medium mb-6 hover:text-violet-800 transition-colors">
               <FiArrowLeft /> Back
             </button>
-
-            {userName && (
-              <p className="text-gray-600 text-sm mb-1">
-                Welcome back, <span className="font-bold text-gray-900">{userName.split(' ')[0]}</span>
-              </p>
-            )}
+            {userName && <p className="text-gray-600 text-sm mb-1">Welcome back, <span className="font-bold text-gray-900">{userName.split(' ')[0]}</span></p>}
             <h1 className="text-2xl font-bold text-gray-900 mb-1">Enter password</h1>
-            <p className="text-sm text-gray-500 mb-6">for <span className="font-medium text-violet-700">{email}</span></p>
+            <p className="text-sm text-gray-500 mb-6">for <span className="font-medium text-violet-700">{input}</span></p>
 
             <form onSubmit={handleSignIn} className="space-y-4">
               <div>
@@ -209,32 +291,91 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-11 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all"
                     placeholder="Your password"
-                    autoFocus
-                    required
+                    autoFocus required
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPass(!showPass)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
+                  <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     {showPass ? <FiEyeOff /> : <FiEye />}
                   </button>
                 </div>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading || !password}
-                className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200"
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
+              <button type="submit" disabled={loading || !password}
+                className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200">
+                {loading ? 'Signing in…' : 'Sign in'}
               </button>
             </form>
+          </div>
+        )}
 
-            <p className="text-xs text-gray-400 text-center mt-4">
-              By signing in, you agree to our{' '}
-              <Link href="/terms" className="underline hover:text-violet-600">Terms of Service</Link>.
+        {/* ── STEP 3: Phone OTP ─────────────────────────────────── */}
+        {step === 'phone-otp' && (
+          <div className="bg-white rounded-2xl border border-violet-100 shadow-lg shadow-violet-100/50 p-8">
+            <button onClick={() => { setStep('email'); setOtp(['','','','','','']) }} className="flex items-center gap-1.5 text-violet-600 text-sm font-medium mb-6 hover:text-violet-800">
+              <FiArrowLeft /> Back
+            </button>
+
+            <div className="w-14 h-14 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiSmartphone className="text-2xl text-violet-600" />
+            </div>
+            <h1 className="text-xl font-bold text-gray-900 text-center mb-1">Verify your number</h1>
+            <p className="text-sm text-gray-500 text-center mb-6">
+              Enter the 6-digit code sent to<br />
+              <span className="font-bold text-violet-700">{phone}</span>
             </p>
+
+            {/* Dev OTP hint */}
+            {devOtp && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-amber-700">Dev mode — SMS not configured</p>
+                  <p className="text-xs text-amber-600">OTP: <span className="font-mono font-black text-lg tracking-widest">{devOtp}</span></p>
+                </div>
+                <button onClick={() => setOtp(devOtp.split(''))}
+                  className="bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg">
+                  Auto-fill
+                </button>
+              </div>
+            )}
+
+            {/* 6 OTP boxes */}
+            <div className="flex gap-2 justify-center mb-6">
+              {otp.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={(r) => { inputRefs.current[i] = r }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={digit}
+                  onChange={(e) => handleOtpDigit(e.target.value, i)}
+                  onKeyDown={(e) => e.key === 'Backspace' && handleOtpBack(i)}
+                  autoFocus={i === 0}
+                  className={`w-11 h-13 text-center text-xl font-bold border-2 rounded-xl outline-none transition-all
+                    ${digit ? 'border-violet-600 bg-violet-50 text-violet-800' : 'border-gray-300 text-gray-900'}
+                    focus:border-violet-600 focus:bg-violet-50`}
+                  style={{ height: '52px' }}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={handleVerifyOtp}
+              disabled={loading || otp.join('').length < 6}
+              className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200 mb-4"
+            >
+              {loading ? 'Verifying…' : 'Verify & Continue'}
+            </button>
+
+            {/* Resend */}
+            <div className="text-center">
+              <span className="text-sm text-gray-500">Didn&apos;t receive it? </span>
+              <button
+                onClick={handleResend}
+                disabled={resendTimer > 0}
+                className="text-sm font-semibold text-violet-600 disabled:text-gray-400 hover:underline disabled:no-underline"
+              >
+                {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+              </button>
+            </div>
           </div>
         )}
       </div>
