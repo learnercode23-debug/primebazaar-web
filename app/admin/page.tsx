@@ -112,6 +112,8 @@ export default function AdminDashboard() {
           { href: '/admin/banners', label: 'Banners', desc: 'Manage homepage promotional banners', icon: FiShoppingBag, color: 'bg-pink-50 border-pink-200' },
           { href: '/admin/reviews', label: 'Review Moderation', desc: 'Approve and moderate customer reviews', icon: FiUsers, color: 'bg-red-50 border-red-200' },
           { href: '/admin/returns', label: 'Returns & Refunds', desc: 'Process return and refund requests', icon: FiShoppingBag, color: 'bg-orange-50 border-orange-200' },
+          { href: '/admin/seller-banks', label: 'Seller Bank KYC', desc: 'Verify seller bank accounts for payouts', icon: FiDollarSign, color: 'bg-emerald-50 border-emerald-200' },
+          { href: '/admin/payouts', label: 'Seller Payouts', desc: 'Run settlements and track COD cash', icon: FiDollarSign, color: 'bg-teal-50 border-teal-200' },
         ].map(({ href, label, desc, icon: Icon, color }) => (
           <Link key={href} href={href} className={`bg-white border rounded-xl p-5 hover:shadow-md transition-shadow ${color}`}>
             <Icon className="text-2xl text-gray-700 mb-2" />
