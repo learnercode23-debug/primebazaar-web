@@ -26,8 +26,17 @@ function toE164(phone: string) {
 }
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const { login, user } = useAuth()
   const router = useRouter()
+
+  // Already logged in — redirect away from login page
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') router.replace('/admin')
+      else if (user.role === 'seller') router.replace('/seller')
+      else router.replace('/')
+    }
+  }, [user, router])
 
   const [step, setStep]         = useState<Step>('email')
   const [input, setInput]       = useState('')
