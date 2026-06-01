@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import Product from '@/models/Product'
+import Category from '@/models/Category'
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -34,7 +35,16 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const body = await req.json()
-    const updated = await Product.findByIdAndUpdate(params.id, body, { new: true })
+
+    // Resolve category name/slug → ObjectId
+    if (body.category && typeof body.category === 'string' && body.category.length < 24) {
+      const cat = await Category.findOne({
+        $or: [{ slug: body.category.toLowerCase() }, { name: { $regex: new RegExp(`^${body.category}$`, 'i') } }]
+      }).select('_id')
+      if (cat) body.category = cat._id
+    }
+
+    const updated = await Product.findByIdAndUpdate(params.id, body, { new: true, runValidators: true })
     return NextResponse.json({ success: true, data: updated })
   } catch {
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 })
