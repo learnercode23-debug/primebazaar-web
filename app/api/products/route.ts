@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import Product from '@/models/Product'
+import Category from '@/models/Category'
 
 export async function GET(req: NextRequest) {
   try {
@@ -78,8 +79,18 @@ export async function POST(req: NextRequest) {
     await connectDB()
     const body = await req.json()
 
+    // Resolve category: accept ObjectId, slug, or name string
+    let categoryId = body.category
+    if (categoryId && typeof categoryId === 'string' && categoryId.length < 24) {
+      const cat = await Category.findOne({
+        $or: [{ slug: categoryId.toLowerCase() }, { name: { $regex: new RegExp(`^${categoryId}$`, 'i') } }]
+      }).select('_id')
+      if (cat) categoryId = cat._id
+    }
+
     const product = await Product.create({
       ...body,
+      category: categoryId,
       seller: user._id,
       isApproved: user.role === 'admin',
     })
