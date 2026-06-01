@@ -75,6 +75,45 @@ interface Counts {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
+function ClaimDemoButton({ onClaimed }: { onClaimed: () => void }) {
+  const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
+
+  async function handleClaim() {
+    setLoading(true)
+    try {
+      const res = await axios.post('/api/seller/claim-demo')
+      if (res.data.success) {
+        toast.success(`${res.data.claimed} demo products assigned! Refreshing orders…`)
+        setDone(true)
+        onClaimed()
+      } else {
+        toast.error(res.data.error || 'Could not claim products')
+      }
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+      toast.error(msg || 'Failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (done) return null
+  return (
+    <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 text-center">
+      <p className="text-sm font-semibold text-violet-800 mb-1">🚀 New seller? Test the hub instantly</p>
+      <p className="text-xs text-violet-600 mb-3">Claim demo products so customer orders appear in your hub</p>
+      <button
+        onClick={handleClaim}
+        disabled={loading}
+        className="bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white text-sm font-bold px-5 py-2 rounded-full transition-all"
+      >
+        {loading ? 'Claiming…' : 'Claim Demo Products'}
+      </button>
+    </div>
+  )
+}
+
 const TABS = [
   { key: 'confirmed', label: 'New',       countKey: 'new',       color: 'text-orange-600 bg-orange-50 border-orange-200' },
   { key: 'processing', label: 'Accepted',  countKey: 'accepted',  color: 'text-blue-600 bg-blue-50 border-blue-200' },
@@ -386,13 +425,16 @@ export default function SellerOrdersHub() {
             {search ? `No results for "${search}"` : `No ${TABS.find((t) => t.key === activeTab)?.label.toLowerCase()} orders`}
           </p>
           {!search && activeTab === 'confirmed' && (
-            <div className="max-w-sm mx-auto bg-blue-50 border border-blue-200 rounded-xl p-4 text-left">
-              <p className="text-sm font-semibold text-blue-800 mb-1">💡 How orders appear here</p>
-              <p className="text-xs text-blue-700">
-                Orders show up only for products you sell. When a customer buys your product via checkout (any payment method),
-                the order appears in <strong>New</strong> tab waiting for your action.
-                Make sure the product belongs to <strong>your seller account</strong>.
-              </p>
+            <div className="max-w-sm mx-auto space-y-3">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-left">
+                <p className="text-sm font-semibold text-blue-800 mb-1">💡 How orders appear here</p>
+                <p className="text-xs text-blue-700">
+                  Orders show up only for products you sell. When a customer buys your product via checkout,
+                  the order appears in <strong>New</strong> tab.
+                  Make sure the product belongs to <strong>your seller account</strong>.
+                </p>
+              </div>
+              <ClaimDemoButton onClaimed={fetchOrders} />
             </div>
           )}
         </div>
