@@ -1,17 +1,46 @@
 import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-const FROM = process.env.RESEND_FROM_EMAIL || 'Primebazaar <onboarding@resend.dev>'
 const BASE = process.env.NEXT_PUBLIC_BASE_URL || 'https://primebazaar-web.vercel.app'
 
-// Resend free plan restriction: without a verified domain,
-// emails can only be delivered to the Resend account owner's email.
-// Set RESEND_TO_OVERRIDE in Vercel env vars to your Resend account email
-// (e.g. learnercode23@gmail.com) to receive ALL emails during testing.
+// ── Gmail SMTP (works for ANY recipient email — no domain needed) ─────────────
+const gmailTransporter = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+    })
+  : null
+
+// ── Resend fallback (free plan only delivers to Resend account email) ─────────
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+const FROM   = process.env.RESEND_FROM_EMAIL || 'Primebazaar <onboarding@resend.dev>'
+
 function resolveRecipient(to: string): string {
   return process.env.RESEND_TO_OVERRIDE || to
 }
 
+// ── Unified send — Gmail SMTP first, then Resend, then console log ────────────
+export async function sendEmail(to: string, subject: string, html: string) {
+  const recipient = resolveRecipient(to)
+  const gmail = gmailTransporter
+  const r = resend
+  if (gmail) {
+    await gmail.sendMail({
+      from: `Primebazaar <${process.env.GMAIL_USER}>`,
+      to: recipient, subject, html,
+    })
+    console.log('[EMAIL] Sent via Gmail SMTP to:', recipient)
+    return
+  }
+  if (r) {
+    await r.emails.send({ from: FROM, to: recipient, subject, html })
+    console.log('[EMAIL] Sent via Resend to:', recipient)
+    return
+  }
+  console.log('[EMAIL] No provider configured. Subject:', subject, '→', recipient)
+}
+
+// ── HTML wrapper ──────────────────────────────────────────────────────────────
 function emailWrapper(content: string) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -20,15 +49,10 @@ function emailWrapper(content: string) {
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F3FF;padding:32px 16px">
   <tr><td align="center">
     <table width="100%" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(109,40,217,0.08)">
-      <!-- Header -->
       <tr><td style="background:linear-gradient(135deg,#1E1B4B 0%,#4C1D95 100%);padding:28px 32px;text-align:center">
-        <h1 style="margin:0;color:#fff;font-size:28px;font-weight:900;letter-spacing:-0.5px">
-          primebazaar<span style="color:#C4B5FD">.</span>
-        </h1>
+        <h1 style="margin:0;color:#fff;font-size:28px;font-weight:900;letter-spacing:-0.5px">primebazaar<span style="color:#C4B5FD">.</span></h1>
       </td></tr>
-      <!-- Body -->
       <tr><td style="padding:32px">${content}</td></tr>
-      <!-- Footer -->
       <tr><td style="background:#F5F3FF;padding:20px 32px;text-align:center">
         <p style="margin:0;font-size:11px;color:#9CA3AF">
           © ${new Date().getFullYear()} Primebazaar. All rights reserved.<br>
@@ -41,31 +65,21 @@ function emailWrapper(content: string) {
 </body></html>`
 }
 
+// ── Welcome email ─────────────────────────────────────────────────────────────
 export async function sendWelcomeEmail(to: string, name: string, role: string) {
-  if (!resend) { console.log('[EMAIL] Welcome (no key):', to); return }
-  to = resolveRecipient(to)
   const isSeller = role === 'seller'
   const ctaHref  = isSeller ? `${BASE}/seller` : `${BASE}/products`
   const ctaText  = isSeller ? 'Go to Seller Hub' : 'Start Shopping'
-
   const content = `
     <div style="text-align:center;margin-bottom:28px">
-      <div style="display:inline-block;background:#EDE9FE;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:16px">
-        ${isSeller ? '🏪' : '🛒'}
-      </div>
-      <h2 style="margin:0 0 8px;color:#1E1B4B;font-size:24px;font-weight:800">
-        Welcome to Primebazaar, ${name}!
-      </h2>
-      <p style="margin:0;color:#6B7280;font-size:15px">
-        Your ${isSeller ? 'seller' : 'customer'} account is ready.
-      </p>
+      <div style="display:inline-block;background:#EDE9FE;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:16px">${isSeller ? '🏪' : '🛒'}</div>
+      <h2 style="margin:0 0 8px;color:#1E1B4B;font-size:24px;font-weight:800">Welcome to Primebazaar, ${name}!</h2>
+      <p style="margin:0;color:#6B7280;font-size:15px">Your ${isSeller ? 'seller' : 'customer'} account is ready.</p>
     </div>
-
     <div style="background:#F5F3FF;border-radius:12px;padding:20px;margin-bottom:24px">
       <p style="margin:0 0 4px;font-size:13px;color:#7C3AED;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Account Type</p>
       <p style="margin:0;font-size:16px;font-weight:700;color:#1E1B4B;text-transform:capitalize">${role}</p>
     </div>
-
     ${isSeller ? `
     <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:12px;padding:20px;margin-bottom:24px">
       <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#92400E">🚀 Seller Quick-Start</p>
@@ -79,210 +93,123 @@ export async function sendWelcomeEmail(to: string, name: string, role: string) {
       <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#065F46">🎁 Welcome Gift</p>
       <p style="margin:0;font-size:13px;color:#6B7280">Use code <strong style="color:#7C3AED">NEWUSER</strong> for 15% off your first order!</p>
     </div>`}
-
     <div style="text-align:center">
-      <a href="${ctaHref}" style="display:inline-block;background:#7C3AED;color:#fff;padding:14px 32px;border-radius:999px;text-decoration:none;font-weight:800;font-size:15px">
-        ${ctaText} →
-      </a>
-    </div>
-  `
-  await resend.emails.send({ from: FROM, to, subject: `Welcome to Primebazaar, ${name}! 🎉`, html: emailWrapper(content) })
+      <a href="${ctaHref}" style="display:inline-block;background:#7C3AED;color:#fff;padding:14px 32px;border-radius:999px;text-decoration:none;font-weight:800;font-size:15px">${ctaText} →</a>
+    </div>`
+  await sendEmail(to, `Welcome to Primebazaar, ${name}! 🎉`, emailWrapper(content))
 }
 
+// ── Login alert ───────────────────────────────────────────────────────────────
 export async function sendLoginAlert(to: string, name: string, loginTime: string, ip?: string) {
-  if (!resend) { console.log('[EMAIL] Login alert (no key):', to); return }
-  to = resolveRecipient(to)
-
   const content = `
     <div style="text-align:center;margin-bottom:28px">
       <div style="display:inline-block;background:#EDE9FE;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:16px">🔐</div>
       <h2 style="margin:0 0 8px;color:#1E1B4B;font-size:22px;font-weight:800">New sign-in detected</h2>
       <p style="margin:0;color:#6B7280;font-size:14px">Hi ${name}, someone just signed into your account.</p>
     </div>
-
     <div style="background:#F5F3FF;border-radius:12px;padding:20px;margin-bottom:24px">
       <table width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-          <td style="padding:6px 0;font-size:13px;color:#6B7280">Date &amp; Time</td>
-          <td style="padding:6px 0;font-size:13px;font-weight:600;color:#1E1B4B;text-align:right">${loginTime}</td>
-        </tr>
-        ${ip ? `<tr>
-          <td style="padding:6px 0;font-size:13px;color:#6B7280">IP Address</td>
-          <td style="padding:6px 0;font-size:13px;font-weight:600;color:#1E1B4B;text-align:right">${ip}</td>
-        </tr>` : ''}
-        <tr>
-          <td style="padding:6px 0;font-size:13px;color:#6B7280">Platform</td>
-          <td style="padding:6px 0;font-size:13px;font-weight:600;color:#1E1B4B;text-align:right">Primebazaar Web</td>
-        </tr>
+        <tr><td style="padding:6px 0;font-size:13px;color:#6B7280">Date &amp; Time</td>
+            <td style="padding:6px 0;font-size:13px;font-weight:600;color:#1E1B4B;text-align:right">${loginTime}</td></tr>
+        ${ip ? `<tr><td style="padding:6px 0;font-size:13px;color:#6B7280">IP Address</td>
+            <td style="padding:6px 0;font-size:13px;font-weight:600;color:#1E1B4B;text-align:right">${ip}</td></tr>` : ''}
+        <tr><td style="padding:6px 0;font-size:13px;color:#6B7280">Platform</td>
+            <td style="padding:6px 0;font-size:13px;font-weight:600;color:#1E1B4B;text-align:right">Primebazaar Web</td></tr>
       </table>
     </div>
-
     <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:16px;margin-bottom:24px">
-      <p style="margin:0;font-size:13px;color:#991B1B">
-        ⚠️ <strong>Wasn't you?</strong> Secure your account immediately by changing your password.
-      </p>
+      <p style="margin:0;font-size:13px;color:#991B1B">⚠️ <strong>Wasn't you?</strong> Secure your account immediately by changing your password.</p>
     </div>
-
     <div style="text-align:center">
-      <a href="${BASE}/login" style="display:inline-block;background:#7C3AED;color:#fff;padding:14px 32px;border-radius:999px;text-decoration:none;font-weight:800;font-size:14px">
-        Secure My Account
-      </a>
-    </div>
-  `
-  await resend.emails.send({ from: FROM, to, subject: `New sign-in to your Primebazaar account`, html: emailWrapper(content) })
+      <a href="${BASE}/forgot-password" style="display:inline-block;background:#7C3AED;color:#fff;padding:14px 32px;border-radius:999px;text-decoration:none;font-weight:800;font-size:14px">Secure My Account</a>
+    </div>`
+  await sendEmail(to, `New sign-in to your Primebazaar account`, emailWrapper(content))
 }
 
-function orderItemsHtml(items: Array<{ title: string; quantity: number; price: number; image: string }>) {
-  return items.map(item => `
-    <tr>
-      <td style="padding:8px;border-bottom:1px solid #eee">
-        <img src="${item.image}" width="48" height="48" style="border-radius:4px;object-fit:cover" />
-      </td>
-      <td style="padding:8px;border-bottom:1px solid #eee">${item.title}</td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${item.quantity}</td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">$${(item.price * item.quantity).toFixed(2)}</td>
-    </tr>
-  `).join('')
-}
-
-export async function sendOrderConfirmation(to: string, order: {
-  orderNumber: string
-  total: number
-  items: Array<{ title: string; quantity: number; price: number; image: string }>
-  shippingAddress: { name: string; street: string; city: string; state: string }
-  estimatedDelivery?: string
-}) {
-  if (!resend) {
-    console.log('[EMAIL] Order confirmation (no Resend key):', order.orderNumber)
-    return
-  }
-  to = resolveRecipient(to)
-
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `Order Confirmed — ${order.orderNumber}`,
-    html: `
-      <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-        <div style="background:#131921;padding:20px;text-align:center">
-          <h1 style="color:#FFD814;margin:0">primebazaar<span style="color:#FFD814">.</span></h1>
-        </div>
-        <div style="padding:24px">
-          <h2 style="color:#131921">Thanks for your order, ${order.shippingAddress.name}!</h2>
-          <p>Order #<strong>${order.orderNumber}</strong> has been confirmed.</p>
-          ${order.estimatedDelivery ? `<p>Estimated delivery: <strong>${order.estimatedDelivery}</strong></p>` : ''}
-          <table style="width:100%;border-collapse:collapse;margin:16px 0">
-            <thead>
-              <tr style="background:#f5f5f5">
-                <th style="padding:8px;text-align:left"></th>
-                <th style="padding:8px;text-align:left">Item</th>
-                <th style="padding:8px;text-align:center">Qty</th>
-                <th style="padding:8px;text-align:right">Price</th>
-              </tr>
-            </thead>
-            <tbody>${orderItemsHtml(order.items)}</tbody>
-          </table>
-          <p style="text-align:right;font-size:18px"><strong>Total: $${order.total.toFixed(2)}</strong></p>
-          <a href="${process.env.NEXTAUTH_URL}/orders" style="display:inline-block;background:#FFD814;color:#131921;padding:12px 24px;border-radius:24px;text-decoration:none;font-weight:bold">View Order</a>
-        </div>
-      </div>
-    `,
-  })
-}
-
-export async function sendShippingNotification(to: string, data: {
-  orderNumber: string
-  trackingNumber: string
-  carrier?: string
-  estimatedDelivery?: string
-}) {
-  if (!resend) {
-    console.log('[EMAIL] Shipping notification (no Resend key):', data.orderNumber)
-    return
-  }
-
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `Your order ${data.orderNumber} has shipped!`,
-    html: `
-      <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-        <div style="background:#131921;padding:20px;text-align:center">
-          <h1 style="color:#FFD814;margin:0">primebazaar<span>.</span></h1>
-        </div>
-        <div style="padding:24px">
-          <h2>🚚 Your order is on its way!</h2>
-          <p>Order <strong>${data.orderNumber}</strong> has been shipped.</p>
-          <p>Tracking: <strong>${data.trackingNumber}</strong>${data.carrier ? ` via ${data.carrier}` : ''}</p>
-          ${data.estimatedDelivery ? `<p>Expected by <strong>${data.estimatedDelivery}</strong></p>` : ''}
-          <a href="${process.env.NEXTAUTH_URL}/orders" style="display:inline-block;background:#FFD814;color:#131921;padding:12px 24px;border-radius:24px;text-decoration:none;font-weight:bold">Track Order</a>
-        </div>
-      </div>
-    `,
-  })
-}
-
+// ── Password reset OTP ────────────────────────────────────────────────────────
 export async function sendPasswordOtp(to: string, otp: string, name: string) {
-  if (!resend) {
-    console.log('[EMAIL] Password reset OTP:', otp, '→', to)
-    return
-  }
-  to = resolveRecipient(to)
-
   const content = `
     <div style="text-align:center;margin-bottom:28px">
       <div style="display:inline-block;background:#EDE9FE;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:16px">🔑</div>
       <h2 style="margin:0 0 8px;color:#1E1B4B;font-size:22px;font-weight:800">Reset your password</h2>
       <p style="margin:0;color:#6B7280;font-size:14px">Hi ${name}, use this code to reset your Primebazaar password.</p>
     </div>
-
     <div style="background:#F5F3FF;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center">
       <p style="margin:0 0 8px;font-size:13px;color:#7C3AED;font-weight:700;text-transform:uppercase;letter-spacing:1px">Your OTP Code</p>
       <p style="margin:0;font-size:42px;font-weight:900;letter-spacing:12px;color:#1E1B4B;font-family:monospace">${otp}</p>
       <p style="margin:8px 0 0;font-size:12px;color:#9CA3AF">Valid for 10 minutes · Do not share this code</p>
     </div>
-
-    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:16px;margin-bottom:24px">
-      <p style="margin:0;font-size:13px;color:#991B1B">
-        ⚠️ If you didn't request this, your account may be at risk. <strong>Do not share this OTP with anyone.</strong>
-      </p>
-    </div>
-  `
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `${otp} is your Primebazaar password reset code`,
-    html: emailWrapper(content),
-  })
+    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:16px">
+      <p style="margin:0;font-size:13px;color:#991B1B">⚠️ If you didn't request this, ignore this email. Your password won't change.</p>
+    </div>`
+  await sendEmail(to, `${otp} is your Primebazaar password reset code`, emailWrapper(content))
 }
 
-export async function sendReturnUpdate(to: string, data: {
-  returnNumber: string
-  status: string
-  refundAmount?: number
+// ── Order confirmation ────────────────────────────────────────────────────────
+export async function sendOrderConfirmation(to: string, order: {
+  orderNumber: string; total: number
+  items: Array<{ title: string; quantity: number; price: number; image: string }>
+  shippingAddress: { name: string; street: string; city: string; state: string }
+  estimatedDelivery?: string
 }) {
-  if (!resend) {
-    console.log('[EMAIL] Return update:', data.returnNumber, data.status)
-    return
-  }
+  const itemsHtml = order.items.map(item => `
+    <tr>
+      <td style="padding:8px;border-bottom:1px solid #eee"><img src="${item.image}" width="48" height="48" style="border-radius:4px;object-fit:cover"/></td>
+      <td style="padding:8px;border-bottom:1px solid #eee">${item.title}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${item.quantity}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">$${(item.price * item.quantity).toFixed(2)}</td>
+    </tr>`).join('')
 
-  const statusMessages: Record<string, string> = {
-    approved: 'Your return has been approved. Please ship the item back.',
-    rejected: 'Unfortunately, your return request has been rejected.',
+  const content = `
+    <h2 style="color:#1E1B4B">Thanks for your order, ${order.shippingAddress.name}!</h2>
+    <p>Order #<strong>${order.orderNumber}</strong> has been confirmed.</p>
+    ${order.estimatedDelivery ? `<p>Estimated delivery: <strong>${order.estimatedDelivery}</strong></p>` : ''}
+    <table style="width:100%;border-collapse:collapse;margin:16px 0">
+      <thead><tr style="background:#F5F3FF">
+        <th style="padding:8px;text-align:left"></th>
+        <th style="padding:8px;text-align:left">Item</th>
+        <th style="padding:8px;text-align:center">Qty</th>
+        <th style="padding:8px;text-align:right">Price</th>
+      </tr></thead>
+      <tbody>${itemsHtml}</tbody>
+    </table>
+    <p style="text-align:right;font-size:18px"><strong>Total: $${order.total.toFixed(2)}</strong></p>
+    <div style="text-align:center;margin-top:16px">
+      <a href="${BASE}/orders" style="display:inline-block;background:#7C3AED;color:#fff;padding:12px 24px;border-radius:24px;text-decoration:none;font-weight:bold">View Order</a>
+    </div>`
+  await sendEmail(to, `Order Confirmed — ${order.orderNumber}`, emailWrapper(content))
+}
+
+// ── Shipping notification ─────────────────────────────────────────────────────
+export async function sendShippingNotification(to: string, data: {
+  orderNumber: string; trackingNumber: string; carrier?: string; estimatedDelivery?: string
+}) {
+  const content = `
+    <h2 style="color:#1E1B4B">🚚 Your order is on its way!</h2>
+    <p>Order <strong>${data.orderNumber}</strong> has been shipped.</p>
+    <p>Tracking: <strong>${data.trackingNumber}</strong>${data.carrier ? ` via ${data.carrier}` : ''}</p>
+    ${data.estimatedDelivery ? `<p>Expected by <strong>${data.estimatedDelivery}</strong></p>` : ''}
+    <div style="text-align:center;margin-top:16px">
+      <a href="${BASE}/orders" style="display:inline-block;background:#7C3AED;color:#fff;padding:12px 24px;border-radius:24px;text-decoration:none;font-weight:bold">Track Order</a>
+    </div>`
+  await sendEmail(to, `Your order ${data.orderNumber} has shipped!`, emailWrapper(content))
+}
+
+// ── Return update ─────────────────────────────────────────────────────────────
+export async function sendReturnUpdate(to: string, data: {
+  returnNumber: string; status: string; refundAmount?: number
+}) {
+  const messages: Record<string, string> = {
+    approved:  'Your return has been approved. Please ship the item back.',
+    rejected:  'Unfortunately, your return request has been rejected.',
     completed: `Your refund of $${data.refundAmount?.toFixed(2)} has been processed.`,
   }
-
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `Return ${data.returnNumber} — ${data.status}`,
-    html: `
-      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
-        <h2>Return Request Update</h2>
-        <p>Return #<strong>${data.returnNumber}</strong></p>
-        <p>${statusMessages[data.status] || `Status updated to: ${data.status}`}</p>
-        <a href="${process.env.NEXTAUTH_URL}/orders" style="display:inline-block;background:#FFD814;color:#131921;padding:12px 24px;border-radius:24px;text-decoration:none;font-weight:bold">View Details</a>
-      </div>
-    `,
-  })
+  const content = `
+    <h2 style="color:#1E1B4B">Return Request Update</h2>
+    <p>Return #<strong>${data.returnNumber}</strong></p>
+    <p>${messages[data.status] || `Status updated to: ${data.status}`}</p>
+    <div style="text-align:center;margin-top:16px">
+      <a href="${BASE}/orders" style="display:inline-block;background:#7C3AED;color:#fff;padding:12px 24px;border-radius:24px;text-decoration:none;font-weight:bold">View Details</a>
+    </div>`
+  await sendEmail(to, `Return ${data.returnNumber} — ${data.status}`, emailWrapper(content))
 }
