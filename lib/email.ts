@@ -4,6 +4,14 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 const FROM = 'Primebazaar <onboarding@resend.dev>'
 const BASE = process.env.NEXT_PUBLIC_BASE_URL || 'https://primebazaar-web.vercel.app'
 
+// Resend free plan restriction: without a verified domain,
+// emails can only be delivered to the Resend account owner's email.
+// Set RESEND_TO_OVERRIDE in Vercel env vars to your Resend account email
+// (e.g. learnercode23@gmail.com) to receive ALL emails during testing.
+function resolveRecipient(to: string): string {
+  return process.env.RESEND_TO_OVERRIDE || to
+}
+
 function emailWrapper(content: string) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -35,6 +43,7 @@ function emailWrapper(content: string) {
 
 export async function sendWelcomeEmail(to: string, name: string, role: string) {
   if (!resend) { console.log('[EMAIL] Welcome (no key):', to); return }
+  to = resolveRecipient(to)
   const isSeller = role === 'seller'
   const ctaHref  = isSeller ? `${BASE}/seller` : `${BASE}/products`
   const ctaText  = isSeller ? 'Go to Seller Hub' : 'Start Shopping'
@@ -82,6 +91,7 @@ export async function sendWelcomeEmail(to: string, name: string, role: string) {
 
 export async function sendLoginAlert(to: string, name: string, loginTime: string, ip?: string) {
   if (!resend) { console.log('[EMAIL] Login alert (no key):', to); return }
+  to = resolveRecipient(to)
 
   const content = `
     <div style="text-align:center;margin-bottom:28px">
@@ -146,6 +156,7 @@ export async function sendOrderConfirmation(to: string, order: {
     console.log('[EMAIL] Order confirmation (no Resend key):', order.orderNumber)
     return
   }
+  to = resolveRecipient(to)
 
   await resend.emails.send({
     from: FROM,
