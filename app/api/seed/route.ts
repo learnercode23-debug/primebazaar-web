@@ -369,6 +369,8 @@ const REVIEWS_TEMPLATES = [
   { rating: 4, title: 'Solid buy', comment: 'Good product, minor things could be improved but overall satisfied.' },
 ]
 
+export async function GET() { return POST() }
+
 export async function POST() {
   try {
     await connectDB()
