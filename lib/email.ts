@@ -6,8 +6,11 @@ const BASE = process.env.NEXT_PUBLIC_BASE_URL || 'https://primebazaar-web.vercel
 // ── Gmail SMTP (works for ANY recipient email — no domain needed) ─────────────
 const gmailTransporter = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
   ? nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
       auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+      tls: { rejectUnauthorized: false },
     })
   : null
 
