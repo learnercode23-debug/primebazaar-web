@@ -8,7 +8,6 @@ import { getAuthUser } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
 import { createLedgerEntry } from '@/lib/settlement'
 import Order from '@/models/Order'
-import SellerWallet from '@/models/SellerWallet'
 
 export async function POST(req: NextRequest) {
   const user = await getAuthUser(req)
@@ -16,11 +15,11 @@ export async function POST(req: NextRequest) {
 
   await connectDB()
 
-  // Find delivered orders that don't have ledger entries yet
-  const deliveredOrders = await Order.find({ status: 'delivered' }).select('_id').limit(20).lean()
+  // Find delivered orders
+  const deliveredOrders = await Order.find({ status: 'delivered' }).select('_id').limit(20)
 
   if (deliveredOrders.length === 0) {
-    // Mark some shipped/packed orders as delivered to generate ledger entries
+    // Mark some orders as delivered to generate ledger entries
     const ordersToDeliver = await Order.find({
       status: { $in: ['shipped', 'packed', 'processing', 'confirmed'] },
     }).limit(5)
@@ -29,7 +28,7 @@ export async function POST(req: NextRequest) {
       order.status = 'delivered'
       order.deliveredAt = new Date()
       await order.save()
-      await createLedgerEntry(order._id.toString())
+      await createLedgerEntry((order._id as { toString(): string }).toString())
     }
 
     return NextResponse.json({
@@ -38,10 +37,10 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // Create ledger entries for already-delivered orders
   let created = 0
   for (const order of deliveredOrders) {
-    await createLedgerEntry(order._id.toString())
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await createLedgerEntry((order as any)._id.toString())
     created++
   }
 
