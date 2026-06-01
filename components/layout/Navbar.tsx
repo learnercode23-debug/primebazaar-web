@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   FiShoppingCart, FiUser, FiMenu, FiX,
   FiHeart, FiPackage, FiLogOut, FiSettings,
-  FiChevronDown, FiMapPin, FiNavigation, FiLoader, FiCheck
+  FiChevronDown, FiMapPin, FiNavigation, FiLoader, FiCheck, FiDollarSign
 } from 'react-icons/fi'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
@@ -220,6 +220,9 @@ export default function Navbar() {
                         <Link href="/addresses" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiMapPin /> My Addresses</Link>
                         {(user.role === 'seller' || user.role === 'admin') && (
                           <Link href="/seller" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiPackage /> Seller Hub</Link>
+                        )}
+                        {user.role === 'seller' && (
+                          <Link href="/seller/earnings" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiDollarSign /> Earnings</Link>
                         )}
                         {user.role === 'admin' && (
                           <Link href="/admin" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiSettings /> Admin</Link>

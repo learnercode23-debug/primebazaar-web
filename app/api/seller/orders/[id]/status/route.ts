@@ -13,6 +13,7 @@ import { getAuthUser } from '@/lib/auth'
 import Order from '@/models/Order'
 import User from '@/models/User'
 import { createNotification } from '@/lib/notifications'
+import { createLedgerEntry } from '@/lib/settlement'
 import { sendShippingNotification } from '@/lib/email'
 import { addDays, format } from 'date-fns'
 
@@ -99,6 +100,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (status === 'delivered') {
       order.deliveredAt = now
       order.actualDelivery = now
+      // Create seller ledger entries for earnings (non-blocking)
+      createLedgerEntry(order._id.toString()).catch(console.error)
       await createNotification(
         order.user.toString(),
         'order_delivered',
