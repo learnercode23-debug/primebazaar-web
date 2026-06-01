@@ -1,0 +1,93 @@
+import mongoose, { Schema, Document } from 'mongoose'
+import bcrypt from 'bcryptjs'
+
+export interface ISavedAddress {
+  _id?: mongoose.Types.ObjectId
+  label: string
+  isDefault: boolean
+  name: string
+  street: string
+  city: string
+  state: string
+  zipCode: string
+  country: string
+  phone: string
+}
+
+export interface IUser extends Document {
+  name: string
+  email: string
+  password?: string
+  googleId?: string
+  role: 'customer' | 'seller' | 'admin'
+  avatar?: string
+  phone?: string
+  savedAddresses: ISavedAddress[]
+  wishlist: mongoose.Types.ObjectId[]
+  recentlyViewed: mongoose.Types.ObjectId[]
+  storeCredit: number
+  membershipTier: 'standard' | 'prime'
+  membershipExpiresAt?: Date
+  stripeCustomerId?: string
+  isActive: boolean
+  emailVerified: boolean
+  notificationPrefs: {
+    orderUpdates: boolean
+    promotions: boolean
+    newArrivals: boolean
+  }
+  createdAt: Date
+  comparePassword(password: string): Promise<boolean>
+}
+
+const SavedAddressSchema = new Schema<ISavedAddress>({
+  label: { type: String, default: 'Home' },
+  isDefault: { type: Boolean, default: false },
+  name: { type: String, required: true },
+  street: { type: String, required: true },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  zipCode: { type: String, required: true },
+  country: { type: String, default: 'US' },
+  phone: { type: String, required: true },
+})
+
+const UserSchema = new Schema<IUser>(
+  {
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String, minlength: 6 },
+    googleId: { type: String, sparse: true, unique: true },
+    role: { type: String, enum: ['customer', 'seller', 'admin'], default: 'customer' },
+    avatar: { type: String },
+    phone: { type: String },
+    savedAddresses: [SavedAddressSchema],
+    wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+    recentlyViewed: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+    storeCredit: { type: Number, default: 0 },
+    membershipTier: { type: String, enum: ['standard', 'prime'], default: 'standard' },
+    membershipExpiresAt: { type: Date },
+    stripeCustomerId: { type: String },
+    isActive: { type: Boolean, default: true },
+    emailVerified: { type: Boolean, default: false },
+    notificationPrefs: {
+      orderUpdates: { type: Boolean, default: true },
+      promotions: { type: Boolean, default: true },
+      newArrivals: { type: Boolean, default: false },
+    },
+  },
+  { timestamps: true }
+)
+
+UserSchema.pre('save', async function (next) {
+  if (!this.isModified('password') || !this.password) return next()
+  this.password = await bcrypt.hash(this.password, 12)
+  next()
+})
+
+UserSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
+  if (!this.password) return false
+  return bcrypt.compare(password, this.password)
+}
+
+export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema)

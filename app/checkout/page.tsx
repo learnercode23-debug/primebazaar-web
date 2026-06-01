@@ -1,0 +1,606 @@
+'use client'
+
+export const dynamic = 'force-dynamic'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import axios from 'axios'
+import toast from 'react-hot-toast'
+import { useCart } from '@/contexts/CartContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { formatPrice } from '@/lib/utils'
+import { Product } from '@/types'
+import { FiCheck, FiTag, FiTruck, FiCreditCard, FiMapPin, FiChevronDown } from 'react-icons/fi'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
+
+type Step = 'address' | 'payment' | 'review'
+type PaymentMethod = 'esewa' | 'khalti' | 'cod' | 'card'
+
+interface SavedAddress {
+  _id: string
+  label: string
+  isDefault: boolean
+  name: string
+  street: string
+  city: string
+  state: string
+  zipCode: string
+  country: string
+  phone: string
+}
+
+const PAYMENT_METHODS: { id: PaymentMethod; label: string; description: string; color: string; logo: React.ReactNode }[] = [
+  {
+    id: 'esewa',
+    label: 'eSewa',
+    description: "Nepal's #1 digital wallet — instant payment",
+    color: 'border-green-400 bg-green-50',
+    logo: (
+      <div className="flex items-center gap-1">
+        <div className="w-7 h-7 bg-green-600 rounded-full flex items-center justify-center">
+          <span className="text-white text-xs font-black leading-none">e</span>
+        </div>
+        <span className="text-green-700 font-bold text-sm">eSewa</span>
+      </div>
+    ),
+  },
+  {
+    id: 'khalti',
+    label: 'Khalti',
+    description: 'Digital wallet & bank payment — easy & secure',
+    color: 'border-purple-400 bg-purple-50',
+    logo: (
+      <div className="flex items-center gap-1">
+        <div className="w-7 h-7 bg-purple-600 rounded-full flex items-center justify-center">
+          <span className="text-white text-xs font-black leading-none">K</span>
+        </div>
+        <span className="text-purple-700 font-bold text-sm">Khalti</span>
+      </div>
+    ),
+  },
+  {
+    id: 'cod',
+    label: 'Cash on Delivery',
+    description: 'Pay with cash when your order arrives at your door',
+    color: 'border-orange-400 bg-orange-50',
+    logo: (
+      <div className="flex items-center gap-1">
+        <span className="text-2xl">💵</span>
+        <span className="text-orange-700 font-bold text-sm">COD</span>
+      </div>
+    ),
+  },
+  {
+    id: 'card',
+    label: 'Credit / Debit Card',
+    description: 'Visa, MasterCard, Amex — powered by Stripe',
+    color: 'border-blue-400 bg-blue-50',
+    logo: (
+      <span className="flex gap-1 text-xs font-bold">
+        <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded">VISA</span>
+        <span className="bg-red-500 text-white px-1.5 py-0.5 rounded">MC</span>
+      </span>
+    ),
+  },
+]
+
+export default function CheckoutPage() {
+  const { user, loading: authLoading } = useAuth()
+  const { items, subtotal, clearCart, loading: cartLoading } = useCart()
+  const router = useRouter()
+
+  const [step, setStep] = useState<Step>('address')
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false)
+  const [address, setAddress] = useState({
+    name: user?.name || '',
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: 'NP',
+    phone: '',
+  })
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('esewa')
+  const [couponCode, setCouponCode] = useState('')
+  const [couponData, setCouponData] = useState<{ discount: number; code: string } | null>(null)
+  const [validatingCoupon, setValidatingCoupon] = useState(false)
+  const [placing, setPlacing] = useState(false)
+
+  const shippingCost = subtotal > 50 ? 0 : 5.99
+  const discount = couponData?.discount || 0
+  const total = subtotal + shippingCost - discount
+
+  useEffect(() => {
+    if (authLoading || cartLoading) return
+    if (!user) { router.push('/login'); return }
+    if (items.length === 0) { router.push('/cart'); return }
+    axios.get('/api/addresses').then((r) => {
+      const addrs = r.data.data || []
+      setSavedAddresses(addrs)
+      const def = addrs.find((a: SavedAddress) => a.isDefault)
+      if (def) {
+        setSelectedAddressId(def._id)
+        setAddress({ name: def.name, street: def.street, city: def.city, state: def.state, zipCode: def.zipCode, country: def.country, phone: def.phone })
+      } else if (addrs.length === 0) {
+        setShowNewAddressForm(true)
+      }
+    })
+  }, [user, items.length, router, authLoading, cartLoading])
+
+  function selectSavedAddress(addr: SavedAddress) {
+    setSelectedAddressId(addr._id)
+    setAddress({ name: addr.name, street: addr.street, city: addr.city, state: addr.state, zipCode: addr.zipCode, country: addr.country, phone: addr.phone })
+    setShowNewAddressForm(false)
+  }
+
+  async function validateCoupon() {
+    if (!couponCode.trim()) return
+    setValidatingCoupon(true)
+    try {
+      const res = await axios.post('/api/coupons/validate', { code: couponCode, subtotal })
+      setCouponData(res.data.data)
+      toast.success(`Coupon applied! You save ${formatPrice(res.data.data.discount)}`)
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Invalid coupon')
+      setCouponData(null)
+    } finally {
+      setValidatingCoupon(false)
+    }
+  }
+
+  async function handlePlaceOrder() {
+    setPlacing(true)
+    const payload = {
+      shippingAddress: address,
+      couponCode: couponData ? couponCode : undefined,
+    }
+
+    try {
+      if (paymentMethod === 'esewa') {
+        // Initiate eSewa — get form fields, then auto-submit a hidden form
+        const res = await axios.post('/api/payment/esewa/initiate', payload)
+        const { paymentUrl, fields } = res.data.data
+
+        const form = document.createElement('form')
+        form.method = 'POST'
+        form.action = paymentUrl
+        Object.entries(fields as Record<string, string>).forEach(([key, value]) => {
+          const input = document.createElement('input')
+          input.type = 'hidden'
+          input.name = key
+          input.value = value
+          form.appendChild(input)
+        })
+        document.body.appendChild(form)
+        form.submit()
+
+      } else if (paymentMethod === 'khalti') {
+        // Initiate Khalti — server returns the correct URL (demo or live)
+        const res = await axios.post('/api/payment/khalti/initiate', payload)
+        const { paymentUrl } = res.data.data
+        // Use replace so the redirect is immediate and browser doesn't show "about:blank"
+        window.location.replace(paymentUrl)
+        return // keep spinner visible during redirect
+
+      } else if (paymentMethod === 'cod') {
+        // Cash on Delivery — create order directly, no payment gateway
+        const res = await axios.post('/api/payment/cod', {
+          ...payload,
+          deliveryOption: 'standard',
+        })
+        await clearCart()
+        toast.success('Order placed! Pay on delivery.')
+        router.push(`/payment/success?orderId=${res.data.data.orderId}&method=cod`)
+
+      } else {
+        // Card (Stripe demo)
+        const res = await axios.post('/api/orders', {
+          ...payload,
+          paymentMethod: 'card',
+          stripePaymentIntentId: 'stripe-demo-' + Date.now(),
+        })
+        await clearCart()
+        toast.success('Order placed successfully!')
+        router.push(`/payment/success?orderId=${res.data.data._id}&method=card`)
+      }
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to place order'
+      toast.error(msg)
+      setPlacing(false)
+    }
+  }
+
+  const steps: { key: Step; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { key: 'address', label: 'Address', icon: FiMapPin },
+    { key: 'payment', label: 'Payment', icon: FiCreditCard },
+    { key: 'review', label: 'Review', icon: FiCheck },
+  ]
+  const stepIdx = steps.findIndex((s) => s.key === step)
+
+  // Show spinner while auth/cart context hydrates — prevents blank-page flash
+  if (authLoading || cartLoading) return <LoadingSpinner fullPage />
+  if (!user || items.length === 0) return null
+
+  return (
+    <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
+
+      {/* Step indicators */}
+      <div className="flex items-center mb-8">
+        {steps.map((s, i) => {
+          const Icon = s.icon
+          const isCompleted = i < stepIdx
+          const isCurrent = i === stepIdx
+          return (
+            <div key={s.key} className="flex items-center">
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isCurrent ? 'bg-amazon-dark text-white' : isCompleted ? 'bg-green-100 text-green-700' : 'text-gray-400'}`}>
+                {isCompleted ? <FiCheck className="text-xs" /> : <Icon className="text-xs" />}
+                {s.label}
+              </div>
+              {i < steps.length - 1 && <div className="w-8 h-px bg-gray-300 mx-1" />}
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left: form */}
+        <div className="lg:col-span-2 space-y-4">
+
+          {/* Step 1 — Address */}
+          {step === 'address' && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
+                <FiMapPin className="text-amazon-orange" /> Shipping Address
+              </h2>
+
+              {/* Saved addresses */}
+              {savedAddresses.length > 0 && !showNewAddressForm && (
+                <div className="space-y-3 mb-4">
+                  {savedAddresses.map((addr) => (
+                    <button
+                      key={addr._id}
+                      onClick={() => selectSavedAddress(addr)}
+                      className={`w-full text-left p-3 rounded-xl border-2 transition-all ${selectedAddressId === addr._id ? 'border-amazon-orange bg-orange-50' : 'border-gray-200 hover:border-gray-300'}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full mr-2">{addr.label}</span>
+                          <span className="font-medium text-sm text-gray-900">{addr.name}</span>
+                          {addr.isDefault && <span className="ml-2 text-xs text-amazon-orange font-medium">Default</span>}
+                        </div>
+                        <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${selectedAddressId === addr._id ? 'border-amazon-orange bg-amazon-orange' : 'border-gray-300'}`}>
+                          {selectedAddressId === addr._id && <div className="w-full h-full rounded-full bg-white scale-50" />}
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">{addr.street}, {addr.city}, {addr.state} {addr.zipCode}</p>
+                    </button>
+                  ))}
+                  <button onClick={() => setShowNewAddressForm(true)} className="text-amazon-teal text-sm hover:underline">
+                    + Use a new address
+                  </button>
+                </div>
+              )}
+
+              {/* New address form */}
+              {(showNewAddressForm || savedAddresses.length === 0) && (
+                <div className="space-y-4">
+                  {savedAddresses.length > 0 && (
+                    <button onClick={() => setShowNewAddressForm(false)} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1">
+                      <FiChevronDown className="rotate-90" /> Use saved address
+                    </button>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[
+                      { key: 'name', label: 'Full Name', placeholder: 'Hari Prasad Sharma', full: true },
+                      { key: 'street', label: 'Street Address', placeholder: 'Chabahil-4, Kathmandu', full: true },
+                      { key: 'city', label: 'City', placeholder: 'Kathmandu' },
+                      { key: 'state', label: 'Province', placeholder: 'Bagmati' },
+                      { key: 'zipCode', label: 'Postal Code', placeholder: '44600' },
+                      { key: 'phone', label: 'Phone', placeholder: '+977-98XXXXXXXX' },
+                    ].map(({ key, label, placeholder, full }) => (
+                      <div key={key} className={full ? 'sm:col-span-2' : ''}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                        <input
+                          value={address[key as keyof typeof address]}
+                          onChange={(e) => setAddress((p) => ({ ...p, [key]: e.target.value }))}
+                          placeholder={placeholder}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                        />
+                      </div>
+                    ))}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                      <select
+                        value={address.country}
+                        onChange={(e) => setAddress((p) => ({ ...p, country: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                      >
+                        <option value="NP">🇳🇵 Nepal</option>
+                        <option value="IN">🇮🇳 India</option>
+                        <option value="US">🇺🇸 United States</option>
+                        <option value="GB">🇬🇧 United Kingdom</option>
+                        <option value="AU">🇦🇺 Australia</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => setStep('payment')}
+                disabled={!address.name || !address.street || !address.city || !address.phone}
+                className="mt-6 bg-amazon-yellow hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold px-6 py-2.5 rounded-full text-sm transition-colors"
+              >
+                Continue to Payment →
+              </button>
+            </div>
+          )}
+
+          {/* Step 2 — Payment */}
+          {step === 'payment' && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
+                <FiCreditCard className="text-amazon-orange" /> Choose Payment Method
+              </h2>
+
+              {/* Nepal gateway highlight banner */}
+              <div className="bg-gradient-to-r from-green-50 to-purple-50 border border-gray-200 rounded-xl p-3 mb-5 flex items-center gap-3">
+                <span className="text-2xl">🇳🇵</span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Nepal payment gateways supported!</p>
+                  <p className="text-xs text-gray-500">Pay instantly with eSewa or Khalti digital wallets</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {PAYMENT_METHODS.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => setPaymentMethod(m.id)}
+                    className={`w-full text-left p-4 rounded-xl border-2 transition-all ${paymentMethod === m.id ? m.color : 'border-gray-200 hover:border-gray-300 bg-white'}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${paymentMethod === m.id ? 'border-amazon-orange' : 'border-gray-300'}`}>
+                          {paymentMethod === m.id && <div className="w-full h-full rounded-full bg-amazon-orange scale-50" />}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-gray-900">{m.label}</p>
+                          <p className="text-xs text-gray-500">{m.description}</p>
+                        </div>
+                      </div>
+                      {m.logo}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Card test info */}
+              {paymentMethod === 'card' && (
+                <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm font-medium text-blue-800 mb-1">🔒 Test Mode</p>
+                  <p className="text-xs text-blue-700">Use card <span className="font-mono font-bold">4242 4242 4242 4242</span>, any future date, any CVC.</p>
+                  <div className="grid grid-cols-1 gap-2 mt-3">
+                    <input placeholder="4242 4242 4242 4242" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input placeholder="MM / YY" className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange" />
+                      <input placeholder="CVC" className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* eSewa info */}
+              {paymentMethod === 'esewa' && (
+                <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-sm font-semibold text-green-800 mb-1">eSewa Test Mode</p>
+                  <div className="text-xs text-green-700 space-y-0.5">
+                    <p>Merchant Code: <span className="font-mono font-bold">EPAYTEST</span></p>
+                    <p>Test eSewa ID: <span className="font-mono font-bold">9806800001</span></p>
+                    <p>Test Password: <span className="font-mono font-bold">Nepal@123</span></p>
+                  </div>
+                </div>
+              )}
+
+              {/* Khalti info */}
+              {paymentMethod === 'khalti' && (
+                <div className="mt-4 bg-purple-50 border border-purple-200 rounded-lg p-3">
+                  <p className="text-sm font-semibold text-purple-800 mb-1">Khalti Test Mode</p>
+                  <div className="text-xs text-purple-700 space-y-0.5">
+                    <p>Test Khalti ID: <span className="font-mono font-bold">9800000001</span></p>
+                    <p>Test MPIN: <span className="font-mono font-bold">1111</span></p>
+                    <p>Test OTP: <span className="font-mono font-bold">987654</span></p>
+                  </div>
+                </div>
+              )}
+
+              {/* COD info */}
+              {paymentMethod === 'cod' && (
+                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-3">
+                  <p className="text-sm font-semibold text-orange-800 mb-1">💵 Cash on Delivery</p>
+                  <div className="text-xs text-orange-700 space-y-0.5">
+                    <p>✔ No advance payment required</p>
+                    <p>✔ Pay in cash when your order arrives</p>
+                    <p>✔ Shipping fee of <strong>Rs. 9.99</strong> applies</p>
+                    <p>✔ Available across Nepal</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => setStep('address')} className="border border-gray-300 text-gray-700 px-4 py-2.5 rounded-full text-sm hover:bg-gray-50">
+                  ← Back
+                </button>
+                <button onClick={() => setStep('review')} className="bg-amazon-yellow hover:bg-yellow-400 text-gray-900 font-bold px-6 py-2.5 rounded-full text-sm transition-colors">
+                  Review Order →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3 — Review */}
+          {step === 'review' && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="font-bold text-gray-900 text-lg mb-4">Order Review</h2>
+
+              {/* Items */}
+              <div className="space-y-3 mb-4">
+                {items.map((item) => {
+                  const product = item.product as Product
+                  const price = product.discountPrice || product.price
+                  return (
+                    <div key={product._id} className="flex gap-3 items-center">
+                      <div className="relative w-12 h-12 rounded bg-gray-50 flex-shrink-0">
+                        <Image src={product.images[0] || ''} alt={product.title} fill className="object-contain p-1" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 line-clamp-1">{product.title}</p>
+                        <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                      </div>
+                      <p className="font-medium text-sm flex-shrink-0">{formatPrice(price * item.quantity)}</p>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Address */}
+              <div className="bg-gray-50 rounded-lg p-3 text-sm mb-4">
+                <p className="font-medium text-gray-900 mb-0.5 flex items-center gap-1">
+                  <FiMapPin className="text-gray-400 text-xs" /> Shipping to:
+                </p>
+                <p className="text-gray-600">{address.name} · {address.phone}</p>
+                <p className="text-gray-600">{address.street}, {address.city}, {address.state} {address.zipCode}</p>
+              </div>
+
+              {/* Payment method */}
+              <div className="bg-gray-50 rounded-lg p-3 text-sm mb-4 flex items-center justify-between">
+                <span className="text-gray-600">Payment via</span>
+                <div className="flex items-center gap-2 font-semibold">
+                  {paymentMethod === 'esewa' && <span className="text-green-700">🟢 eSewa</span>}
+                  {paymentMethod === 'khalti' && <span className="text-purple-700">🟣 Khalti</span>}
+                  {paymentMethod === 'cod' && <span className="text-orange-700">💵 Cash on Delivery</span>}
+                  {paymentMethod === 'card' && <span className="text-blue-700">💳 Card</span>}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setStep('payment')} className="border border-gray-300 text-gray-700 px-4 py-2.5 rounded-full text-sm hover:bg-gray-50">
+                  ← Back
+                </button>
+                <button
+                  onClick={handlePlaceOrder}
+                  disabled={placing}
+                  className="flex-1 bg-amazon-orange hover:bg-orange-500 disabled:opacity-70 text-white font-bold px-6 py-2.5 rounded-full text-sm transition-colors flex items-center justify-center gap-2"
+                >
+                  {placing ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      {paymentMethod === 'esewa' ? 'Redirecting to eSewa…' : paymentMethod === 'khalti' ? 'Redirecting to Khalti…' : 'Placing Order…'}
+
+                    </>
+                  ) : (
+                    `Place Order — ${formatPrice(total)}`
+                  )}
+                </button>
+              </div>
+
+              {paymentMethod === 'cod' && (
+                <div className="mt-3 bg-orange-50 border border-orange-200 rounded-lg p-3 text-xs text-orange-700">
+                  <p className="font-semibold mb-0.5">📦 Cash on Delivery</p>
+                  <p>Pay Rs.{formatPrice(total).replace('$','')} in cash when your order is delivered. Shipping fee of Rs.9.99 applies.</p>
+                </div>
+              )}
+              {(paymentMethod === 'esewa' || paymentMethod === 'khalti') && (
+                <p className="text-xs text-gray-400 text-center mt-2">
+                  You will be redirected to {paymentMethod === 'esewa' ? 'eSewa' : 'Khalti'} to complete payment securely.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right: order summary */}
+        <div>
+          <div className="bg-white rounded-xl border border-gray-200 p-5 sticky top-20 space-y-4">
+            <h2 className="font-bold text-gray-900">Order Summary</h2>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Items ({items.reduce((s, i) => s + i.quantity, 0)})</span>
+                <span>{formatPrice(subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="flex items-center gap-1"><FiTruck className="text-xs" /> Shipping</span>
+                <span className={subtotal > 50 ? 'text-amazon-green font-medium' : ''}>
+                  {subtotal > 50 ? 'FREE' : formatPrice(shippingCost)}
+                </span>
+              </div>
+              {couponData && (
+                <div className="flex justify-between text-amazon-green font-medium">
+                  <span>Coupon ({couponData.code})</span>
+                  <span>-{formatPrice(discount)}</span>
+                </div>
+              )}
+            </div>
+
+            <hr />
+
+            <div className="flex justify-between font-bold text-lg">
+              <span>Total</span>
+              <span>{formatPrice(total)}</span>
+            </div>
+
+            {/* Coupon code */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                <FiTag /> Coupon Code
+              </label>
+              <div className="flex gap-2">
+                <input
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. SAVE10"
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                />
+                <button
+                  onClick={validateCoupon}
+                  disabled={validatingCoupon || !couponCode}
+                  className="bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-white px-3 py-2 rounded-lg text-xs font-medium"
+                >
+                  {validatingCoupon ? '...' : 'Apply'}
+                </button>
+              </div>
+              {couponData && <p className="text-xs text-amazon-green mt-1">✓ Coupon applied!</p>}
+              <p className="text-xs text-gray-400 mt-1">Try: SAVE10, FLAT20, NEWUSER</p>
+            </div>
+
+            {/* Nepal payment badges */}
+            <div className="pt-2 border-t border-gray-100">
+              <p className="text-xs text-gray-500 mb-2 text-center">Accepted Payments</p>
+              <div className="flex items-center justify-center gap-3 flex-wrap">
+                <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-lg text-xs font-bold">
+                  <span className="w-4 h-4 bg-green-600 rounded-full flex items-center justify-center text-white text-xs leading-none">e</span>
+                  eSewa
+                </div>
+                <div className="flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-1 rounded-lg text-xs font-bold">
+                  <span className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs leading-none">K</span>
+                  Khalti
+                </div>
+                <div className="flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-lg text-xs font-bold">
+                  💵 COD
+                </div>
+                <div className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-bold">
+                  💳 Card
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,43 @@
+{
+  "name": "Primebazaar — Shop Everything",
+  "short_name": "Primebazaar",
+  "description": "Primebazaar — Your one-stop shop for electronics, fashion, home goods, and more.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1E1B4B",
+  "theme_color": "#1E1B4B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "lifestyle"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Browse Products",
+      "url": "/products",
+      "description": "Browse all products"
+    },
+    {
+      "name": "My Cart",
+      "url": "/cart",
+      "description": "View your shopping cart"
+    },
+    {
+      "name": "My Orders",
+      "url": "/orders",
+      "description": "Track your orders"
+    }
+  ]
+}
