@@ -140,15 +140,17 @@ export default function Navbar() {
           ════════════════════════════════════════════ */}
       <div className="bg-amazon-dark">
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
-          <div className="flex items-center h-14 sm:h-16 gap-2 sm:gap-3">
+
+          {/* ── Row 1: Logo + Icons (all screens) ── */}
+          <div className="flex items-center h-12 sm:h-16 gap-2 sm:gap-3">
 
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center gap-0">
-              <span className="text-white font-black text-base sm:text-xl">primebazaar</span>
+            <Link href="/" className="flex-shrink-0 flex items-center">
+              <span className="text-white font-black text-base sm:text-xl tracking-tight">primebazaar</span>
               <span className="text-amazon-yellow text-xl sm:text-2xl font-black leading-none">.</span>
             </Link>
 
-            {/* ── Deliver to — DESKTOP (xl+) ── */}
+            {/* ── Deliver to — DESKTOP only ── */}
             <div className="relative hidden xl:block flex-shrink-0" ref={locationMenuRef}>
               <button
                 onClick={() => setLocationOpen(!locationOpen)}
@@ -170,14 +172,16 @@ export default function Navbar() {
                 </div>
                 <FiChevronDown className={`text-gray-400 text-xs transition-transform ${locationOpen ? 'rotate-180' : ''}`} />
               </button>
-
               {locationOpen && <LocationDropdown />}
             </div>
 
-            {/* Search */}
-            <div className="flex-1 min-w-0">
+            {/* Search — DESKTOP only (mobile has its own row below) */}
+            <div className="flex-1 min-w-0 hidden sm:block">
               <SearchAutocomplete className="w-full" />
             </div>
+
+            {/* Spacer on mobile */}
+            <div className="flex-1 sm:hidden" />
 
             {/* ── Right icons ── */}
             <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
@@ -228,13 +232,13 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Notification bell — visible on all screen sizes */}
+              {/* Notification bell */}
               <NotificationBell />
 
               <Link href="/wishlist" className="hidden md:flex items-center text-white hover:ring-1 hover:ring-white rounded p-2"><FiHeart className="text-xl" /></Link>
 
-              {/* Mobile user icon */}
-              <Link href={user ? '/profile' : '/login'} className="sm:hidden flex items-center text-white p-2 rounded hover:ring-1 hover:ring-white">
+              {/* Mobile: user icon */}
+              <Link href={user ? '/profile' : '/login'} className="sm:hidden flex items-center text-white p-2 rounded">
                 <FiUser className="text-xl" />
               </Link>
 
@@ -248,10 +252,17 @@ export default function Navbar() {
                 )}
               </Link>
 
-              {/* Hamburger — desktop only (mobile uses bottom nav) */}
-              <button onClick={() => setMobileOpen(!mobileOpen)} className="sm:hidden text-white p-2 rounded hover:ring-1 hover:ring-white" aria-label="Menu">
+              {/* Hamburger — desktop only */}
+              <button onClick={() => setMobileOpen(!mobileOpen)} className="hidden sm:flex text-white p-2 rounded hover:ring-1 hover:ring-white" aria-label="Menu">
                 {mobileOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
               </button>
+            </div>
+          </div>
+
+          {/* ── Row 2: Search bar — MOBILE only ── */}
+          <div className="sm:hidden pb-2">
+            <SearchAutocomplete className="w-full" />
+          </div>
             </div>
           </div>
         </div>
