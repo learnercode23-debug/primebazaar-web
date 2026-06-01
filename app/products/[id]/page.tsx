@@ -153,7 +153,7 @@ export default function ProductDetailPage() {
   deliveryDate.setDate(deliveryDate.getDate() + (product.estimatedDeliveryDays || 5))
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-6">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: category?.name || 'Products', href: `/products?category=${encodeURIComponent(category?.name || '')}` },

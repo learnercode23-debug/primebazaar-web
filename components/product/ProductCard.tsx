@@ -110,18 +110,18 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
           ) : null}
         </div>
 
-        {/* Wishlist */}
+        {/* Wishlist — always visible on mobile, hover on desktop */}
         <button
           onClick={() => toggleWishlist(product._id)}
           className={cn(
-            'absolute top-2 right-2 p-1.5 rounded-full bg-white/90 shadow-sm border transition-all',
+            'absolute top-2 right-2 p-2 rounded-full bg-white/90 shadow-sm border transition-all',
             wishlisted
               ? 'text-red-500 border-red-200'
-              : 'text-gray-400 border-transparent opacity-0 group-hover:opacity-100 hover:text-red-500 hover:border-red-200'
+              : 'text-gray-400 border-gray-200 sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-500 hover:border-red-200'
           )}
           aria-label="Save to wishlist"
         >
-          <FiHeart className={cn('text-xs sm:text-sm', wishlisted ? 'fill-current' : '')} />
+          <FiHeart className={cn('text-sm', wishlisted ? 'fill-current' : '')} />
         </button>
       </div>
 
