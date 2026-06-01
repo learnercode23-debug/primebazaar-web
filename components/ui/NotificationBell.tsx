@@ -46,7 +46,12 @@ export default function NotificationBell() {
     setUnreadCount(0)
   }
 
-  if (!user) return null
+  // Show bell even when not logged in — clicking redirects to login
+  if (!user) return (
+    <Link href="/login" className="relative text-white hover:ring-1 hover:ring-white rounded p-1.5 transition-colors flex items-center">
+      <FiBell className="text-xl" />
+    </Link>
+  )
 
   return (
     <div className="relative" ref={ref}>

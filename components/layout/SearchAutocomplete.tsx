@@ -71,8 +71,8 @@ export default function SearchAutocomplete({ className = '' }: { className?: str
 
   return (
     <div className={`relative ${className}`}>
-      <form onSubmit={handleSubmit} className="flex">
-        <div className="relative flex-1 flex">
+      <form onSubmit={handleSubmit} className="flex rounded-lg overflow-hidden">
+        <div className="relative flex-1 flex bg-white">
           <select className="bg-gray-200 text-gray-700 text-sm rounded-l-md px-2 border-r border-gray-300 hidden sm:block focus:outline-none cursor-pointer">
             <option>All</option>
             <option>Electronics</option>
@@ -87,8 +87,8 @@ export default function SearchAutocomplete({ className = '' }: { className?: str
             value={query}
             onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
             onFocus={() => setOpen(true)}
-            placeholder="Search..."
-            className="flex-1 px-3 py-2 text-gray-900 text-sm focus:outline-none min-w-0"
+            placeholder="Search products..."
+            className="flex-1 px-3 py-1.5 sm:py-2 text-gray-900 text-sm focus:outline-none min-w-0"
             style={{ fontSize: 16 }}
           />
           {query && (
@@ -96,8 +96,8 @@ export default function SearchAutocomplete({ className = '' }: { className?: str
               <FiX className="text-sm" />
             </button>
           )}
-          <button type="submit" className="bg-amazon-orange hover:bg-yellow-500 px-3 sm:px-4 rounded-r-md flex items-center justify-center transition-colors flex-shrink-0">
-            <FiSearch className="text-gray-900 text-base sm:text-lg" />
+          <button type="submit" className="bg-violet-600 hover:bg-violet-700 px-3 sm:px-4 flex items-center justify-center transition-colors flex-shrink-0">
+            <FiSearch className="text-white text-base sm:text-lg" />
           </button>
         </div>
       </form>
