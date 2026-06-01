@@ -11,7 +11,7 @@ import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatPrice } from '@/lib/utils'
 import { Product } from '@/types'
-import { FiCheck, FiTag, FiTruck, FiCreditCard, FiMapPin, FiChevronDown } from 'react-icons/fi'
+import { FiCheck, FiTag, FiTruck, FiCreditCard, FiMapPin, FiChevronDown, FiNavigation } from 'react-icons/fi'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 type Step = 'address' | 'payment' | 'review'
@@ -103,6 +103,7 @@ export default function CheckoutPage() {
     country: 'NP',
     phone: '',
   })
+  const [gpsLoading, setGpsLoading] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('esewa')
   const [couponCode, setCouponCode] = useState('')
   const [couponData, setCouponData] = useState<{ discount: number; code: string } | null>(null)
@@ -129,6 +130,38 @@ export default function CheckoutPage() {
       }
     })
   }, [user, items.length, router, authLoading, cartLoading])
+
+  async function useCurrentLocation() {
+    if (!navigator.geolocation) { toast.error('Geolocation not supported'); return }
+    setGpsLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.latitude}&lon=${coords.longitude}`,
+            { headers: { 'Accept-Language': 'en' } }
+          )
+          const data = await res.json()
+          const a = data.address || {}
+          const street = [a.road, a.suburb || a.neighbourhood || a.quarter].filter(Boolean).join(', ')
+          const city = a.city || a.town || a.municipality || a.village || a.county || ''
+          const state = a.state || a.province || ''
+          const zipCode = a.postcode || ''
+          const countryMap: Record<string, string> = { np: 'NP', in: 'IN', us: 'US', gb: 'GB', au: 'AU' }
+          const country = countryMap[a.country_code?.toLowerCase()] || 'NP'
+          setAddress((p) => ({ ...p, street, city, state, zipCode, country }))
+          setShowNewAddressForm(true)
+          toast.success('Location detected!')
+        } catch {
+          toast.error('Could not fetch address. Please fill manually.')
+        } finally {
+          setGpsLoading(false)
+        }
+      },
+      () => { toast.error('Location access denied. Please allow GPS.'); setGpsLoading(false) },
+      { timeout: 10000 }
+    )
+  }
 
   function selectSavedAddress(addr: SavedAddress) {
     setSelectedAddressId(addr._id)
@@ -293,6 +326,23 @@ export default function CheckoutPage() {
                       <FiChevronDown className="rotate-90" /> Use saved address
                     </button>
                   )}
+
+                  {/* GPS auto-fill button */}
+                  <button
+                    type="button"
+                    onClick={useCurrentLocation}
+                    disabled={gpsLoading}
+                    className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl text-sm transition-all shadow-sm"
+                  >
+                    <FiNavigation className={gpsLoading ? 'animate-spin' : ''} />
+                    {gpsLoading ? 'Detecting location…' : 'Use Current Location'}
+                  </button>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+                    <div className="relative flex justify-center"><span className="bg-white px-2 text-xs text-gray-400">or fill manually</span></div>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
                       { key: 'name', label: 'Full Name', placeholder: 'Hari Prasad Sharma', full: true },
