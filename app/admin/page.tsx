@@ -33,7 +33,7 @@ export default function AdminDashboard() {
   async function runMining() {
     setMiningState('running')
     try {
-      const res = await axios.post('/api/admin/analytics/mine-rules', { minSupport: 0.01, minConfidence: 0.05, minLift: 1.2 })
+      const res = await axios.post('/api/admin/analytics/mine-rules', { minSupport: 0.005, minConfidence: 0.02, minLift: 1.0, paidOnly: false })
       setMiningResult(res.data.data)
       setMiningState('done')
     } catch {

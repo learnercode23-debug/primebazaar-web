@@ -46,10 +46,10 @@ export interface AprioriConfig {
  */
 export async function runAprioriMining(config: AprioriConfig = {}): Promise<MiningResult> {
   const {
-    minSupport = 0.01,
-    minConfidence = 0.05,
-    minLift = 1.2,
-    paidOnly = true,
+    minSupport = 0.005,   // 0.5% — works with small datasets
+    minConfidence = 0.02, // 2% — catch co-purchases in demo data
+    minLift = 1.0,        // any positive association
+    paidOnly = false,     // include COD/pending orders in demo mode
   } = config
 
   const t0 = Date.now()
