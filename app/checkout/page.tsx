@@ -109,10 +109,26 @@ export default function CheckoutPage() {
   const [couponData, setCouponData] = useState<{ discount: number; code: string } | null>(null)
   const [validatingCoupon, setValidatingCoupon] = useState(false)
   const [placing, setPlacing] = useState(false)
+  const [codEligible, setCodEligible] = useState(true)
+  const [codFee, setCodFee] = useState(0)
+  const [codIneligibleReason, setCodIneligibleReason] = useState('')
 
   const shippingCost = subtotal > 50 ? 0 : 5.99
   const discount = couponData?.discount || 0
-  const total = subtotal + shippingCost - discount
+  const activeCodFee = paymentMethod === 'cod' ? codFee : 0
+  const total = subtotal + shippingCost - discount + activeCodFee
+
+  // Check COD eligibility when subtotal or address changes
+  useEffect(() => {
+    if (subtotal <= 0) return
+    const productIds = items.map((i) => (i.product as { _id: string })._id)
+    axios.post('/api/cod/check-eligibility', { orderTotal: subtotal, zipCode: address.zipCode, productIds })
+      .then((r) => {
+        setCodEligible(r.data.eligible)
+        setCodFee(r.data.codFee || 0)
+        setCodIneligibleReason(r.data.reason || '')
+      }).catch(() => {})
+  }, [subtotal, address.zipCode])
 
   useEffect(() => {
     if (authLoading || cartLoading) return
@@ -470,14 +486,23 @@ export default function CheckoutPage() {
 
               {/* COD info */}
               {paymentMethod === 'cod' && (
-                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-3">
-                  <p className="text-sm font-semibold text-orange-800 mb-1">💵 Cash on Delivery</p>
-                  <div className="text-xs text-orange-700 space-y-0.5">
-                    <p>✔ No advance payment required</p>
-                    <p>✔ Pay in cash when your order arrives</p>
-                    <p>✔ Shipping fee of <strong>Rs. 9.99</strong> applies</p>
-                    <p>✔ Available across Nepal</p>
-                  </div>
+                <div className="mt-4 space-y-2">
+                  {!codEligible ? (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p className="text-sm font-semibold text-red-700 flex items-center gap-1">⚠️ COD Not Available</p>
+                      <p className="text-xs text-red-600 mt-0.5">{codIneligibleReason}</p>
+                    </div>
+                  ) : (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                      <p className="text-sm font-semibold text-orange-800 mb-1">💵 Cash on Delivery</p>
+                      <div className="text-xs text-orange-700 space-y-0.5">
+                        <p>✔ No advance payment required</p>
+                        <p>✔ Pay in cash when your order arrives</p>
+                        {codFee > 0 && <p>✔ COD handling fee: <strong>+ {formatPrice(codFee)}</strong></p>}
+                        <p className="font-bold text-orange-900 mt-1">Amount to pay on delivery: {formatPrice(total)}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -485,7 +510,7 @@ export default function CheckoutPage() {
                 <button onClick={() => setStep('address')} className="border border-gray-300 text-gray-700 px-4 py-2.5 rounded-full text-sm hover:bg-gray-50">
                   ← Back
                 </button>
-                <button onClick={() => setStep('review')} className="bg-amazon-yellow hover:bg-yellow-400 text-gray-900 font-bold px-6 py-2.5 rounded-full text-sm transition-colors">
+                <button onClick={() => setStep('review')} disabled={paymentMethod === 'cod' && !codEligible} className="bg-amazon-yellow hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold px-6 py-2.5 rounded-full text-sm transition-colors">
                   Review Order →
                 </button>
               </div>
@@ -589,6 +614,12 @@ export default function CheckoutPage() {
                   {subtotal > 50 ? 'FREE' : formatPrice(shippingCost)}
                 </span>
               </div>
+              {activeCodFee > 0 && (
+                <div className="flex justify-between text-orange-600 text-sm">
+                  <span>COD Handling Fee</span>
+                  <span>+ {formatPrice(activeCodFee)}</span>
+                </div>
+              )}
               {couponData && (
                 <div className="flex justify-between text-amazon-green font-medium">
                   <span>Coupon ({couponData.code})</span>

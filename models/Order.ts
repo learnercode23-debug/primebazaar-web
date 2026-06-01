@@ -38,12 +38,14 @@ export interface IOrder extends Document {
   // confirmed → (seller rejects) → cancelled
   status:
     | 'pending'
-    | 'confirmed'      // payment done, waiting for seller
-    | 'processing'     // seller accepted
-    | 'packed'         // seller packed it
-    | 'shipped'        // dispatched with tracking
-    | 'out_for_delivery'
-    | 'delivered'
+    | 'confirmed'           // payment done / COD placed, waiting for seller
+    | 'processing'          // seller accepted
+    | 'packed'
+    | 'shipped'
+    | 'out_for_delivery'    // assigned to delivery agent
+    | 'delivered'           // delivered & cash collected (COD)
+    | 'delivery_failed'     // agent couldn't deliver (retry pending)
+    | 'refused'             // customer refused on delivery
     | 'cancelled'
     | 'returned'
 
@@ -55,6 +57,20 @@ export interface IOrder extends Document {
   rejectedAt?: Date
   rejectionReason?: string
   rejectionCategory?: 'out_of_stock' | 'damaged' | 'pricing_error' | 'other'
+
+  // ── COD-specific fields ────────────────────────────────────────────────────
+  codFee: number                    // Handling fee added for COD
+  codCollected: boolean             // Has cash been collected from customer
+  codCollectedAt?: Date             // When cash was collected
+  codCollectedAmount?: number       // Actual amount collected
+  codRemittanceStatus: 'pending' | 'remitted' | 'not_applicable'
+  deliveryAgent?: mongoose.Types.ObjectId
+  deliveryAttempts: number          // How many delivery attempts made
+  deliveryFailureReason?: string    // Reason for failed delivery
+  nextAttemptDate?: Date            // Scheduled retry date
+  codOtpVerified: boolean           // Whether OTP was verified before placing
+  // Status history for full audit trail
+  statusHistory: Array<{ status: string; timestamp: Date; note?: string }>
 
   subtotal: number
   shippingCost: number
@@ -118,7 +134,7 @@ const OrderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned'],
+      enum: ['pending', 'confirmed', 'processing', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'delivery_failed', 'refused', 'cancelled', 'returned'],
       default: 'pending',
     },
     // Seller action timestamps
@@ -151,6 +167,18 @@ const OrderSchema = new Schema<IOrder>(
     returnRequested: { type: Boolean, default: false },
     notes: { type: String },
     adminNotes: { type: String },
+    // COD fields
+    codFee:               { type: Number, default: 0 },
+    codCollected:         { type: Boolean, default: false },
+    codCollectedAt:       { type: Date },
+    codCollectedAmount:   { type: Number },
+    codRemittanceStatus:  { type: String, enum: ['pending', 'remitted', 'not_applicable'], default: 'not_applicable' },
+    deliveryAgent:        { type: Schema.Types.ObjectId, ref: 'DeliveryAgent' },
+    deliveryAttempts:     { type: Number, default: 0 },
+    deliveryFailureReason:{ type: String },
+    nextAttemptDate:      { type: Date },
+    codOtpVerified:       { type: Boolean, default: false },
+    statusHistory:        [{ status: String, timestamp: { type: Date, default: Date.now }, note: String }],
   },
   { timestamps: true }
 )
