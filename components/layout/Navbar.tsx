@@ -266,8 +266,6 @@ export default function Navbar() {
           <div className="sm:hidden pb-2">
             <SearchAutocomplete className="w-full" />
           </div>
-            </div>
-          </div>
         </div>
       </div>
 
