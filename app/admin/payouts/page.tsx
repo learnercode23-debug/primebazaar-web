@@ -55,6 +55,7 @@ export default function AdminPayoutsPage() {
   const [stats, setStats] = useState<PlatformStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(false)
+  const [seeding, setSeeding] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -74,6 +75,16 @@ export default function AdminPayoutsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function seedWallets() {
+    setSeeding(true)
+    try {
+      const res = await axios.post('/api/admin/seed-wallets')
+      toast.success(res.data.message)
+      fetchData()
+    } catch { toast.error('Seed failed') }
+    finally { setSeeding(false) }
   }
 
   async function runSettlement() {
@@ -99,13 +110,22 @@ export default function AdminPayoutsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Seller Payouts</h1>
           <p className="text-sm text-gray-500">Settlement management & payout history</p>
         </div>
-        <button
-          onClick={runSettlement}
-          disabled={running}
-          className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all"
-        >
-          {running ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Running…</> : <><FiPlay /> Run Settlement</>}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={seedWallets}
+            disabled={seeding}
+            className="flex items-center gap-2 border border-violet-300 text-violet-700 hover:bg-violet-50 disabled:opacity-60 font-semibold px-4 py-2.5 rounded-xl text-sm transition-all"
+          >
+            {seeding ? 'Seeding…' : '⚡ Seed Demo Data'}
+          </button>
+          <button
+            onClick={runSettlement}
+            disabled={running}
+            className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all"
+          >
+            {running ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Running…</> : <><FiPlay /> Run Settlement</>}
+          </button>
+        </div>
       </div>
 
       {/* Platform stats */}
