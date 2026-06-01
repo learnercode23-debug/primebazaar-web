@@ -27,15 +27,16 @@ function CartRecommendations({ productIds }: { productIds: string[] }) {
   useEffect(() => {
     if (!productIds.length) { setLoading(false); return }
     const firstId = productIds[0]
+    if (!firstId) { setLoading(false); return }
     axios.get(`/api/products/${firstId}/recommendations`)
       .then((r) => {
         const recs: Product[] = r.data.data || []
-        // Filter out items already in cart
-        setProducts(recs.filter((p) => !productIds.includes(p._id)).slice(0, 4))
+        setProducts(recs.filter((p) => p?._id && !productIds.includes(p._id)).slice(0, 4))
       })
-      .catch(() => {})
+      .catch(() => setProducts([]))
       .finally(() => setLoading(false))
-  }, [productIds.join(',')])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productIds[0]])
 
   async function handleAdd(productId: string) {
     setAdding(productId)
@@ -88,7 +89,9 @@ export default function CartPage() {
   const shippingCost = subtotal > 50 ? 0 : 5.99
   const total = subtotal + shippingCost
 
-  const cartProductIds = items.map((i) => (i.product as Product)._id).filter(Boolean)
+  const cartProductIds = items
+    .map((i) => { const p = i.product as Product; return p?._id || null })
+    .filter(Boolean) as string[]
 
   if (!user) {
     return (
