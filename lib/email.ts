@@ -222,29 +222,37 @@ export async function sendShippingNotification(to: string, data: {
   })
 }
 
-export async function sendPasswordReset(to: string, resetLink: string) {
+export async function sendPasswordOtp(to: string, otp: string, name: string) {
   if (!resend) {
-    console.log('[EMAIL] Password reset link:', resetLink)
+    console.log('[EMAIL] Password reset OTP:', otp, '→', to)
     return
   }
+  to = resolveRecipient(to)
 
+  const content = `
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="display:inline-block;background:#EDE9FE;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:16px">🔑</div>
+      <h2 style="margin:0 0 8px;color:#1E1B4B;font-size:22px;font-weight:800">Reset your password</h2>
+      <p style="margin:0;color:#6B7280;font-size:14px">Hi ${name}, use this code to reset your Primebazaar password.</p>
+    </div>
+
+    <div style="background:#F5F3FF;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center">
+      <p style="margin:0 0 8px;font-size:13px;color:#7C3AED;font-weight:700;text-transform:uppercase;letter-spacing:1px">Your OTP Code</p>
+      <p style="margin:0;font-size:42px;font-weight:900;letter-spacing:12px;color:#1E1B4B;font-family:monospace">${otp}</p>
+      <p style="margin:8px 0 0;font-size:12px;color:#9CA3AF">Valid for 10 minutes · Do not share this code</p>
+    </div>
+
+    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:16px;margin-bottom:24px">
+      <p style="margin:0;font-size:13px;color:#991B1B">
+        ⚠️ If you didn't request this, your account may be at risk. <strong>Do not share this OTP with anyone.</strong>
+      </p>
+    </div>
+  `
   await resend.emails.send({
     from: FROM,
     to,
-    subject: 'Reset your Primebazaar password',
-    html: `
-      <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-        <div style="background:#131921;padding:20px;text-align:center">
-          <h1 style="color:#FFD814;margin:0">primebazaar<span>.</span></h1>
-        </div>
-        <div style="padding:24px">
-          <h2>Password Reset Request</h2>
-          <p>Click below to reset your password. This link expires in 1 hour.</p>
-          <a href="${resetLink}" style="display:inline-block;background:#FFD814;color:#131921;padding:12px 24px;border-radius:24px;text-decoration:none;font-weight:bold">Reset Password</a>
-          <p style="color:#999;font-size:12px;margin-top:24px">If you didn't request this, ignore this email.</p>
-        </div>
-      </div>
-    `,
+    subject: `${otp} is your Primebazaar password reset code`,
+    html: emailWrapper(content),
   })
 }
 
