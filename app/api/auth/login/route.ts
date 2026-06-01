@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { signToken } from '@/lib/auth'
 import User from '@/models/User'
+import { sendLoginAlert } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,6 +24,11 @@ export async function POST(req: NextRequest) {
     }
 
     const token = signToken(user._id.toString(), user.role)
+
+    // Send login alert email (non-blocking)
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || undefined
+    const loginTime = new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Asia/Kathmandu' })
+    sendLoginAlert(user.email, user.name, loginTime, ip).catch(() => {})
 
     const res = NextResponse.json({
       success: true,

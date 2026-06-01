@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { signToken } from '@/lib/auth'
 import User from '@/models/User'
+import { sendWelcomeEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,6 +26,9 @@ export async function POST(req: NextRequest) {
     })
 
     const token = signToken(user._id.toString(), user.role)
+
+    // Send welcome email (non-blocking)
+    sendWelcomeEmail(user.email, user.name, user.role).catch(() => {})
 
     const res = NextResponse.json({
       success: true,
