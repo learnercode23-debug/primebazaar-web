@@ -12,7 +12,31 @@ import { Order } from '@/types'
 import { formatPrice, formatDate } from '@/lib/utils'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Breadcrumb from '@/components/ui/Breadcrumb'
-import { FiPackage, FiDownload, FiRefreshCw, FiX } from 'react-icons/fi'
+import { FiPackage, FiDownload, FiRefreshCw, FiX, FiTruck } from 'react-icons/fi'
+
+interface SubOrderItem { title: string; image: string; price: number; quantity: number; product: string }
+interface SubOrder {
+  _id: string
+  subOrderNumber: string
+  status: string
+  items: SubOrderItem[]
+  subtotal: number
+  totalAmount: number
+  trackingNumber?: string
+  trackingCarrier?: string
+  shippedAt?: string
+  deliveredAt?: string
+}
+
+const SUB_STATUS_COLOR: Record<string, string> = {
+  confirmed:        'bg-amber-100 text-amber-700',
+  processing:       'bg-blue-100 text-blue-700',
+  packed:           'bg-indigo-100 text-indigo-700',
+  shipped:          'bg-purple-100 text-purple-700',
+  out_for_delivery: 'bg-violet-100 text-violet-700',
+  delivered:        'bg-green-100 text-green-700',
+  cancelled:        'bg-red-100 text-red-700',
+}
 
 const STATUS_STEPS = [
   { key: 'pending', label: 'Order Placed', icon: '📦' },
@@ -31,6 +55,7 @@ export default function OrderDetailPage() {
   const { id } = useParams() as { id: string }
   const router = useRouter()
   const [order, setOrder] = useState<Order | null>(null)
+  const [subOrders, setSubOrders] = useState<SubOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [cancelling, setCancelling] = useState(false)
   const [showReturnForm, setShowReturnForm] = useState(false)
@@ -39,9 +64,13 @@ export default function OrderDetailPage() {
   const [submittingReturn, setSubmittingReturn] = useState(false)
 
   useEffect(() => {
-    axios.get(`/api/orders/${id}`)
-      .then((r) => setOrder(r.data.data))
-      .catch(() => router.push('/orders'))
+    Promise.all([
+      axios.get(`/api/orders/${id}`),
+      axios.get(`/api/orders/${id}/shipments`).catch(() => ({ data: { data: [] } })),
+    ]).then(([orderRes, shipmentsRes]) => {
+      setOrder(orderRes.data.data)
+      setSubOrders(shipmentsRes.data.data || [])
+    }).catch(() => router.push('/orders'))
       .finally(() => setLoading(false))
   }, [id, router])
 
@@ -222,6 +251,60 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Shipments (one per seller) ─────────────────────────── */}
+      {subOrders.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="font-bold text-gray-900 flex items-center gap-2">
+            <FiTruck className="text-violet-600" />
+            Shipments ({subOrders.length})
+            {subOrders.length > 1 && (
+              <span className="text-xs font-normal text-gray-500">— items from {subOrders.length} sellers</span>
+            )}
+          </h2>
+          {subOrders.map((sub) => (
+            <div key={sub._id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <p className="text-sm font-bold text-gray-900 font-mono">{sub.subOrderNumber}</p>
+                  <p className="text-xs text-gray-400">{sub.items.length} item{sub.items.length > 1 ? 's' : ''}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {sub.trackingNumber && (
+                    <p className="text-xs text-gray-500">
+                      Tracking: <span className="font-mono font-bold text-gray-900">{sub.trackingNumber}</span>
+                      {sub.trackingCarrier && ` · ${sub.trackingCarrier}`}
+                    </p>
+                  )}
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${SUB_STATUS_COLOR[sub.status] || 'bg-gray-100 text-gray-600'}`}>
+                    {sub.status.replace(/_/g, ' ')}
+                  </span>
+                </div>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {sub.items.map((item, i) => (
+                  <div key={i} className="flex gap-3 px-5 py-3 items-center">
+                    <div className="relative w-12 h-12 bg-gray-50 rounded flex-shrink-0">
+                      <Image src={item.image || 'https://via.placeholder.com/100'} alt={item.title} fill className="object-contain p-1" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/products/${item.product}`}>
+                        <p className="text-sm font-medium text-gray-900 hover:text-violet-600 line-clamp-1">{item.title}</p>
+                      </Link>
+                      <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                    </div>
+                    <p className="text-sm font-bold text-gray-900 flex-shrink-0">{formatPrice(item.price * item.quantity)}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-between text-sm">
+                <span className="text-gray-500">Shipment total</span>
+                <span className="font-bold text-gray-900">{formatPrice(sub.totalAmount)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Items */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

@@ -7,6 +7,7 @@ import Product from '@/models/Product'
 import Coupon from '@/models/Coupon'
 import { generateTrackingNumber } from '@/lib/utils'
 import { notifyOrderPlaced, notifySellerNewOrder } from '@/lib/notifications'
+import { splitOrderBySeller } from '@/lib/splitOrder'
 import User from '@/models/User'
 
 export async function GET(req: NextRequest) {
@@ -122,6 +123,8 @@ export async function POST(req: NextRequest) {
 
     // Notify customer + all sellers in the order
     const customer = await User.findById(user._id).select('name').lean() as { name?: string } | null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    splitOrderBySeller(order._id.toString(), order.orderNumber, orderItems as any).catch(console.error)
     await notifyOrderPlaced(user._id.toString(), order.orderNumber, order._id.toString())
     await notifySellerNewOrder(
       orderItems.map((i) => ({ seller: i.seller, title: i.title })),

@@ -9,6 +9,7 @@ import User from '@/models/User'
 import { generateTrackingNumber } from '@/lib/utils'
 import { sendOrderConfirmation } from '@/lib/email'
 import { notifyOrderPlaced, notifySellerNewOrder } from '@/lib/notifications'
+import { splitOrderBySeller } from '@/lib/splitOrder'
 
 export async function POST(req: NextRequest) {
   try {
@@ -99,6 +100,9 @@ export async function POST(req: NextRequest) {
         shippingAddress: shippingAddress as { name: string; street: string; city: string; state: string },
       })
     }
+    // Split order into per-seller sub-orders (non-blocking)
+    splitOrderBySeller(order._id.toString(), order.orderNumber, orderItems).catch(console.error)
+
     await notifyOrderPlaced(user._id.toString(), order.orderNumber, order._id.toString())
     // Notify all sellers in this order (customer var already declared above)
     await notifySellerNewOrder(
