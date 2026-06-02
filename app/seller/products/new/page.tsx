@@ -69,10 +69,11 @@ export default function NewProductPage() {
           reader.readAsDataURL(file)
         })
         const res = await axios.post('/api/upload', { image: base64, folder: 'primebazaar/products' })
-        const url = res.data.url
+        const url: string = res.data.data?.url || res.data.url || ''
+        if (!url) throw new Error('No URL returned from upload')
         setForm((p) => ({
           ...p,
-          images: [...p.images.filter((img) => img.trim()), url],
+          images: [...p.images.filter((img) => img && img.trim()), url],
         }))
         toast.success('Image uploaded!')
       }
@@ -98,7 +99,7 @@ export default function NewProductPage() {
         discountPrice,
         discountPercent,
         stock: parseInt(form.stock),
-        images: form.images.filter((img) => img.trim()),
+        images: form.images.filter((img) => img && img.trim()),
         tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
       })
       toast.success('Product created! Awaiting admin approval.')
@@ -242,7 +243,7 @@ export default function NewProductPage() {
           <div className="space-y-2">
             {form.images.map((img, i) => (
               <div key={i} className="flex gap-2 items-center">
-                {img.trim() && (
+                {img && img.trim() && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={img} alt="" className="w-12 h-12 object-cover rounded-lg border border-gray-200 flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
                 )}
