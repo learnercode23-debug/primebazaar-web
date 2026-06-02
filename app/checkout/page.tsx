@@ -586,7 +586,7 @@ export default function CheckoutPage() {
               {paymentMethod === 'cod' && (
                 <div className="mt-3 bg-orange-50 border border-orange-200 rounded-lg p-3 text-xs text-orange-700">
                   <p className="font-semibold mb-0.5">📦 Cash on Delivery</p>
-                  <p>Pay Rs.{formatPrice(total).replace('$','')} in cash when your order is delivered. Shipping fee of Rs.9.99 applies.</p>
+                  <p>Pay {formatPrice(total)} in cash when your order is delivered. Shipping fee of Rs.9.99 applies.</p>
                 </div>
               )}
               {(paymentMethod === 'esewa' || paymentMethod === 'khalti') && (
