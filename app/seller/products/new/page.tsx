@@ -2,18 +2,21 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { CATEGORIES } from '@/lib/utils'
 import Breadcrumb from '@/components/ui/Breadcrumb'
+import { FiUpload, FiX } from 'react-icons/fi'
 
 export default function NewProductPage() {
   const { user } = useAuth()
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -48,6 +51,37 @@ export default function NewProductPage() {
 
   function addImageField() {
     setForm((p) => ({ ...p, images: [...p.images, ''] }))
+  }
+
+  function removeImage(i: number) {
+    setForm((p) => ({ ...p, images: p.images.filter((_, idx) => idx !== i) }))
+  }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+    setUploading(true)
+    try {
+      for (const file of files) {
+        const reader = new FileReader()
+        const base64 = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string)
+          reader.readAsDataURL(file)
+        })
+        const res = await axios.post('/api/upload', { image: base64, folder: 'primebazaar/products' })
+        const url = res.data.url
+        setForm((p) => ({
+          ...p,
+          images: [...p.images.filter((img) => img.trim()), url],
+        }))
+        toast.success('Image uploaded!')
+      }
+    } catch {
+      toast.error('Upload failed. Check Cloudinary settings.')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -179,16 +213,56 @@ export default function NewProductPage() {
 
         {/* Images */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-          <h2 className="font-bold text-gray-900">Product Images</h2>
-          <p className="text-xs text-gray-500">Enter URLs for product images (e.g. from Unsplash, your CDN, etc.)</p>
-          {form.images.map((img, i) => (
-            <div key={i} className="flex gap-2">
-              <input value={img} onChange={(e) => updateImage(i, e.target.value)} placeholder={`Image URL ${i + 1}`}
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange" />
-            </div>
-          ))}
-          <button type="button" onClick={addImageField} className="text-amazon-teal text-sm hover:underline">
-            + Add another image
+          <div className="flex items-center justify-between">
+            <h2 className="font-bold text-gray-900">Product Images</h2>
+            <span className="text-xs text-gray-400">{form.images.filter(i => i.trim()).length} image(s)</span>
+          </div>
+
+          {/* Upload from computer */}
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-violet-300 rounded-xl p-6 text-center cursor-pointer hover:bg-violet-50 transition-all"
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+            <FiUpload className="text-3xl text-violet-400 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-violet-700">
+              {uploading ? 'Uploading...' : 'Click to upload from computer'}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP — up to 10MB each</p>
+          </div>
+
+          {/* Image previews + URL inputs */}
+          <div className="space-y-2">
+            {form.images.map((img, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                {img.trim() && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={img} alt="" className="w-12 h-12 object-cover rounded-lg border border-gray-200 flex-shrink-0" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                )}
+                <input
+                  value={img}
+                  onChange={(e) => updateImage(i, e.target.value)}
+                  placeholder={`Image URL ${i + 1}`}
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                />
+                {form.images.length > 1 && (
+                  <button type="button" onClick={() => removeImage(i)} className="text-red-400 hover:text-red-600 p-1">
+                    <FiX />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <button type="button" onClick={addImageField} className="text-violet-600 text-sm hover:underline">
+            + Add image URL manually
           </button>
         </div>
 
