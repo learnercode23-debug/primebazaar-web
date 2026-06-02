@@ -8,7 +8,7 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatDate } from '@/lib/utils'
-import { FiUser, FiMail, FiPhone, FiMapPin, FiSave, FiPackage, FiHeart, FiShield } from 'react-icons/fi'
+import { FiUser, FiMail, FiPhone, FiMapPin, FiSave, FiPackage, FiHeart, FiShield, FiDollarSign } from 'react-icons/fi'
 import Link from 'next/link'
 
 export default function ProfilePage() {
@@ -72,7 +72,10 @@ export default function ProfilePage() {
               {[
                 { href: '/orders', icon: FiPackage, label: 'My Orders' },
                 { href: '/wishlist', icon: FiHeart, label: 'Wishlist' },
-                ...(user.role !== 'customer' ? [{ href: '/seller', icon: FiShield, label: 'Seller Dashboard' }] : []),
+                ...(user.role !== 'customer' ? [
+                  { href: '/seller', icon: FiShield, label: 'Seller Hub' },
+                  { href: '/seller/earnings', icon: FiDollarSign, label: 'Earnings & Payouts' },
+                ] : []),
               ].map(({ href, icon: Icon, label }) => (
                 <Link key={href} href={href} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                   <Icon className="text-gray-400" /> {label}
