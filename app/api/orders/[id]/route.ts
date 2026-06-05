@@ -1,7 +1,9 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import Order from '@/models/Order'
+import { emitAll, emitToUser } from '@/lib/socket-server'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -34,7 +36,23 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     await connectDB()
     const body = await req.json()
+
+    // Generate invoice number the moment an order is marked delivered
+    if (body.status === 'delivered') {
+      body.invoiceNumber = body.invoiceNumber || ('INV-' + Date.now().toString(36).toUpperCase())
+      body.deliveredAt   = body.deliveredAt   || new Date()
+    }
+
     const order = await Order.findByIdAndUpdate(params.id, body, { new: true })
+
+    if (order) {
+      const payload = { orderId: params.id, status: order.status, orderNumber: order.orderNumber }
+      // Notify the customer whose order was updated
+      emitToUser(order.user.toString(), 'order:updated', payload)
+      // Notify admin dashboard (all admins are in the public room)
+      emitAll('order:updated', payload)
+    }
+
     return NextResponse.json({ success: true, data: order })
   } catch {
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 })

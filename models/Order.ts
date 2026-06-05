@@ -31,7 +31,14 @@ export interface IOrder extends Document {
   estimatedDelivery?: Date
   actualDelivery?: Date
   paymentMethod: string
-  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded' | 'partially_refunded'
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded' | 'partially_refunded' | 'pending_verification'
+
+  // ── Khalti QR manual payment fields ───────────────────────────────────────
+  khaltiTransactionId?:       string   // entered by customer as proof
+  khaltiVerificationStatus?:  'pending_verification' | 'verified' | 'rejected'
+  khaltiVerifiedBy?:          mongoose.Types.ObjectId
+  khaltiVerifiedAt?:          Date
+  khaltiRejectionReason?:     string
 
   // ── Seller Hub status flow ────────────────────────────────────────────────
   // confirmed → (seller accepts) → processing → packed → shipped → delivered
@@ -69,6 +76,12 @@ export interface IOrder extends Document {
   deliveryFailureReason?: string    // Reason for failed delivery
   nextAttemptDate?: Date            // Scheduled retry date
   codOtpVerified: boolean           // Whether OTP was verified before placing
+  deliveryCode?:            string  // 5-digit code customer shows delivery agent
+  deliveryCodeGeneratedAt?: Date
+  deliveryCodeAttempts:     number
+  deliveryCodeLocked:       boolean
+  deliveryCodeLockedAt?:    Date
+  deliveryCodeCollectedBy?: mongoose.Types.ObjectId
   // Status history for full audit trail
   statusHistory: Array<{ status: string; timestamp: Date; note?: string }>
 
@@ -177,7 +190,19 @@ const OrderSchema = new Schema<IOrder>(
     deliveryAttempts:     { type: Number, default: 0 },
     deliveryFailureReason:{ type: String },
     nextAttemptDate:      { type: Date },
-    codOtpVerified:       { type: Boolean, default: false },
+    codOtpVerified:          { type: Boolean, default: false },
+    khaltiTransactionId:      { type: String },
+    khaltiVerificationStatus: { type: String, enum: ['pending_verification','verified','rejected'] },
+    khaltiVerifiedBy:         { type: Schema.Types.ObjectId, ref: 'User' },
+    khaltiVerifiedAt:         { type: Date },
+    khaltiRejectionReason:    { type: String },
+    // ── Delivery Verification Code (Flipkart-style COD OTP) ────────────────────
+    deliveryCode:            { type: String },          // 5-digit code shown to customer
+    deliveryCodeGeneratedAt: { type: Date },            // when code was generated
+    deliveryCodeAttempts:    { type: Number, default: 0 }, // wrong-entry counter
+    deliveryCodeLocked:      { type: Boolean, default: false }, // locked after 3 wrong tries
+    deliveryCodeLockedAt:    { type: Date },
+    deliveryCodeCollectedBy: { type: Schema.Types.ObjectId, ref: 'User' }, // delivery agent user
     statusHistory:        [{ status: String, timestamp: { type: Date, default: Date.now }, note: String }],
   },
   { timestamps: true }
@@ -186,9 +211,6 @@ const OrderSchema = new Schema<IOrder>(
 OrderSchema.pre('save', function (next) {
   if (!this.orderNumber) {
     this.orderNumber = 'AMZ-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase()
-  }
-  if (!this.invoiceNumber && this.paymentStatus === 'paid') {
-    this.invoiceNumber = 'INV-' + Date.now().toString(36).toUpperCase()
   }
   next()
 })

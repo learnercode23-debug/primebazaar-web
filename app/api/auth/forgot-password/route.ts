@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
@@ -33,7 +34,10 @@ export async function POST(req: NextRequest) {
 
     await sendPasswordOtp(email, otp, user.name)
 
-    return NextResponse.json({ success: true, message: 'OTP sent to your registered email.' })
+    // In development, expose OTP so devs can test without email setup
+    const devOtp = process.env.NODE_ENV !== 'production' ? otp : undefined
+
+    return NextResponse.json({ success: true, message: 'OTP sent to your registered email.', devOtp })
   } catch (err) {
     console.error('Forgot password error:', err)
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 })

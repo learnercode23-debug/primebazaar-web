@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
@@ -9,6 +10,8 @@ import { verifyEsewaPayment } from '@/lib/esewa'
 import { generateTrackingNumber } from '@/lib/utils'
 import { sendOrderConfirmation } from '@/lib/email'
 import { notifyOrderPlaced, notifySellerNewOrder } from '@/lib/notifications'
+import { splitOrderBySeller } from '@/lib/splitOrder'
+import { assignProductSeller } from '@/lib/assignmentEngine'
 import User from '@/models/User'
 
 export async function GET(req: NextRequest) {
@@ -58,6 +61,11 @@ export async function GET(req: NextRequest) {
     for (const item of cart.items) {
       const product = item.product as InstanceType<typeof Product>
       const price = product.discountPrice || product.price
+      const assignment = await assignProductSeller(
+        product._id.toString(),
+        product.seller.toString(),
+        item.quantity
+      )
       orderItems.push({
         product: product._id,
         title: product.title,
@@ -65,7 +73,9 @@ export async function GET(req: NextRequest) {
         price,
         originalPrice: product.price,
         quantity: item.quantity,
-        seller: product.seller,
+        seller: assignment.sellerId,
+        assignmentRule:   assignment.rule,
+        assignmentReason: assignment.reason,
       })
     }
 
@@ -84,7 +94,6 @@ export async function GET(req: NextRequest) {
       couponCode: pending.couponCode,
       trackingNumber: generateTrackingNumber(),
       stripePaymentIntentId: verification.transactionUuid,
-      invoiceNumber: 'INV-' + Date.now().toString(36).toUpperCase(),
     })
 
     // Decrement stock
@@ -108,6 +117,10 @@ export async function GET(req: NextRequest) {
         shippingAddress: pending.shippingAddress as { name: string; street: string; city: string; state: string },
       })
     }
+    // Split into per-seller sub-orders and log assignments (awaited before redirect)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await splitOrderBySeller(order._id.toString(), order.orderNumber, orderItems as any).catch(console.error)
+
     await notifyOrderPlaced(user._id.toString(), order.orderNumber, order._id.toString())
     await notifySellerNewOrder(
       orderItems.map((i) => ({ seller: i.seller, title: i.title })),

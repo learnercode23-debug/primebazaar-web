@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
@@ -10,6 +11,9 @@ import { generateTrackingNumber } from '@/lib/utils'
 import { sendOrderConfirmation } from '@/lib/email'
 import { notifyOrderPlaced, notifySellerNewOrder } from '@/lib/notifications'
 import { splitOrderBySeller } from '@/lib/splitOrder'
+import { assignProductSeller } from '@/lib/assignmentEngine'
+import CODSettings from '@/models/CODSettings'
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,6 +38,11 @@ export async function POST(req: NextRequest) {
       }
       const price = product.discountPrice || product.price
       subtotal += price * item.quantity
+      const assignment = await assignProductSeller(
+        product._id.toString(),
+        product.seller.toString(),
+        item.quantity
+      )
       orderItems.push({
         product: product._id,
         title: product.title,
@@ -41,12 +50,24 @@ export async function POST(req: NextRequest) {
         price,
         originalPrice: product.price,
         quantity: item.quantity,
-        seller: product.seller,
+        seller: assignment.sellerId,
+        assignmentRule:   assignment.rule,
+        assignmentReason: assignment.reason,
       })
     }
 
-    // COD delivery fee — always charge shipping (no free threshold for COD)
-    const shippingCost = deliveryOption === 'express' ? 15.99 : 9.99
+    // Shipping: same threshold as regular orders (free over Rs.50 / $50)
+    const baseShipping = subtotal > 500 ? 0 : 99
+    const shippingCost = deliveryOption === 'express' ? 199 : baseShipping
+
+    // Calculate COD handling fee from settings
+    const codSettingsForFee = await CODSettings.findOne().lean() as { handlingFee?: number; handlingFeeType?: string } | null
+    const codFeeValue = codSettingsForFee?.handlingFee ?? 50
+    const codFeeType  = codSettingsForFee?.handlingFeeType ?? 'fixed'
+    const codFee = codFeeType === 'percentage'
+      ? Math.round(subtotal * codFeeValue / 100)
+      : codFeeValue
+
     let discount = 0
 
     if (couponCode) {
@@ -65,7 +86,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const totalAmount = Math.max(0, Math.round((subtotal + shippingCost - discount) * 100) / 100)
+    const totalAmount = Math.max(0, Math.round((subtotal + shippingCost + codFee - discount) * 100) / 100)
+
+    // Generate 5-digit delivery verification code on placement
+    const deliveryCode = String(Math.floor(10000 + Math.random() * 90000))
 
     const order = await Order.create({
       user: user._id,
@@ -74,14 +98,19 @@ export async function POST(req: NextRequest) {
       paymentMethod: 'cod',
       paymentStatus: 'pending',       // paid on delivery
       status: 'confirmed',
+      deliveryCode,
+      deliveryCodeGeneratedAt: new Date(),
+      deliveryCodeAttempts: 0,
+      deliveryCodeLocked: false,
       deliveryOption,
       subtotal,
       shippingCost,
       discount,
       totalAmount,
+      codFee,
+      codRemittanceStatus: 'pending',
       couponCode: couponCode || undefined,
       trackingNumber: generateTrackingNumber(),
-      invoiceNumber: 'INV-' + Date.now().toString(36).toUpperCase(),
     })
 
     // Decrement stock
@@ -101,7 +130,8 @@ export async function POST(req: NextRequest) {
       })
     }
     // Split order into per-seller sub-orders (non-blocking)
-    splitOrderBySeller(order._id.toString(), order.orderNumber, orderItems).catch(console.error)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await splitOrderBySeller(order._id.toString(), order.orderNumber, orderItems as any).catch(console.error)
 
     await notifyOrderPlaced(user._id.toString(), order.orderNumber, order._id.toString())
     // Notify all sellers in this order (customer var already declared above)

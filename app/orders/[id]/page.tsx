@@ -125,7 +125,7 @@ export default function OrderDetailPage() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>
         <div className="flex items-center gap-2 flex-wrap">
-          {order.invoiceNumber && (
+          {order.invoiceNumber && order.status === 'delivered' && (
             <a href={`/api/orders/${id}/invoice`} target="_blank" rel="noreferrer"
               className="flex items-center gap-1 text-sm border border-gray-300 text-gray-700 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors">
               <FiDownload /> Download Invoice
@@ -147,6 +147,38 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Return form */}
+      {/* ── COD Delivery Verification Code ─────────────────────────────── */}
+      {(order as unknown as { paymentMethod?: string; deliveryCode?: string; deliveryCodeLocked?: boolean }).paymentMethod === 'cod' &&
+       ['shipped','out_for_delivery','confirmed','processing','packed'].includes(order.status) && (
+        <div className="bg-orange-50 border-2 border-orange-300 rounded-2xl p-5 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xl">🔑</div>
+            <div className="flex-1">
+              <h2 className="font-bold text-gray-900 text-base mb-0.5">Delivery Verification Code</h2>
+              <p className="text-sm text-gray-600 mb-3">
+                When the delivery agent arrives, they will ask for this code. Share it only at the door.
+              </p>
+              {(order as unknown as { deliveryCodeLocked?: boolean }).deliveryCodeLocked ? (
+                <div className="bg-red-100 border border-red-300 rounded-xl px-4 py-3 text-sm text-red-700">
+                  ⚠️ Code is locked after too many wrong attempts. Contact support.
+                </div>
+              ) : (order as unknown as { deliveryCode?: string }).deliveryCode ? (
+                <div className="bg-white border-2 border-orange-400 rounded-xl px-6 py-3 text-center shadow-sm inline-block">
+                  <p className="text-xs text-gray-500 mb-1">Your Code</p>
+                  <p className="text-4xl font-black tracking-[0.3em] text-orange-600">
+                    {(order as unknown as { deliveryCode?: string }).deliveryCode}
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 text-sm text-yellow-700">
+                  Code will appear here once your order is shipped.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {showReturnForm && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 mb-6">
           <h2 className="font-bold text-gray-900 mb-3">Request Return / Refund</h2>
