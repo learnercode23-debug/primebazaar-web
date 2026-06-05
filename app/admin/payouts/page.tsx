@@ -59,11 +59,13 @@ export default function AdminPayoutsPage() {
   const [seeding, setSeeding]   = useState(false)
 
   // Manual payout modal state
-  const [manualTarget, setManualTarget] = useState<Wallet | null>(null)
-  const [manualRef,    setManualRef]    = useState('')
-  const [manualMethod, setManualMethod] = useState('eSewa')
-  const [manualNotes,  setManualNotes]  = useState('')
-  const [paying,       setPaying]       = useState(false)
+  const [manualTarget,  setManualTarget]  = useState<Wallet | null>(null)
+  const [manualRef,     setManualRef]     = useState('')
+  const [manualMethod,  setManualMethod]  = useState('eSewa')
+  const [manualNotes,   setManualNotes]   = useState('')
+  const [paying,        setPaying]        = useState(false)
+  const [manualAccNum,  setManualAccNum]  = useState('')
+  const [savingAccNum,  setSavingAccNum]  = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -106,6 +108,27 @@ export default function AdminPayoutsPage() {
       toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Settlement failed')
     } finally {
       setRunning(false)
+    }
+  }
+
+  async function saveAccountNumber() {
+    if (!manualTarget?.bank || !manualAccNum.trim()) return
+    setSavingAccNum(true)
+    try {
+      await axios.patch('/api/admin/seller-banks', {
+        sellerId:      manualTarget.sellerId,
+        accountNumber: manualAccNum.trim(),
+      })
+      toast.success('Account number saved')
+      // Update local state so the modal reflects the saved number
+      setManualTarget({
+        ...manualTarget,
+        bank: { ...manualTarget.bank, accountNumber: manualAccNum.trim() },
+      })
+    } catch {
+      toast.error('Failed to save account number')
+    } finally {
+      setSavingAccNum(false)
     }
   }
 
@@ -209,7 +232,7 @@ export default function AdminPayoutsPage() {
                     <p className="text-xs text-amber-600">{formatPrice(w.pendingBalance)} pending</p>
                     {w.availableBalance >= 100 && (
                       <button
-                        onClick={() => { setManualTarget(w); setManualRef(''); setManualNotes('') }}
+                        onClick={() => { setManualTarget(w); setManualRef(''); setManualNotes(''); setManualAccNum(w.bank?.accountNumber || '') }}
                         className="mt-2 flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
                       >
                         <FiSend className="text-xs" /> Pay Manually
@@ -288,12 +311,29 @@ export default function AdminPayoutsPage() {
                       <p className="text-base font-bold text-gray-900 tracking-widest">{manualTarget.bank.mobileWallet}</p>
                     </div>
                   )}
-                  <div>
+                  <div className="w-full">
                     <p className="text-xs text-gray-500">{manualTarget.bank.bankName}</p>
                     {manualTarget.bank.accountNumber ? (
                       <p className="text-base font-bold text-gray-900 tracking-widest font-mono">{manualTarget.bank.accountNumber}</p>
                     ) : (
-                      <p className="text-sm text-gray-600">••••{manualTarget.bank.accountLast4}</p>
+                      <div className="mt-1">
+                        <p className="text-xs text-red-500 font-medium mb-1">⚠ Full account number not on file (••••{manualTarget.bank.accountLast4})</p>
+                        <div className="flex gap-2">
+                          <input
+                            value={manualAccNum}
+                            onChange={(e) => setManualAccNum(e.target.value)}
+                            placeholder="Enter full account number"
+                            className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-400"
+                          />
+                          <button
+                            onClick={saveAccountNumber}
+                            disabled={!manualAccNum.trim() || savingAccNum}
+                            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold rounded-lg"
+                          >
+                            {savingAccNum ? '…' : 'Save'}
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
                   {manualTarget.bank.kycStatus !== 'verified' && (
