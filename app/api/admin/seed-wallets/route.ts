@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Create verified bank account if none exists
+      const demoAccNum = `0${String(10000 + seeded).padStart(9, '0')}`
       const existingBank = await SellerBankAccount.findOne({ seller: seller._id })
       if (!existingBank) {
         await SellerBankAccount.create({
@@ -71,16 +72,19 @@ export async function POST(req: NextRequest) {
           bankName:           'Nepal Bank Ltd',
           accountHolderName:  seller.name,
           accountLast4:       String(1000 + seeded).slice(-4),
+          accountNumber:      demoAccNum,
           ifscCode:           'NBL0000001',
           isDefault:          true,
           kycStatus:          'verified',
           isVerified:         true,
           walletType:         'bank',
         })
-      } else if (existingBank.kycStatus !== 'verified') {
+      } else {
+        // Backfill accountNumber and ensure KYC is verified
         await SellerBankAccount.findByIdAndUpdate(existingBank._id, {
           kycStatus:  'verified',
           isVerified: true,
+          ...(!existingBank.accountNumber && { accountNumber: demoAccNum }),
         })
       }
 
