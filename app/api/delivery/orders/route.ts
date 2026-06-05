@@ -1,6 +1,8 @@
+export const dynamic = 'force-dynamic'
 /**
- * GET /api/delivery/orders — delivery agent's assigned COD orders
- * PUT /api/delivery/orders — update delivery status (delivered / failed / refused)
+ * GET /api/delivery/orders
+ * Returns all COD orders assigned to the current delivery agent.
+ * Works for both DeliveryAgent model users and directly-assigned users.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
@@ -13,15 +15,25 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   await connectDB()
 
-  const agent = await DeliveryAgent.findOne({ user: user._id })
-  if (!agent) return NextResponse.json({ success: false, error: 'Not a delivery agent' }, { status: 403 })
+  // Support both old DeliveryAgent model and direct User assignment
+  let agentName = user.name || 'Agent'
+  const queryOr = [
+    { deliveryCodeCollectedBy: user._id },  // new direct assignment
+  ]
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const agentDoc = await DeliveryAgent.findOne({ user: user._id }).lean() as any
+  if (agentDoc) {
+    agentName = agentDoc.name
+    queryOr.push({ deliveryAgent: agentDoc._id } as never)
+  }
 
   const orders = await Order.find({
-    deliveryAgent: agent._id,
+    $or:           queryOr,
     paymentMethod: 'cod',
-    status: { $in: ['out_for_delivery', 'delivery_failed'] },
+    status:        { $in: ['shipped', 'out_for_delivery', 'delivery_failed'] },
   })
-    .populate('user', 'name phone')
+    .populate('user', 'name phone email')
     .sort({ createdAt: -1 })
     .lean()
 
@@ -29,56 +41,11 @@ export async function GET(req: NextRequest) {
     .filter((o) => !o.codCollected)
     .reduce((sum, o) => sum + o.totalAmount, 0)
 
-  return NextResponse.json({ success: true, data: orders, totalToCollect, agentName: agent.name })
-}
-
-export async function PUT(req: NextRequest) {
-  const user = await getAuthUser(req)
-  if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-  await connectDB()
-
-  const agent = await DeliveryAgent.findOne({ user: user._id })
-  if (!agent) return NextResponse.json({ success: false, error: 'Not a delivery agent' }, { status: 403 })
-
-  const { orderId, action, failureReason, nextAttemptDate, collectedAmount } = await req.json()
-
-  const order = await Order.findOne({ _id: orderId, deliveryAgent: agent._id })
-  if (!order) return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 })
-
-  const now = new Date()
-
-  if (action === 'delivered') {
-    order.status = 'delivered'
-    order.deliveredAt = now
-    order.codCollected = true
-    order.codCollectedAt = now
-    order.codCollectedAmount = collectedAmount || order.totalAmount
-    order.paymentStatus = 'paid'
-    order.codRemittanceStatus = 'pending'
-    order.statusHistory.push({ status: 'delivered', timestamp: now, note: 'Delivered & cash collected' })
-
-    // Update agent stats
-    await DeliveryAgent.findByIdAndUpdate(agent._id, {
-      $inc: {
-        totalDeliveries: 1,
-        totalCashCollected: order.totalAmount,
-        pendingRemittance: order.totalAmount,
-      },
-    })
-
-  } else if (action === 'failed') {
-    order.status = 'delivery_failed'
-    order.deliveryAttempts += 1
-    order.deliveryFailureReason = failureReason || 'Customer not available'
-    if (nextAttemptDate) order.nextAttemptDate = new Date(nextAttemptDate)
-    order.statusHistory.push({ status: 'delivery_failed', timestamp: now, note: failureReason })
-
-  } else if (action === 'refused') {
-    order.status = 'refused'
-    order.deliveryFailureReason = failureReason || 'Customer refused delivery'
-    order.statusHistory.push({ status: 'refused', timestamp: now, note: failureReason })
-  }
-
-  await order.save()
-  return NextResponse.json({ success: true, message: `Order marked as ${action}` })
+  return NextResponse.json({
+    success: true,
+    data:    orders,
+    totalToCollect,
+    agentName,
+    agentId: user._id,
+  })
 }

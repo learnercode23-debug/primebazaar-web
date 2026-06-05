@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * POST /api/auth/otp/send
  * Body: { phone: "+9779801234567" }
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     await PhoneOtp.create({ phone, otp, expiresAt })
 
-    const smsSent = await sendSMS(phone, `Your Primebazaar verification code is: ${otp}. Valid for 5 minutes. Do not share this code.`)
+    const smsSent = await sendSMS(phone, `Your Primepasal verification code is: ${otp}. Valid for 5 minutes. Do not share this code.`)
 
     return NextResponse.json({
       success: true,

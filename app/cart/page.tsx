@@ -117,7 +117,7 @@ export default function CartPage() {
           <div className="w-20 h-20 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <FiShoppingCart className="text-3xl text-violet-600" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Your Primebazaar Cart is empty</h1>
+          <h1 className="text-2xl font-bold mb-2">Your Primepasal Cart is empty</h1>
           <p className="text-gray-500 mb-6">Looks like you haven&apos;t added anything yet.</p>
           <Link
             href="/products"

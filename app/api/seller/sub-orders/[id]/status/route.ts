@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * PUT /api/seller/sub-orders/:id/status
  * Advances a sub-order through its status pipeline.
@@ -8,6 +9,7 @@ import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import SubOrder from '@/models/SubOrder'
 import Order from '@/models/Order'
+import SellerPerformance from '@/models/SellerPerformance'
 import { deriveParentStatus } from '@/lib/splitOrder'
 
 const ALLOWED_TRANSITIONS: Record<string, string> = {
@@ -56,6 +58,53 @@ export async function PUT(
     }
 
     await sub.save()
+
+    // Auto-generate delivery verification code when a COD order ships
+    if (status === 'shipped') {
+      try {
+        const parentOrder = await Order.findById(sub.parentOrder)
+        if (parentOrder && parentOrder.paymentMethod === 'cod' && !parentOrder.deliveryCode) {
+          const code = String(Math.floor(10000 + Math.random() * 90000))
+          parentOrder.deliveryCode            = code
+          parentOrder.deliveryCodeGeneratedAt = now
+          parentOrder.deliveryCodeAttempts    = 0
+          parentOrder.deliveryCodeLocked      = false
+          await parentOrder.save()
+        }
+      } catch (codeErr) {
+        console.error('Auto-generate delivery code error:', codeErr)
+      }
+    }
+
+    // Update seller performance metrics
+    try {
+      const perf = await SellerPerformance.findOneAndUpdate(
+        { seller: sub.seller },
+        { $setOnInsert: { seller: sub.seller } },
+        { upsert: true, new: true }
+      )
+      if (perf) {
+        if (status === 'processing') {
+          // Seller accepted — check if on time
+          const onTime = sub.acceptDeadline ? now <= sub.acceptDeadline : true
+          if (onTime) perf.acceptedOnTime += 1
+          else        perf.acceptedLate   += 1
+        }
+        if (status === 'shipped') {
+          // Seller shipped — check if on time
+          const onTime = sub.shipDeadline ? now <= sub.shipDeadline : true
+          if (onTime) perf.shippedOnTime += 1
+          else        perf.shippedLate   += 1
+        }
+        if (status === 'cancelled') perf.cancelled += 1
+        if (status === 'delivered') perf.delivered += 1
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(perf as any).recompute()
+        await perf.save()
+      }
+    } catch (perfErr) {
+      console.error('Performance update error:', perfErr)
+    }
 
     // Update parent order status based on all sibling sub-orders
     const siblings = await SubOrder.find({ parentOrder: sub.parentOrder }).select('status').lean()

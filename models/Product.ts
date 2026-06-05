@@ -118,7 +118,7 @@ ProductSchema.index({ seller: 1, isApproved: 1 })
 ProductSchema.index({ salesCount: -1 })
 ProductSchema.index({ createdAt: -1 })
 ProductSchema.index({ rating: -1 })
-ProductSchema.index({ slug: 1 })
+// Note: slug index is created automatically via unique:true in the schema field definition
 
 ProductSchema.pre('save', function (next) {
   if (!this.slug && this.title) {

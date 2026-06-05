@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * GET /api/seller/sub-orders
  * Returns the logged-in seller's sub-orders with optional status filter.

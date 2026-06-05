@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
@@ -25,7 +26,11 @@ export async function GET(req: NextRequest) {
 
     const query: Record<string, unknown> = { isApproved: true }
 
-    if (category) query.category = category
+    if (category) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cat: any = await Category.findOne({ name: { $regex: `^${category}$`, $options: 'i' } }).lean()
+      query.category = cat?._id ?? null
+    }
     if (subcategory) query.subcategory = subcategory
     if (brand) query.brand = { $regex: brand, $options: 'i' }
     if (featured === 'true') query.isFeatured = true
@@ -83,7 +88,7 @@ export async function POST(req: NextRequest) {
     let categoryId = body.category
     if (categoryId && typeof categoryId === 'string' && categoryId.length < 24) {
       const cat = await Category.findOne({
-        $or: [{ slug: categoryId.toLowerCase() }, { name: { $regex: new RegExp(`^${categoryId}$`, 'i') } }]
+        $or: [{ slug: categoryId.toLowerCase() }, { name: { $regex: new RegExp(`^${categoryId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }]
       }).select('_id')
       if (cat) categoryId = cat._id
     }

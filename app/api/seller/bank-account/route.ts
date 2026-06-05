@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
@@ -42,6 +43,35 @@ export async function POST(req: NextRequest) {
     kycStatus:   'submitted',
     isVerified:  false,
   })
+
+  return NextResponse.json({ success: true, data: account })
+}
+
+export async function PATCH(req: NextRequest) {
+  const user = await getAuthUser(req)
+  if (!user || user.role !== 'seller') return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
+  await connectDB()
+
+  const { accountId, accountHolderName, bankName, accountNumber, ifscCode, mobileWallet, walletType } = await req.json()
+  if (!accountId) return NextResponse.json({ success: false, error: 'accountId required' }, { status: 400 })
+
+  const account = await SellerBankAccount.findOne({ _id: accountId, seller: user._id })
+  if (!account) return NextResponse.json({ success: false, error: 'Account not found' }, { status: 404 })
+
+  if (accountHolderName) account.accountHolderName = accountHolderName
+  if (bankName)          account.bankName          = bankName
+  if (ifscCode)          account.ifscCode          = ifscCode
+  if (mobileWallet)      account.mobileWallet      = mobileWallet
+  if (walletType)        account.walletType        = walletType
+  if (accountNumber || mobileWallet) {
+    account.accountLast4 = accountNumber
+      ? String(accountNumber).slice(-4)
+      : (mobileWallet || account.mobileWallet || '').slice(-4) || '0000'
+  }
+  // Reset KYC on edit so admin re-verifies
+  account.kycStatus  = 'submitted'
+  account.isVerified = false
+  await account.save()
 
   return NextResponse.json({ success: true, data: account })
 }

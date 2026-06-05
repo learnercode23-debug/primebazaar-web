@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * Seeds realistic multi-item orders with deliberate co-purchase patterns.
  * This gives the Apriori algorithm meaningful training data.
@@ -8,8 +9,9 @@
  *   Home combos         — vacuum + kitchen
  *   Book + coffee combo — book + kitchen appliance
  */
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
+import { getAuthUser } from '@/lib/auth'
 import Order from '@/models/Order'
 import Product from '@/models/Product'
 import User from '@/models/User'
@@ -30,7 +32,9 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const user = await getAuthUser(req)
+  if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Admin only' }, { status: 403 })
   try {
     await connectDB()
 

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
@@ -11,8 +12,8 @@ export async function POST(req: NextRequest) {
     if (!email || !otp || !newPassword) {
       return NextResponse.json({ success: false, error: 'Email, OTP and new password are required' }, { status: 400 })
     }
-    if (newPassword.length < 6) {
-      return NextResponse.json({ success: false, error: 'Password must be at least 6 characters' }, { status: 400 })
+    if (newPassword.length < 8) {
+      return NextResponse.json({ success: false, error: 'Password must be at least 8 characters' }, { status: 400 })
     }
 
     const record = await PasswordReset.findOne({

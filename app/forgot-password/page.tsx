@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
   async function handleResetPassword(e: React.FormEvent) {
     e.preventDefault()
     if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return }
-    if (newPassword.length < 6) { toast.error('Password must be at least 6 characters'); return }
+    if (newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return }
     setLoading(true)
     try {
       await axios.post('/api/auth/reset-password', { email, otp: otp.join(''), newPassword })
@@ -120,7 +120,7 @@ export default function ForgotPasswordPage() {
 
       {/* Logo */}
       <Link href="/" className="mb-8 flex items-center gap-1 group">
-        <span className="text-3xl font-black text-gray-900 tracking-tight group-hover:text-violet-700 transition-colors">primebazaar</span>
+        <span className="text-3xl font-black text-gray-900 tracking-tight group-hover:text-violet-700 transition-colors">primepasal</span>
         <span className="text-violet-600 text-4xl font-black leading-none">.</span>
       </Link>
 
@@ -252,7 +252,7 @@ export default function ForgotPasswordPage() {
                     placeholder="At least 6 characters"
                     autoFocus
                     required
-                    minLength={6}
+                    minLength={8}
                   />
                   <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
                     {showPass ? <FiEyeOff /> : <FiEye />}

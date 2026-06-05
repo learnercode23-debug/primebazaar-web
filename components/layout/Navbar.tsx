@@ -146,7 +146,7 @@ export default function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex-shrink-0 flex items-center">
-              <span className="text-white font-black text-base sm:text-xl tracking-tight">primebazaar</span>
+              <span className="text-white font-black text-base sm:text-xl tracking-tight">primepasal</span>
               <span className="text-amazon-yellow text-xl sm:text-2xl font-black leading-none">.</span>
             </Link>
 
@@ -218,6 +218,7 @@ export default function Navbar() {
                         <Link href="/orders" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiPackage /> My Orders</Link>
                         <Link href="/wishlist" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiHeart /> Wishlist</Link>
                         <Link href="/addresses" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiMapPin /> My Addresses</Link>
+                        <Link href="/support" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>💬 Help & Support</Link>
                         {(user.role === 'seller' || user.role === 'admin') && (
                           <Link href="/seller" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiPackage /> Seller Hub</Link>
                         )}
@@ -269,48 +270,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════
-          MOBILE LOCATION BAR — always visible on mobile
-          ════════════════════════════════════════════ */}
-      <div className="sm:hidden bg-[#232050] border-t border-white/10">
-        <div className="relative" ref={locationOpen ? locationMenuRef : undefined}>
-          <button
-            onClick={() => setLocationOpen(!locationOpen)}
-            className="w-full flex items-center gap-2 px-4 py-2 text-left"
-          >
-            {locating
-              ? <FiLoader className="text-amazon-yellow animate-spin text-sm flex-shrink-0" />
-              : locationSaved
-              ? <FiCheck className="text-green-400 text-sm flex-shrink-0" />
-              : <FiMapPin className="text-amazon-yellow text-sm flex-shrink-0" />
-            }
-            <div className="flex-1 min-w-0">
-              <span className="text-gray-400 text-xs">Deliver to </span>
-              <span className="text-white text-xs font-bold">
-                {locating ? 'Detecting location…' : deliveryCity}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={(e) => { e.stopPropagation(); detectLocation() }}
-                disabled={locating}
-                className="flex items-center gap-1 bg-brand-600 hover:bg-brand-700 text-white text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors disabled:opacity-60"
-              >
-                {locating ? <FiLoader className="animate-spin text-xs" /> : <FiNavigation className="text-xs" />}
-                {locating ? '…' : 'Use GPS'}
-              </button>
-              <FiChevronDown className={`text-gray-400 text-xs transition-transform flex-shrink-0 ${locationOpen ? 'rotate-180' : ''}`} />
-            </div>
-          </button>
-
-          {/* Mobile dropdown */}
-          {locationOpen && (
-            <div className="absolute top-full left-2 right-2 z-[60]">
-              <LocationDropdown />
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* ════════════════════════════════════════════
           SECONDARY NAV — desktop only
@@ -358,6 +317,7 @@ export default function Navbar() {
                 <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}><FiSettings className="text-gray-400" /> My Account</Link>
                 <Link href="/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}><FiPackage className="text-gray-400" /> My Orders</Link>
                 <Link href="/addresses" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}><FiMapPin className="text-gray-400" /> My Addresses</Link>
+                <Link href="/support" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}>💬 Help &amp; Support</Link>
                 {(user.role === 'seller' || user.role === 'admin') && (
                   <Link href="/seller" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}><FiPackage className="text-gray-400" /> Seller Hub</Link>
                 )}

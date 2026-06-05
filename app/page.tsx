@@ -7,7 +7,7 @@ import FeaturedProducts from '@/components/home/FeaturedProducts'
 import { FiTruck, FiShield, FiRefreshCw, FiHeadphones } from 'react-icons/fi'
 
 const TRUST_BADGES = [
-  { icon: FiTruck,      title: 'Free Shipping',  desc: 'Orders over $50',     color: 'text-violet-600 bg-violet-50' },
+  { icon: FiTruck,      title: 'Free Shipping',  desc: 'Orders over Rs.500',  color: 'text-violet-600 bg-violet-50' },
   { icon: FiShield,     title: 'Secure Payment', desc: 'SSL encrypted',        color: 'text-indigo-600 bg-indigo-50' },
   { icon: FiRefreshCw,  title: 'Easy Returns',   desc: '30-day return',        color: 'text-purple-600 bg-purple-50' },
   { icon: FiHeadphones, title: '24/7 Support',   desc: "Always here",          color: 'text-fuchsia-600 bg-fuchsia-50' },

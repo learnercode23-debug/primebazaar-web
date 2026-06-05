@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
@@ -17,6 +18,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     await connectDB()
     const order = await Order.findById(params.id).populate('user', 'name email')
     if (!order) return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 })
+
+    // Sellers can only ship orders that contain their products
+    if (user.role === 'seller') {
+      const sellerId = user._id.toString()
+      const ownsItem = order.items.some((item: { seller?: { toString(): string } }) => item.seller?.toString() === sellerId)
+      if (!ownsItem) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
+      }
+    }
 
     const { trackingNumber, carrier, estimatedDeliveryDays = 5 } = await req.json()
 

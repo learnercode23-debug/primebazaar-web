@@ -43,7 +43,7 @@ const emptyForm = {
 }
 
 export default function AddressesPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [addresses, setAddresses] = useState<Address[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,10 +54,11 @@ export default function AddressesPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    if (authLoading) return
     if (!user) { router.push('/login'); return }
     axios.get('/api/addresses').then((r) => setAddresses(r.data.data || []))
       .finally(() => setLoading(false))
-  }, [user, router])
+  }, [user, authLoading, router])
 
   function openAdd() { setForm(emptyForm); setEditId(null); setShowForm(true) }
   function openAddWithMap() { setShowMap(true) }

@@ -7,23 +7,32 @@ import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
 import { WishlistProvider } from '@/contexts/WishlistContext'
+import RealtimeSync from '@/components/RealtimeSync'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Primebazaar — Shop Everything',
-  description: 'Primebazaar — Your one-stop shop for electronics, fashion, home goods, and more. Best deals every day.',
+  title: 'Primepasal — Shop Everything',
+  description: 'Primepasal — Your one-stop shop for electronics, fashion, home goods, and more. Best deals every day.',
+  verification: {
+    google: 'KC4bI1RQ7DfW4PZ1gYNztEmBdP1GdsglFWGkVnk9lYQ',
+  },
   manifest: '/manifest.json',
+  icons: {
+    icon:      [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    shortcut:  '/icon.svg',
+    apple:     '/icon.svg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Primebazaar',
+    title: 'Primepasal',
   },
   other: {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
-    'application-name': 'Primebazaar',
+    'application-name': 'Primepasal',
     'msapplication-TileColor': '#1E1B4B',
     'theme-color': '#1E1B4B',
   },
@@ -47,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
+              <RealtimeSync />
               <Navbar />
               <main className="flex-1 pb-14 lg:pb-0">
                 {children}

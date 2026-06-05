@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +29,7 @@ export default function LoginPage() {
   const { login, user } = useAuth()
   const router = useRouter()
 
-  // Already logged in — redirect away from login page
+  // Already logged in â€” redirect away from login page
   useEffect(() => {
     if (user) {
       if (user.role === 'admin') router.replace('/admin')
@@ -58,7 +58,7 @@ export default function LoginPage() {
     return () => clearTimeout(t)
   }, [resendTimer])
 
-  // ── Step 1: Continue ────────────────────────────────────────────────────
+  // â”€â”€ Step 1: Continue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function handleContinue(e: React.FormEvent) {
     e.preventDefault()
     if (!input.trim()) return
@@ -95,7 +95,7 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  // ── Email sign in ────────────────────────────────────────────────────────
+  // â”€â”€ Email sign in â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -110,7 +110,7 @@ export default function LoginPage() {
     }
   }
 
-  // ── Phone OTP digit input ─────────────────────────────────────────────
+  // â”€â”€ Phone OTP digit input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function handleOtpDigit(val: string, idx: number) {
     if (val.length === 6 && /^\d{6}$/.test(val)) {
       setOtp(val.split(''))
@@ -130,7 +130,7 @@ export default function LoginPage() {
     }
   }
 
-  // ── Verify OTP ───────────────────────────────────────────────────────
+  // â”€â”€ Verify OTP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function handleVerifyOtp() {
     const code = otp.join('')
     if (code.length < 6) { toast.error('Enter all 6 digits'); return }
@@ -148,7 +148,7 @@ export default function LoginPage() {
     }
   }
 
-  // ── Resend OTP ───────────────────────────────────────────────────────
+  // â”€â”€ Resend OTP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function handleResend() {
     if (resendTimer > 0) return
     try {
@@ -172,13 +172,13 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 flex flex-col items-center justify-center py-12 px-4">
 
       <Link href="/" className="mb-8 flex items-center gap-1 group">
-        <span className="text-3xl font-black text-gray-900 tracking-tight group-hover:text-violet-700 transition-colors">primebazaar</span>
+        <span className="text-3xl font-black text-gray-900 tracking-tight group-hover:text-violet-700 transition-colors">primepasal</span>
         <span className="text-violet-600 text-4xl font-black leading-none">.</span>
       </Link>
 
       <div className="w-full max-w-sm">
 
-        {/* ── STEP 1: Email or Phone ─────────────────────────────── */}
+        {/* â”€â”€ STEP 1: Email or Phone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {step === 'email' && (
           <div className="bg-white rounded-2xl border border-violet-100 shadow-lg shadow-violet-100/50 p-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-1">Sign in</h1>
@@ -215,54 +215,36 @@ export default function LoginPage() {
                 disabled={loading || !input}
                 className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200"
               >
-                {loading ? 'Please wait…' : inputIsPhone ? 'Send OTP →' : 'Continue'}
+                {loading ? 'Please waitâ€¦' : inputIsPhone ? 'Send OTP â†’' : 'Continue'}
               </button>
             </form>
 
             <p className="text-xs text-gray-400 text-center mt-4 leading-5">
-              By continuing, you agree to Primebazaar&apos;s{' '}
+              By continuing, you agree to Primepasal&apos;s{' '}
               <Link href="/terms" className="underline hover:text-violet-600">Terms</Link> and{' '}
               <Link href="/privacy" className="underline hover:text-violet-600">Privacy Notice</Link>.
             </p>
 
             <div className="relative my-5">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-              <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">New to Primebazaar?</span></div>
+              <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">New to Primepasal?</span></div>
             </div>
 
             <Link href="/register" className="block w-full text-center border-2 border-violet-200 text-violet-700 font-semibold py-3 rounded-xl hover:bg-violet-50 transition-all text-sm">
-              Create your Primebazaar account
+              Create your Primepasal account
             </Link>
 
-            <div className="mt-6 p-4 bg-violet-50 border border-violet-100 rounded-xl">
-              <p className="text-xs font-bold text-violet-700 mb-2 flex items-center gap-1">
-                <FiZap className="text-amber-500" /> Demo accounts
-              </p>
-              <div className="space-y-1.5">
-                {[
-                  ['Customer', 'alice@customer.com', 'customer123'],
-                  ['Seller', 'tech@seller.com', 'seller123'],
-                  ['Admin', 'admin@primebazaar.com', 'admin123'],
-                ].map(([role, e, p]) => (
-                  <button key={role} onClick={() => quickLogin(e, p)}
-                    className="w-full text-left text-xs text-violet-600 hover:text-violet-800 hover:underline flex items-center gap-2">
-                    <span className="font-semibold w-16">{role}</span>
-                    <span className="text-gray-500">{e}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
-        {/* ── STEP 2a: New user (email) ─────────────────────────── */}
+        {/* â”€â”€ STEP 2a: New user (email) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {step === 'new-user' && (
           <div className="bg-white rounded-2xl border border-violet-100 shadow-lg shadow-violet-100/50 p-8">
             <button onClick={() => setStep('email')} className="flex items-center gap-1.5 text-violet-600 text-sm font-medium mb-6 hover:text-violet-800 transition-colors">
               <FiArrowLeft /> Back
             </button>
             <div className="w-14 h-14 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">👋</span>
+              <span className="text-2xl">ðŸ‘‹</span>
             </div>
             <h1 className="text-xl font-bold text-gray-900 text-center mb-1">Looks like you&apos;re new here!</h1>
             <p className="text-sm text-gray-500 text-center mb-6">
@@ -270,7 +252,7 @@ export default function LoginPage() {
             </p>
             <Link href={`/register?email=${encodeURIComponent(input)}`}
               className="block w-full text-center bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200 mb-3">
-              Create your Primebazaar account
+              Create your Primepasal account
             </Link>
             <button onClick={() => { setInput(''); setStep('email') }}
               className="block w-full text-center text-violet-600 hover:text-violet-800 text-sm font-medium py-2 transition-colors">
@@ -279,7 +261,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* ── STEP 2b: Password (email) ─────────────────────────── */}
+        {/* â”€â”€ STEP 2b: Password (email) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {step === 'password' && (
           <div className="bg-white rounded-2xl border border-violet-100 shadow-lg shadow-violet-100/50 p-8">
             <button onClick={() => { setStep('email'); setPassword('') }} className="flex items-center gap-1.5 text-violet-600 text-sm font-medium mb-6 hover:text-violet-800 transition-colors">
@@ -309,7 +291,7 @@ export default function LoginPage() {
               </div>
               <button type="submit" disabled={loading || !password}
                 className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200">
-                {loading ? 'Signing in…' : 'Sign in'}
+                {loading ? 'Signing inâ€¦' : 'Sign in'}
               </button>
             </form>
 
@@ -321,7 +303,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* ── STEP 3: Phone OTP ─────────────────────────────────── */}
+        {/* â”€â”€ STEP 3: Phone OTP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {step === 'phone-otp' && (
           <div className="bg-white rounded-2xl border border-violet-100 shadow-lg shadow-violet-100/50 p-8">
             <button onClick={() => { setStep('email'); setOtp(['','','','','','']) }} className="flex items-center gap-1.5 text-violet-600 text-sm font-medium mb-6 hover:text-violet-800">
@@ -341,7 +323,7 @@ export default function LoginPage() {
             {devOtp && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-amber-700">Dev mode — SMS not configured</p>
+                  <p className="text-xs font-bold text-amber-700">Dev mode â€” SMS not configured</p>
                   <p className="text-xs text-amber-600">OTP: <span className="font-mono font-black text-lg tracking-widest">{devOtp}</span></p>
                 </div>
                 <button onClick={() => setOtp(devOtp.split(''))}
@@ -377,7 +359,7 @@ export default function LoginPage() {
               disabled={loading || otp.join('').length < 6}
               className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200 mb-4"
             >
-              {loading ? 'Verifying…' : 'Verify & Continue'}
+              {loading ? 'Verifyingâ€¦' : 'Verify & Continue'}
             </button>
 
             {/* Resend */}
@@ -397,3 +379,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

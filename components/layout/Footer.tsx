@@ -19,7 +19,7 @@ export default function Footer() {
         <div>
           <h3 className="font-bold text-sm mb-3">Get to Know Us</h3>
           <ul className="space-y-2 text-sm text-gray-400">
-            <li><Link href="#" className="hover:underline">About Primebazaar</Link></li>
+            <li><Link href="#" className="hover:underline">About Primepasal</Link></li>
             <li><Link href="#" className="hover:underline">Careers</Link></li>
             <li><Link href="#" className="hover:underline">Press Releases</Link></li>
             <li><Link href="#" className="hover:underline">Investor Relations</Link></li>
@@ -28,10 +28,10 @@ export default function Footer() {
         <div>
           <h3 className="font-bold text-sm mb-3">Make Money with Us</h3>
           <ul className="space-y-2 text-sm text-gray-400">
-            <li><Link href="/register?role=seller" className="hover:underline">Sell on Primebazaar</Link></li>
+            <li><Link href="/register?role=seller" className="hover:underline">Sell on Primepasal</Link></li>
             <li><Link href="#" className="hover:underline">Become an Affiliate</Link></li>
             <li><Link href="#" className="hover:underline">Advertise Your Products</Link></li>
-            <li><Link href="#" className="hover:underline">Sell Apps on Primebazaar</Link></li>
+            <li><Link href="#" className="hover:underline">Sell Apps on Primepasal</Link></li>
           </ul>
         </div>
         <div>
@@ -62,7 +62,7 @@ export default function Footer() {
       {/* Bottom footer */}
       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-white font-bold text-xl">primebazaar</span>
+          <span className="text-white font-bold text-xl">primepasal</span>
           <span className="text-amazon-yellow text-2xl font-black">.</span>
         </div>
         <div className="flex gap-4">
@@ -72,7 +72,7 @@ export default function Footer() {
           <a href="#" className="text-gray-400 hover:text-white transition-colors"><FiYoutube className="text-xl" /></a>
         </div>
         <div className="text-xs text-gray-500 text-center">
-          © {new Date().getFullYear()} Primebazaar. All rights reserved.{' '}
+          © {new Date().getFullYear()} Primepasal. All rights reserved.{' '}
           <Link href="#" className="hover:underline">Privacy</Link> ·{' '}
           <Link href="#" className="hover:underline">Terms</Link>
         </div>

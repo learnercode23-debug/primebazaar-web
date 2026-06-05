@@ -1,5 +1,11 @@
 {
   "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/sla-check",
+      "schedule": "0 0 * * *"
+    }
+  ],
   "buildCommand": "next build",
   "devCommand": "next dev",
   "installCommand": "npm install",

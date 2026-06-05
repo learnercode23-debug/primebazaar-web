@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
@@ -39,7 +40,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     // Resolve category name/slug → ObjectId
     if (body.category && typeof body.category === 'string' && body.category.length < 24) {
       const cat = await Category.findOne({
-        $or: [{ slug: body.category.toLowerCase() }, { name: { $regex: new RegExp(`^${body.category}$`, 'i') } }]
+        $or: [{ slug: body.category.toLowerCase() }, { name: { $regex: new RegExp(`^${body.category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }]
       }).select('_id')
       if (cat) body.category = cat._id
     }

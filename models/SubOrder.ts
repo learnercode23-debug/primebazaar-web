@@ -56,6 +56,18 @@ export interface ISubOrder extends Document {
   trackingNumber?: string
   trackingCarrier?: string
 
+  // Assignment metadata (written by assignmentEngine at order creation)
+  assignmentRule:   string
+  assignmentReason: string
+
+  // SLA deadlines (set at creation from SLAConfig)
+  acceptDeadline?: Date   // seller must accept (move to 'processing') by this time
+  shipDeadline?:   Date   // seller must ship by this time
+  slaStatus: 'ok' | 'at_risk' | 'accept_breached' | 'ship_breached'
+  autoActionTaken: boolean   // true once the cron has acted on a breach
+  autoActionAt?:   Date
+  autoActionType?: 'cancelled' | 'reassigned'
+
   // Status history for audit trail
   statusHistory: Array<{ status: string; timestamp: Date; note?: string }>
 
@@ -96,6 +108,14 @@ const SubOrderSchema = new Schema<ISubOrder>({
   rejectionCategory: { type: String },
   trackingNumber:    { type: String },
   trackingCarrier:   { type: String },
+  assignmentRule:    { type: String, default: 'primary_seller' },
+  assignmentReason:  { type: String, default: 'Assigned at order placement' },
+  acceptDeadline:    { type: Date },
+  shipDeadline:      { type: Date },
+  slaStatus:         { type: String, enum: ['ok','at_risk','accept_breached','ship_breached'], default: 'ok' },
+  autoActionTaken:   { type: Boolean, default: false },
+  autoActionAt:      { type: Date },
+  autoActionType:    { type: String, enum: ['cancelled','reassigned'] },
   statusHistory:     [{ status: String, timestamp: { type: Date, default: Date.now }, note: String }],
 }, { timestamps: true })
 

@@ -82,6 +82,7 @@ export default function SellerEarningsPage() {
   const [nextPayoutDate, setNextPayoutDate] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [showBankForm, setShowBankForm] = useState(false)
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null)
   const [bankForm, setBankForm] = useState({
     accountHolderName: '',
     bankName: '',
@@ -94,7 +95,9 @@ export default function SellerEarningsPage() {
 
   useEffect(() => {
     if (authLoading) return
-    if (!user || user.role !== 'seller') { router.push('/'); return }
+    if (!user) { router.push('/'); return }
+    if (user.role === 'admin') { router.push('/admin/payouts'); return }
+    if (user.role !== 'seller') { router.push('/'); return }
     fetchData()
   }, [user, authLoading])
 
@@ -117,13 +120,33 @@ export default function SellerEarningsPage() {
     }
   }
 
+  function startEdit(acct: BankAccount) {
+    setEditingAccountId(acct._id)
+    setBankForm({
+      accountHolderName: acct.accountHolderName,
+      bankName: acct.bankName,
+      accountNumber: '',
+      ifscCode: '',
+      walletType: acct.walletType || 'bank',
+      mobileWallet: '',
+    })
+    setShowBankForm(true)
+  }
+
   async function saveBankAccount(e: React.FormEvent) {
     e.preventDefault()
     setSavingBank(true)
     try {
-      await axios.post('/api/seller/bank-account', bankForm)
-      toast.success('Bank account saved! KYC verification pending.')
+      if (editingAccountId) {
+        await axios.patch('/api/seller/bank-account', { ...bankForm, accountId: editingAccountId })
+        toast.success('Bank account updated! KYC re-verification pending.')
+      } else {
+        await axios.post('/api/seller/bank-account', bankForm)
+        toast.success('Bank account saved! KYC verification pending.')
+      }
       setShowBankForm(false)
+      setEditingAccountId(null)
+      setBankForm({ accountHolderName: '', bankName: '', accountNumber: '', ifscCode: '', walletType: 'bank', mobileWallet: '' })
       fetchData()
     } catch (err: unknown) {
       toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to save')
@@ -257,19 +280,27 @@ export default function SellerEarningsPage() {
 
             {bankAccounts.map((acct) => (
               <div key={acct._id} className="border border-gray-100 rounded-xl p-3 mb-2">
-                <div className="flex items-start justify-between">
-                  <div>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900">{acct.bankName}</p>
                     <p className="text-xs text-gray-500">{acct.accountHolderName}</p>
                     <p className="text-xs text-gray-400">••••{acct.accountLast4}</p>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    acct.kycStatus === 'verified' ? 'bg-green-100 text-green-700' :
-                    acct.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' :
-                    'bg-amber-100 text-amber-700'
-                  }`}>
-                    {acct.kycStatus === 'verified' ? '✓ KYC Verified' : acct.kycStatus === 'rejected' ? 'KYC Rejected' : 'KYC Pending'}
-                  </span>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${
+                      acct.kycStatus === 'verified' ? 'bg-green-100 text-green-700' :
+                      acct.kycStatus === 'rejected' ? 'bg-red-100 text-red-700' :
+                      'bg-amber-100 text-amber-700'
+                    }`}>
+                      {acct.kycStatus === 'verified' ? '✓ KYC Verified' : acct.kycStatus === 'rejected' ? 'KYC Rejected' : 'KYC Pending'}
+                    </span>
+                    <button
+                      onClick={() => startEdit(acct)}
+                      className="text-xs text-violet-600 hover:underline font-medium"
+                    >
+                      Edit
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

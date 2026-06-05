@@ -25,6 +25,13 @@ export interface IUser extends Document {
   savedAddresses: ISavedAddress[]
   wishlist: mongoose.Types.ObjectId[]
   recentlyViewed: mongoose.Types.ObjectId[]
+  address?: {
+    street?: string
+    city?: string
+    state?: string
+    zipCode?: string
+    country?: string
+  }
   storeCredit: number
   membershipTier: 'standard' | 'prime'
   membershipExpiresAt?: Date
@@ -36,6 +43,7 @@ export interface IUser extends Document {
     promotions: boolean
     newArrivals: boolean
   }
+  expoPushToken?: string   // Expo push token — set by the mobile app after login
   createdAt: Date
   comparePassword(password: string): Promise<boolean>
 }
@@ -56,7 +64,7 @@ const UserSchema = new Schema<IUser>(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, minlength: 6 },
+    password: { type: String, minlength: 8 },
     googleId: { type: String, sparse: true, unique: true },
     role: { type: String, enum: ['customer', 'seller', 'admin'], default: 'customer' },
     avatar: { type: String },
@@ -64,12 +72,20 @@ const UserSchema = new Schema<IUser>(
     savedAddresses: [SavedAddressSchema],
     wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
     recentlyViewed: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+    address: {
+      street:  { type: String, default: '' },
+      city:    { type: String, default: '' },
+      state:   { type: String, default: '' },
+      zipCode: { type: String, default: '' },
+      country: { type: String, default: 'Nepal' },
+    },
     storeCredit: { type: Number, default: 0 },
     membershipTier: { type: String, enum: ['standard', 'prime'], default: 'standard' },
     membershipExpiresAt: { type: Date },
     stripeCustomerId: { type: String },
     isActive: { type: Boolean, default: true },
     emailVerified: { type: Boolean, default: false },
+    expoPushToken: { type: String },
     notificationPrefs: {
       orderUpdates: { type: Boolean, default: true },
       promotions: { type: Boolean, default: true },

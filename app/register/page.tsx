@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,11 +23,11 @@ function RegisterForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (form.password.length < 6) { toast.error('Password must be at least 6 characters'); return }
+    if (form.password.length < 8) { toast.error('Password must be at least 8 characters'); return }
     setLoading(true)
     try {
       await register(form.name, form.email, form.password, form.role)
-      toast.success('Account created! Welcome to Primebazaar.')
+      toast.success('Account created! Welcome to Primepasal.')
       router.push(form.role === 'seller' ? '/seller' : '/')
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Registration failed'
@@ -43,7 +43,7 @@ function RegisterForm() {
       {/* Logo */}
       <Link href="/" className="mb-8 flex items-center gap-1 group">
         <span className="text-3xl font-black text-gray-900 tracking-tight group-hover:text-violet-700 transition-colors">
-          primebazaar
+          Primepasal
         </span>
         <span className="text-violet-600 text-4xl font-black leading-none">.</span>
       </Link>
@@ -55,7 +55,7 @@ function RegisterForm() {
         </Link>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Create account</h1>
-        <p className="text-sm text-gray-500 mb-6">Join millions of shoppers on Primebazaar</p>
+        <p className="text-sm text-gray-500 mb-6">Join millions of shoppers on Primepasal</p>
 
         {/* Role selector */}
         <div className="flex gap-3 mb-6">
@@ -124,9 +124,9 @@ function RegisterForm() {
                 value={form.password}
                 onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
                 className="w-full pl-10 pr-11 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all"
-                placeholder="At least 6 characters"
+                placeholder="At least 8 characters"
                 required
-                minLength={6}
+                minLength={8}
               />
               <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showPass ? <FiEyeOff /> : <FiEye />}
@@ -140,12 +140,12 @@ function RegisterForm() {
             disabled={loading}
             className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200 mt-2"
           >
-            {loading ? 'Creating account...' : 'Create your Primebazaar account'}
+            {loading ? 'Creating account...' : 'Create your Primepasal account'}
           </button>
         </form>
 
         <p className="text-xs text-gray-400 text-center mt-4 leading-5">
-          By creating an account, you agree to Primebazaar&apos;s{' '}
+          By creating an account, you agree to Primepasal&apos;s{' '}
           <Link href="/terms" className="underline hover:text-violet-600">Conditions of Use</Link>{' '}
           and <Link href="/privacy" className="underline hover:text-violet-600">Privacy Notice</Link>.
         </p>
@@ -177,3 +177,4 @@ export default function RegisterPage() {
     </Suspense>
   )
 }
+

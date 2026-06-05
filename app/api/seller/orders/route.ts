@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * GET /api/seller/orders
  * Returns orders that contain at least one item sold by this seller.

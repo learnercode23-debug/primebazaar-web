@@ -1,7 +1,7 @@
 import { Resend } from 'resend'
 import nodemailer from 'nodemailer'
 
-const BASE = process.env.NEXT_PUBLIC_BASE_URL || 'https://primebazaar-web.vercel.app'
+const BASE = process.env.NEXT_PUBLIC_BASE_URL || 'https://primepasal.com'
 
 // ── Gmail SMTP (works for ANY recipient email — no domain needed) ─────────────
 const gmailTransporter = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
@@ -16,7 +16,7 @@ const gmailTransporter = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWOR
 
 // ── Resend fallback (free plan only delivers to Resend account email) ─────────
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-const FROM   = process.env.RESEND_FROM_EMAIL || 'Primebazaar <onboarding@resend.dev>'
+const FROM   = process.env.RESEND_FROM_EMAIL || 'Primepasal <onboarding@resend.dev>'
 
 function resolveRecipient(to: string): string {
   return process.env.RESEND_TO_OVERRIDE || to
@@ -29,7 +29,7 @@ export async function sendEmail(to: string, subject: string, html: string) {
   const r = resend
   if (gmail) {
     await gmail.sendMail({
-      from: `Primebazaar <${process.env.GMAIL_USER}>`,
+      from: `Primepasal <${process.env.GMAIL_USER}>`,
       to: recipient, subject, html,
     })
     console.log('[EMAIL] Sent via Gmail SMTP to:', recipient)
@@ -47,19 +47,19 @@ export async function sendEmail(to: string, subject: string, html: string) {
 function emailWrapper(content: string) {
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Primebazaar</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Primepasal</title></head>
 <body style="margin:0;padding:0;background:#F5F3FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F3FF;padding:32px 16px">
   <tr><td align="center">
     <table width="100%" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(109,40,217,0.08)">
       <tr><td style="background:linear-gradient(135deg,#1E1B4B 0%,#4C1D95 100%);padding:28px 32px;text-align:center">
-        <h1 style="margin:0;color:#fff;font-size:28px;font-weight:900;letter-spacing:-0.5px">primebazaar<span style="color:#C4B5FD">.</span></h1>
+        <h1 style="margin:0;color:#fff;font-size:28px;font-weight:900;letter-spacing:-0.5px">primepasal<span style="color:#C4B5FD">.</span></h1>
       </td></tr>
       <tr><td style="padding:32px">${content}</td></tr>
       <tr><td style="background:#F5F3FF;padding:20px 32px;text-align:center">
         <p style="margin:0;font-size:11px;color:#9CA3AF">
-          © ${new Date().getFullYear()} Primebazaar. All rights reserved.<br>
-          <a href="${BASE}" style="color:#7C3AED;text-decoration:none">primebazaar-web.vercel.app</a>
+          © ${new Date().getFullYear()} Primepasal. All rights reserved.<br>
+          <a href="${BASE}" style="color:#7C3AED;text-decoration:none">primepasal.com</a>
         </p>
       </td></tr>
     </table>
@@ -76,7 +76,7 @@ export async function sendWelcomeEmail(to: string, name: string, role: string) {
   const content = `
     <div style="text-align:center;margin-bottom:28px">
       <div style="display:inline-block;background:#EDE9FE;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:16px">${isSeller ? '🏪' : '🛒'}</div>
-      <h2 style="margin:0 0 8px;color:#1E1B4B;font-size:24px;font-weight:800">Welcome to Primebazaar, ${name}!</h2>
+      <h2 style="margin:0 0 8px;color:#1E1B4B;font-size:24px;font-weight:800">Welcome to Primepasal, ${name}!</h2>
       <p style="margin:0;color:#6B7280;font-size:15px">Your ${isSeller ? 'seller' : 'customer'} account is ready.</p>
     </div>
     <div style="background:#F5F3FF;border-radius:12px;padding:20px;margin-bottom:24px">
@@ -99,7 +99,7 @@ export async function sendWelcomeEmail(to: string, name: string, role: string) {
     <div style="text-align:center">
       <a href="${ctaHref}" style="display:inline-block;background:#7C3AED;color:#fff;padding:14px 32px;border-radius:999px;text-decoration:none;font-weight:800;font-size:15px">${ctaText} →</a>
     </div>`
-  await sendEmail(to, `Welcome to Primebazaar, ${name}! 🎉`, emailWrapper(content))
+  await sendEmail(to, `Welcome to Primepasal, ${name}! 🎉`, emailWrapper(content))
 }
 
 // ── Login alert ───────────────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ export async function sendLoginAlert(to: string, name: string, loginTime: string
         ${ip ? `<tr><td style="padding:6px 0;font-size:13px;color:#6B7280">IP Address</td>
             <td style="padding:6px 0;font-size:13px;font-weight:600;color:#1E1B4B;text-align:right">${ip}</td></tr>` : ''}
         <tr><td style="padding:6px 0;font-size:13px;color:#6B7280">Platform</td>
-            <td style="padding:6px 0;font-size:13px;font-weight:600;color:#1E1B4B;text-align:right">Primebazaar Web</td></tr>
+            <td style="padding:6px 0;font-size:13px;font-weight:600;color:#1E1B4B;text-align:right">Primepasal Web</td></tr>
       </table>
     </div>
     <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:16px;margin-bottom:24px">
@@ -126,7 +126,7 @@ export async function sendLoginAlert(to: string, name: string, loginTime: string
     <div style="text-align:center">
       <a href="${BASE}/forgot-password" style="display:inline-block;background:#7C3AED;color:#fff;padding:14px 32px;border-radius:999px;text-decoration:none;font-weight:800;font-size:14px">Secure My Account</a>
     </div>`
-  await sendEmail(to, `New sign-in to your Primebazaar account`, emailWrapper(content))
+  await sendEmail(to, `New sign-in to your Primepasal account`, emailWrapper(content))
 }
 
 // ── Password reset OTP ────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ export async function sendPasswordOtp(to: string, otp: string, name: string) {
     <div style="text-align:center;margin-bottom:28px">
       <div style="display:inline-block;background:#EDE9FE;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:16px">🔑</div>
       <h2 style="margin:0 0 8px;color:#1E1B4B;font-size:22px;font-weight:800">Reset your password</h2>
-      <p style="margin:0;color:#6B7280;font-size:14px">Hi ${name}, use this code to reset your Primebazaar password.</p>
+      <p style="margin:0;color:#6B7280;font-size:14px">Hi ${name}, use this code to reset your Primepasal password.</p>
     </div>
     <div style="background:#F5F3FF;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center">
       <p style="margin:0 0 8px;font-size:13px;color:#7C3AED;font-weight:700;text-transform:uppercase;letter-spacing:1px">Your OTP Code</p>
@@ -145,7 +145,7 @@ export async function sendPasswordOtp(to: string, otp: string, name: string) {
     <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:16px">
       <p style="margin:0;font-size:13px;color:#991B1B">⚠️ If you didn't request this, ignore this email. Your password won't change.</p>
     </div>`
-  await sendEmail(to, `${otp} is your Primebazaar password reset code`, emailWrapper(content))
+  await sendEmail(to, `${otp} is your Primepasal password reset code`, emailWrapper(content))
 }
 
 // ── Order confirmation ────────────────────────────────────────────────────────

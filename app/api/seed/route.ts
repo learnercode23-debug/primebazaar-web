@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
+import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
+import { getAuthUser } from '@/lib/auth'
 import User from '@/models/User'
 import Product from '@/models/Product'
 import Review from '@/models/Review'
@@ -369,9 +371,11 @@ const REVIEWS_TEMPLATES = [
   { rating: 4, title: 'Solid buy', comment: 'Good product, minor things could be improved but overall satisfied.' },
 ]
 
-export async function GET() { return POST() }
+export async function GET(req: NextRequest) { return POST(req) }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const admin = await getAuthUser(req)
+  if (!admin || admin.role !== 'admin') return NextResponse.json({ error: 'Admin only' }, { status: 403 })
   try {
     await connectDB()
 

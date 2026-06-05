@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /seller/
+Disallow: /seller/*
+Disallow: /delivery/
+Disallow: /agent/
+Disallow: /api/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /profile/
+Disallow: /orders/
+Disallow: /addresses/
+
+Sitemap: https://primepasal.com/sitemap.xml

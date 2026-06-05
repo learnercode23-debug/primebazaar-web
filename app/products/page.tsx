@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 import { Product } from '@/types'
 import ProductCard from '@/components/product/ProductCard'
+import FadeIn from '@/components/ui/FadeIn'
 import FilterSidebar from '@/components/product/FilterSidebar'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Breadcrumb from '@/components/ui/Breadcrumb'
@@ -129,11 +130,19 @@ function ProductsContent() {
             </div>
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4">
-              {products.map((p) => <ProductCard key={p._id} product={p} variant="grid" />)}
+              {products.map((p, i) => (
+                <FadeIn key={p._id} delay={i * 50}>
+                  <ProductCard product={p} variant="grid" />
+                </FadeIn>
+              ))}
             </div>
           ) : (
             <div className="space-y-3">
-              {products.map((p) => <ProductCard key={p._id} product={p} variant="list" />)}
+              {products.map((p, i) => (
+                <FadeIn key={p._id} delay={i * 40}>
+                  <ProductCard product={p} variant="list" />
+                </FadeIn>
+              ))}
             </div>
           )}
 

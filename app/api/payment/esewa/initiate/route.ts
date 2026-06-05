@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
       subtotal += price * item.quantity
     }
 
-    const shippingCost = subtotal > 50 ? 0 : 5.99
+    const shippingCost = subtotal > 500 ? 0 : 99
     let discount = 0
 
     if (couponCode) {

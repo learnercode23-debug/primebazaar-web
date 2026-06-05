@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
@@ -15,14 +16,32 @@ export async function GET() {
 
 // PUT — admin only, update settings
 export async function PUT(req: NextRequest) {
-  const user = await getAuthUser(req)
-  if (!user || user.role !== 'admin') return NextResponse.json({ success: false, error: 'Admin only' }, { status: 403 })
-  await connectDB()
-  const body = await req.json()
-  const settings = await CODSettings.findOneAndUpdate(
-    {},
-    { ...body, updatedBy: user._id },
-    { upsert: true, new: true }
-  )
-  return NextResponse.json({ success: true, data: settings })
+  try {
+    const user = await getAuthUser(req)
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Admin only' }, { status: 403 })
+    }
+    await connectDB()
+    const body = await req.json()
+
+    // Only update known fields — never pass _id, __v, createdAt, updatedAt
+    const allowed: Record<string, unknown> = {}
+    if (body.maxOrderValue             != null) allowed.maxOrderValue             = Number(body.maxOrderValue)
+    if (body.handlingFee               != null) allowed.handlingFee               = Number(body.handlingFee)
+    if (body.handlingFeeType)                   allowed.handlingFeeType           = body.handlingFeeType
+    if (body.isEnabled                 != null) allowed.isEnabled                 = Boolean(body.isEnabled)
+    if (body.otpRequired               != null) allowed.otpRequired               = Boolean(body.otpRequired)
+    if (body.maxDailyOrdersPerCustomer != null) allowed.maxDailyOrdersPerCustomer = Number(body.maxDailyOrdersPerCustomer)
+    if (Array.isArray(body.serviceablePincodes)) allowed.serviceablePincodes      = body.serviceablePincodes
+
+    const settings = await CODSettings.findOneAndUpdate(
+      {},
+      { $set: allowed },
+      { upsert: true, new: true, runValidators: true }
+    )
+    return NextResponse.json({ success: true, data: settings })
+  } catch (err) {
+    console.error('COD settings save error:', err)
+    return NextResponse.json({ success: false, error: String(err) }, { status: 500 })
+  }
 }

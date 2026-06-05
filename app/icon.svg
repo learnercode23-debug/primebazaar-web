@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Dark navy background with rounded corners -->
+  <rect width="32" height="32" rx="7" fill="#1a1a2e"/>
+  <!-- White "P" letter -->
+  <text x="5" y="24" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="22" fill="white">P</text>
+  <!-- Brand yellow dot (like the logo "primebazaar.") -->
+  <circle cx="27" cy="24" r="3.5" fill="#FFC107"/>
+</svg>

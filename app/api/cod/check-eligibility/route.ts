@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * POST /api/cod/check-eligibility
  * Checks if COD is available for a given order before checkout.
@@ -15,7 +16,8 @@ export async function POST(req: NextRequest) {
   await connectDB()
   const { orderTotal, zipCode, productIds } = await req.json()
 
-  const settings = await CODSettings.findOne().lean() as {
+  // Load settings; if none exist yet, auto-create with defaults (COD enabled)
+  let settings = await CODSettings.findOne().lean() as {
     isEnabled: boolean
     maxOrderValue: number
     serviceablePincodes: string[]
@@ -25,7 +27,18 @@ export async function POST(req: NextRequest) {
     otpRequired: boolean
   } | null
 
-  if (!settings || !settings.isEnabled) {
+  if (!settings) {
+    await CODSettings.create({
+      maxOrderValue: 50000, handlingFee: 50, handlingFeeType: 'fixed',
+      isEnabled: true, otpRequired: false, maxDailyOrdersPerCustomer: 5,
+    })
+    settings = {
+      isEnabled: true, maxOrderValue: 50000, serviceablePincodes: [],
+      blockedCategories: [], handlingFee: 50, handlingFeeType: 'fixed', otpRequired: false,
+    }
+  }
+
+  if (!settings.isEnabled) {
     return NextResponse.json({ eligible: false, reason: 'COD is currently not available' })
   }
 

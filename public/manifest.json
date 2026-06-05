@@ -1,7 +1,7 @@
 {
-  "name": "Primebazaar — Shop Everything",
-  "short_name": "Primebazaar",
-  "description": "Primebazaar — Your one-stop shop for electronics, fashion, home goods, and more.",
+  "name": "Primepasal — Shop Everything",
+  "short_name": "Primepasal",
+  "description": "Primepasal — Your one-stop shop for electronics, fashion, home goods, and more.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1E1B4B",

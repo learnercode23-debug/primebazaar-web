@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
@@ -8,6 +9,7 @@ import Coupon from '@/models/Coupon'
 import { generateTrackingNumber } from '@/lib/utils'
 import { notifyOrderPlaced, notifySellerNewOrder } from '@/lib/notifications'
 import { splitOrderBySeller } from '@/lib/splitOrder'
+import { assignProductSeller } from '@/lib/assignmentEngine'
 import User from '@/models/User'
 
 export async function GET(req: NextRequest) {
@@ -62,17 +64,27 @@ export async function POST(req: NextRequest) {
       }
       const price = product.discountPrice || product.price
       subtotal += price * item.quantity
+
+      // Use assignment engine to pick the best seller (handles multi-seller products)
+      const assignment = await assignProductSeller(
+        product._id.toString(),
+        product.seller.toString(),
+        item.quantity
+      )
+
       orderItems.push({
-        product: product._id,
-        title: product.title,
-        image: product.images[0] || '',
+        product:           product._id,
+        title:             product.title,
+        image:             product.images[0] || '',
         price,
-        quantity: item.quantity,
-        seller: product.seller,
+        quantity:          item.quantity,
+        seller:            assignment.sellerId,     // assigned seller (may differ from product.seller)
+        assignmentRule:    assignment.rule,
+        assignmentReason:  assignment.reason,
       })
     }
 
-    const shippingCost = subtotal > 50 ? 0 : 5.99
+    const shippingCost = subtotal > 500 ? 0 : 99
     let discount = 0
 
     if (couponCode) {
@@ -124,7 +136,7 @@ export async function POST(req: NextRequest) {
     // Notify customer + all sellers in the order
     const customer = await User.findById(user._id).select('name').lean() as { name?: string } | null
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    splitOrderBySeller(order._id.toString(), order.orderNumber, orderItems as any).catch(console.error)
+    await splitOrderBySeller(order._id.toString(), order.orderNumber, orderItems as any).catch(console.error)
     await notifyOrderPlaced(user._id.toString(), order.orderNumber, order._id.toString())
     await notifySellerNewOrder(
       orderItems.map((i) => ({ seller: i.seller, title: i.title })),

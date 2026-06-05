@@ -337,7 +337,7 @@ export default function ProductDetailPage() {
             <div className="space-y-2 text-xs text-gray-600">
               <div className="flex items-start gap-2"><FiShield className="flex-shrink-0 mt-0.5" /> Secure transaction</div>
               <div className="flex items-start gap-2"><FiRefreshCw className="flex-shrink-0 mt-0.5" /> 30-day return policy</div>
-              <div className="flex items-start gap-2"><FiTruck className="flex-shrink-0 mt-0.5" /> Ships from Primebazaar warehouse</div>
+              <div className="flex items-start gap-2"><FiTruck className="flex-shrink-0 mt-0.5" /> Ships from Primepasal warehouse</div>
             </div>
 
             {product.tags && product.tags.length > 0 && (

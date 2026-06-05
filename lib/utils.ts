@@ -28,7 +28,10 @@ export function truncate(str: string, length: number): string {
 }
 
 export function generateTrackingNumber(): string {
-  return 'AMZ' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase()
+  const year  = new Date().getFullYear().toString().slice(-2)
+  const ts    = Date.now().toString(36).toUpperCase().slice(-5)
+  const rand  = Math.random().toString(36).slice(2, 6).toUpperCase()
+  return `PPS${year}${ts}${rand}`  // e.g. PPS26MPYG1ZZC
 }
 
 export const CATEGORIES = [

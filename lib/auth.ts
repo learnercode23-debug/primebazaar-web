@@ -3,7 +3,10 @@ import { NextRequest } from 'next/server'
 import { connectDB } from './mongodb'
 import User, { IUser } from '@/models/User'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production'
+const JWT_SECRET = process.env.JWT_SECRET ||
+  (process.env.NODE_ENV === 'production'
+    ? (() => { throw new Error('JWT_SECRET env variable is not set') })()
+    : 'dev-only-secret-not-for-production')
 
 export function signToken(userId: string, role: string): string {
   return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '7d' })

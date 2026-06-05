@@ -23,6 +23,7 @@ import SellerLedger from '@/models/SellerLedger'
 import SellerPayout from '@/models/SellerPayout'
 import SellerBankAccount from '@/models/SellerBankAccount'
 import Category from '@/models/Category'
+import { resolveCommissionRate, calculateCommission } from './commissionEngine'
 
 const COLLECTION_FEE_PCT  = 2      // 2% payment gateway cost passed to seller
 const RETURN_WINDOW_DAYS  = 7      // earnings released after 7 days post-delivery
@@ -47,16 +48,17 @@ export async function createLedgerEntry(orderId: string) {
     const existing = await SellerLedger.findOne({ order: orderId, seller: sellerId })
     if (existing) continue
 
-    // Get commission rate from product's category
-    const product = item.product as unknown as { category: string }
-    let commissionRate = 10  // default 10%
-    if (product?.category) {
-      const cat = await Category.findById(product.category).select('commission').lean() as { commission?: number } | null
-      if (cat?.commission) commissionRate = cat.commission
-    }
+    // Resolve commission rate using the priority engine (product → category → seller → global)
+    const product = item.product as unknown as { _id?: string; category?: string }
+    const resolved = await resolveCommissionRate(
+      product?._id?.toString() || item.product?.toString() || '',
+      product?.category?.toString() || null,
+      sellerId
+    )
+    const commissionRate = resolved.rate
 
     const grossAmount   = item.price * item.quantity
-    const commissionFee = Math.round(grossAmount * commissionRate / 100 * 100) / 100
+    const commissionFee = calculateCommission(grossAmount, item.quantity, resolved)
     const collectionFee = Math.round(grossAmount * COLLECTION_FEE_PCT / 100 * 100) / 100
     const netEarning    = Math.round((grossAmount - commissionFee - collectionFee) * 100) / 100
 

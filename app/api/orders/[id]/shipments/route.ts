@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * GET /api/orders/:id/shipments
  * Returns the sub-orders for a given order (for customer's order detail page).

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /**
  * POST /api/auth/otp/verify
  * Body: { phone: "+9779801234567", otp: "123456" }

@@ -51,6 +51,10 @@ export default function SellerDashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Seller Dashboard</h1>
           <p className="text-gray-500 text-sm">Welcome back, {user.name}</p>
         </div>
+        <Link href="/seller/deliveries"
+          className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2.5 rounded-full text-sm transition-colors flex items-center gap-2">
+          📸 Delivery Proofs
+        </Link>
         <Link
           href="/seller/products/new"
           className="bg-amazon-yellow hover:bg-yellow-400 text-gray-900 font-bold px-4 py-2.5 rounded-full text-sm transition-colors flex items-center gap-2"

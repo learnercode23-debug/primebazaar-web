@@ -10,6 +10,7 @@ import CountdownTimer from '@/components/ui/CountdownTimer'
 import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { cn } from '@/lib/utils'
+import { useState } from 'react'
 
 interface ProductCardProps {
   product: Product
@@ -23,6 +24,13 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
   const wishlisted = isWishlisted(product._id)
   const price = product.discountPrice || product.price
   const hasDiscount = product.discountPrice && product.discountPrice < product.price
+  const [bouncing, setBouncing] = useState(false)
+
+  function handleAddToCart() {
+    addToCart(product._id)
+    setBouncing(true)
+    setTimeout(() => setBouncing(false), 450)
+  }
 
   /* ── List variant ─────────────────────────────────────────────────────── */
   if (variant === 'list') {
@@ -48,13 +56,14 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
           {product.stock === 0 && <p className="text-xs text-red-600 font-medium mt-0.5">Out of Stock</p>}
           <div className="flex gap-2 mt-3">
             <button
-              onClick={() => addToCart(product._id)}
+              onClick={handleAddToCart}
               disabled={product.stock === 0}
               className={cn(
                 'flex-1 flex items-center justify-center gap-1 py-2 rounded-full text-sm font-semibold transition-colors',
                 inCart ? 'bg-green-100 text-green-700 border border-green-300'
                   : product.stock === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                  : 'bg-amazon-yellow hover:bg-yellow-400 text-gray-900'
+                  : 'bg-amazon-yellow hover:bg-yellow-400 text-gray-900',
+                bouncing && 'animate-cart-bounce'
               )}
             >
               <FiShoppingCart className="text-sm" />
@@ -77,7 +86,7 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
 
   /* ── Grid variant ─────────────────────────────────────────────────────── */
   return (
-    <div className="bg-white rounded-xl border border-brand-100 overflow-hidden hover:shadow-purple hover:border-brand-200 transition-all duration-200 group flex flex-col h-full">
+    <div className="bg-white rounded-xl border border-brand-100 overflow-hidden hover:shadow-purple hover:border-brand-200 hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full">
 
       {/* Image + Badges */}
       <div className="relative">
@@ -164,7 +173,7 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
           </div>
 
           <button
-            onClick={() => addToCart(product._id)}
+            onClick={handleAddToCart}
             disabled={product.stock === 0}
             className={cn(
               'w-full text-xs sm:text-sm font-semibold py-2 sm:py-2.5 rounded-full transition-all flex items-center justify-center gap-1.5',
@@ -172,7 +181,8 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
                 ? 'bg-green-100 text-green-700 border border-green-300'
                 : product.stock === 0
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-amazon-yellow hover:bg-yellow-400 text-gray-900 shadow-sm hover:shadow-md'
+                : 'bg-amazon-yellow hover:bg-yellow-400 text-gray-900 shadow-sm hover:shadow-md',
+              bouncing && 'animate-cart-bounce'
             )}
           >
             <FiShoppingCart className="text-xs sm:text-sm flex-shrink-0" />

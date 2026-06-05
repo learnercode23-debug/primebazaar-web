@@ -53,7 +53,7 @@ function KhaltiDemoContent() {
           {/* Merchant + amount */}
           <div className="text-center mb-5">
             <p className="text-sm text-gray-500">Pay to</p>
-            <p className="font-bold text-gray-900 text-base">Primebazaar Store</p>
+            <p className="font-bold text-gray-900 text-base">Primepasal Store</p>
             <p className="text-2xl font-bold text-purple-700 mt-1">Rs. {formatPrice(amount).replace('$', '')}</p>
           </div>
 

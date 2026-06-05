@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { formatPrice, formatDate } from '@/lib/utils'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { FiUsers, FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiShield, FiCpu } from 'react-icons/fi'
+// FiTrendingUp re-used for Order Tracking card
 
 interface AdminAnalytics {
   totalRevenue: number
@@ -114,6 +115,12 @@ export default function AdminDashboard() {
           { href: '/admin/returns', label: 'Returns & Refunds', desc: 'Process return and refund requests', icon: FiShoppingBag, color: 'bg-orange-50 border-orange-200' },
           { href: '/admin/seller-banks', label: 'Seller Bank KYC', desc: 'Verify seller bank accounts for payouts', icon: FiDollarSign, color: 'bg-emerald-50 border-emerald-200' },
           { href: '/admin/payouts', label: 'Seller Payouts', desc: 'Run settlements and track COD cash', icon: FiDollarSign, color: 'bg-teal-50 border-teal-200' },
+          { href: '/admin/assignments', label: 'Seller Assignments', desc: 'View, filter & reassign orders to sellers', icon: FiCpu, color: 'bg-indigo-50 border-indigo-200' },
+          { href: '/admin/tracking', label: 'Order Tracking & SLA', desc: 'SLA timers, auto-reassign, seller performance scores', icon: FiTrendingUp, color: 'bg-rose-50 border-rose-200' },
+          { href: '/admin/cod-collections', label: 'COD Collections', desc: 'Live delivery verifications, cash per agent, unlock codes', icon: FiTrendingUp, color: 'bg-green-50 border-green-200' },
+          { href: '/admin/commission', label: 'Commission Tracking', desc: 'Earnings per product, seller, category + rule management', icon: FiDollarSign, color: 'bg-violet-50 border-violet-200' },
+          { href: '/admin/support', label: 'Customer Support', desc: 'Help articles, ticket metrics, CSAT scores', icon: FiUsers, color: 'bg-cyan-50 border-cyan-200' },
+          { href: '/agent', label: 'Agent Dashboard', desc: 'Handle support tickets and customer queries', icon: FiUsers, color: 'bg-sky-50 border-sky-200' },
         ].map(({ href, label, desc, icon: Icon, color }) => (
           <Link key={href} href={href} className={`bg-white border rounded-xl p-5 hover:shadow-md transition-shadow ${color}`}>
             <Icon className="text-2xl text-gray-700 mb-2" />
