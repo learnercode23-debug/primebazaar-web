@@ -18,7 +18,7 @@ interface Wallet {
   pendingBalance: number
   availableBalance: number
   paidOutBalance: number
-  bank?: { bankName: string; accountLast4: string; accountHolderName: string; mobileWallet?: string; walletType?: string; kycStatus: string; isVerified: boolean }
+  bank?: { bankName: string; accountLast4: string; accountNumber?: string; accountHolderName: string; mobileWallet?: string; walletType?: string; kycStatus: string; isVerified: boolean }
 }
 
 interface Payout {
@@ -196,7 +196,7 @@ export default function AdminPayoutsPage() {
                     {w.bank ? (
                       <p className="text-xs mt-1">
                         {w.bank.kycStatus === 'verified'
-                          ? <span className="text-green-600">✓ {w.bank.bankName} ••••{w.bank.accountLast4}</span>
+                          ? <span className="text-green-600">✓ {w.bank.bankName} {w.bank.accountNumber || `••••${w.bank.accountLast4}`}</span>
                           : <span className="text-amber-600 flex items-center gap-0.5"><FiAlertCircle className="text-xs" /> KYC {w.bank.kycStatus}</span>}
                       </p>
                     ) : (
@@ -288,7 +288,14 @@ export default function AdminPayoutsPage() {
                       <p className="text-base font-bold text-gray-900 tracking-widest">{manualTarget.bank.mobileWallet}</p>
                     </div>
                   )}
-                  <p className="text-xs text-gray-600">{manualTarget.bank.bankName} — ••••{manualTarget.bank.accountLast4}</p>
+                  <div>
+                    <p className="text-xs text-gray-500">{manualTarget.bank.bankName}</p>
+                    {manualTarget.bank.accountNumber ? (
+                      <p className="text-base font-bold text-gray-900 tracking-widest font-mono">{manualTarget.bank.accountNumber}</p>
+                    ) : (
+                      <p className="text-sm text-gray-600">••••{manualTarget.bank.accountLast4}</p>
+                    )}
+                  </div>
                   {manualTarget.bank.kycStatus !== 'verified' && (
                     <p className="text-xs text-red-500 font-medium">⚠ KYC not verified — pay with caution</p>
                   )}

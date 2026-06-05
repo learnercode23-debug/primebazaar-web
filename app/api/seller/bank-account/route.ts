@@ -23,8 +23,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Name and bank are required' }, { status: 400 })
   }
 
-  // SECURITY: Never store full account number. Store only last 4 digits.
-  // In production: send full number to payout provider vault, store their token.
   const accountLast4 = accountNumber ? String(accountNumber).slice(-4) : mobileWallet?.slice(-4) || '0000'
 
   // If setting as default, unset all existing defaults
@@ -35,11 +33,11 @@ export async function POST(req: NextRequest) {
     accountHolderName,
     bankName,
     accountLast4,
+    accountNumber:     accountNumber ? String(accountNumber) : undefined,
     ifscCode,
     mobileWallet,
     walletType:  walletType || 'bank',
     isDefault:   true,
-    // KYC: starts as pending — admin must verify before payouts enabled
     kycStatus:   'submitted',
     isVerified:  false,
   })
@@ -67,6 +65,7 @@ export async function PATCH(req: NextRequest) {
     account.accountLast4 = accountNumber
       ? String(accountNumber).slice(-4)
       : (mobileWallet || account.mobileWallet || '').slice(-4) || '0000'
+    if (accountNumber) account.accountNumber = String(accountNumber)
   }
   // Reset KYC on edit so admin re-verifies
   account.kycStatus  = 'submitted'

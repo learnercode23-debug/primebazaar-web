@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   const sellerIds = wallets.map((w) => (w.seller as unknown as { _id: { toString(): string } })?._id?.toString() || String(w.seller))
   // Fetch all bank accounts (not just isDefault) — pick verified first, then any
   const bankAccounts = await SellerBankAccount.find({ seller: { $in: sellerIds } })
-    .select('seller bankName accountLast4 accountHolderName mobileWallet walletType kycStatus isVerified isDefault')
+    .select('seller bankName accountLast4 accountNumber accountHolderName mobileWallet walletType kycStatus isVerified isDefault')
     .sort({ kycStatus: 1, isDefault: -1 }) // verified + default first
     .lean()
   // Keep only the best account per seller (verified > default > first)

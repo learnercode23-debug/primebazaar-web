@@ -14,9 +14,8 @@ export interface ISellerBankAccount extends Document {
   seller: mongoose.Types.ObjectId
   accountHolderName: string
   bankName: string
-  // Store only last 4 digits for display — full number goes to payout provider vault
   accountLast4: string
-  // In production: store the provider's vault/token reference, not the actual number
+  accountNumber?: string  // Full account number — admin-only, for manual bank transfers
   accountToken?: string
   ifscCode?: string       // India
   routingNumber?: string  // USA
@@ -34,6 +33,7 @@ const SellerBankAccountSchema = new Schema<ISellerBankAccount>({
   accountHolderName: { type: String, required: true },
   bankName:          { type: String, required: true },
   accountLast4:      { type: String, required: true, maxlength: 4 },
+  accountNumber:     { type: String },
   accountToken:      { type: String },
   ifscCode:          { type: String },
   routingNumber:     { type: String },
