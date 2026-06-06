@@ -41,11 +41,12 @@ const QUICK_REPLIES_CUSTOMER = [
   'Can you send more photos?',
 ]
 
-function Avatar({ name, src }: { name: string; src?: string }) {
-  if (src) return <img src={src} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0"/>
+function Avatar({ name, src }: { name?: string; src?: string }) {
+  const letter = (name || '?').charAt(0).toUpperCase()
+  if (src) return <img src={src} alt={name || ''} className="w-8 h-8 rounded-full object-cover flex-shrink-0"/>
   return (
     <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm flex-shrink-0">
-      {name.charAt(0).toUpperCase()}
+      {letter}
     </div>
   )
 }
@@ -131,8 +132,8 @@ export default function ChatRoom() {
     }
   }
 
-  function useQuickReply(text: string) {
-    setText(text)
+  function applyQuickReply(reply: string) {
+    setText(reply)
     inputRef.current?.focus()
   }
 
@@ -143,7 +144,7 @@ export default function ChatRoom() {
   )
   if (!convo) return null
 
-  const other = isSeller ? convo.customer : convo.seller
+  const other = (isSeller ? convo.customer : convo.seller) || { _id: '', name: 'Unknown', avatar: undefined }
   const quickReplies = isSeller ? QUICK_REPLIES_SELLER : QUICK_REPLIES_CUSTOMER
 
   return (
@@ -238,7 +239,7 @@ export default function ChatRoom() {
       <div className="px-3 py-2 bg-gray-50 sm:border-l sm:border-r sm:border-gray-200 overflow-x-auto flex-shrink-0">
         <div className="flex gap-1.5 w-max">
           {quickReplies.map((qr, i) => (
-            <button key={i} onClick={() => useQuickReply(qr)}
+            <button key={i} onClick={() => applyQuickReply(qr)}
               className="text-xs bg-white border border-gray-200 text-gray-600 rounded-full px-3 py-1.5 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors whitespace-nowrap flex-shrink-0">
               {qr.length > 30 ? qr.slice(0, 30) + '…' : qr}
             </button>

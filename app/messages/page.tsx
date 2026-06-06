@@ -20,11 +20,13 @@ interface Conversation {
   unreadBySeller: number
 }
 
-function Avatar({ name, src, size = 10 }: { name: string; src?: string; size?: number }) {
-  if (src) return <img src={src} alt={name} className={`w-${size} h-${size} rounded-full object-cover`} />
+function Avatar({ name, src, size = 10 }: { name?: string; src?: string; size?: number }) {
+  const letter = (name || '?').charAt(0).toUpperCase()
+  const px = size * 4
+  if (src) return <img src={src} alt={name || ''} style={{ width: px, height: px }} className="rounded-full object-cover flex-shrink-0" />
   return (
-    <div className={`w-${size} h-${size} rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm flex-shrink-0`}>
-      {name.charAt(0).toUpperCase()}
+    <div style={{ width: px, height: px }} className="rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm flex-shrink-0">
+      {letter}
     </div>
   )
 }
@@ -50,6 +52,7 @@ export default function MessagesPage() {
     if (authLoading) return
     if (!user) { router.push('/login'); return }
     axios.get('/api/messages').then(r => setConversations(r.data.data || []))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [user, authLoading, router])
 
@@ -57,7 +60,7 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!user) return
     const t = setInterval(() => {
-      axios.get('/api/messages').then(r => setConversations(r.data.data || []))
+      axios.get('/api/messages').then(r => setConversations(r.data.data || [])).catch(() => {})
     }, 15000)
     return () => clearInterval(t)
   }, [user])
@@ -67,9 +70,9 @@ export default function MessagesPage() {
   const isSeller = user.role === 'seller' || user.role === 'admin'
 
   const filtered = conversations.filter(c => {
-    const other = isSeller ? c.customer.name : c.seller.name
+    const other = isSeller ? (c.customer?.name || '') : (c.seller?.name || '')
     const prod  = c.product?.title || ''
-    return (other + prod + c.lastMessage).toLowerCase().includes(search.toLowerCase())
+    return (other + prod + (c.lastMessage || '')).toLowerCase().includes(search.toLowerCase())
   })
 
   return (
@@ -114,7 +117,7 @@ export default function MessagesPage() {
       ) : (
         <div className="space-y-2">
           {filtered.map(convo => {
-            const other = isSeller ? convo.customer : convo.seller
+            const other = (isSeller ? convo.customer : convo.seller) || { _id: '', name: 'Unknown', avatar: undefined }
             const unread = isSeller ? convo.unreadBySeller : convo.unreadByCustomer
             const lastIsMe = (isSeller && convo.lastSenderRole === 'seller') ||
                              (!isSeller && convo.lastSenderRole === 'customer')
