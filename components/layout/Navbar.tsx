@@ -53,7 +53,7 @@ export default function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex-shrink-0 flex items-center">
-              <img src="/brand/logo.png" alt="PrimePasal" className="h-8 sm:h-10 w-auto"
+              <img src="/brand/logo.png" alt="PrimePasal" className="h-9 sm:h-11 w-auto"
                 onError={(e) => { (e.target as HTMLImageElement).src = '/brand/logo.svg' }} />
             </Link>
 
