@@ -53,8 +53,7 @@ export default function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex-shrink-0 flex items-center">
-              <span className="text-white font-black text-base sm:text-xl tracking-tight">primepasal</span>
-              <span className="text-amazon-yellow text-xl sm:text-2xl font-black leading-none">.</span>
+              <img src="/brand/logo.svg" alt="PrimePasal" className="h-8 sm:h-10 w-auto" />
             </Link>
 
             {/* Search — DESKTOP only (mobile has its own row below) */}

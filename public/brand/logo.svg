@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 125" width="520" height="125">
+  <defs>
+    <clipPath id="bagClip">
+      <rect x="6" y="46" width="96" height="73" rx="11"/>
+    </clipPath>
+    <linearGradient id="bagGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1B56B0"/>
+      <stop offset="100%" style="stop-color:#1540A0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ═══ BAG HANDLE ═══ -->
+  <path d="M 26 52 C 26 16 82 16 82 52"
+    fill="none" stroke="#1B56B0" stroke-width="11" stroke-linecap="round"/>
+
+  <!-- ═══ BAG BODY ═══ -->
+  <rect x="6" y="46" width="96" height="73" rx="11" fill="url(#bagGrad)"/>
+
+  <!-- Orange swoosh accent bottom-right of bag -->
+  <path d="M 48 119 Q 80 98 102 100 L 102 119 Z"
+    fill="#E8731A" clip-path="url(#bagClip)"/>
+
+  <!-- ═══ P LETTER — shadow layer (gives depth) ═══ -->
+  <text x="17" y="111"
+    font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
+    font-size="76" font-weight="900"
+    fill="#0D3888" opacity="0.5">P</text>
+
+  <!-- ═══ P LETTER — white main ═══ -->
+  <text x="14" y="108"
+    font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
+    font-size="76" font-weight="900"
+    fill="white">P</text>
+
+  <!-- Handle holes -->
+  <circle cx="26" cy="52" r="6" fill="#A8C0E8"/>
+  <circle cx="82" cy="52" r="6" fill="#A8C0E8"/>
+
+  <!-- ═══ TEXT ═══ -->
+
+  <!-- "Prime" — dark blue -->
+  <text x="115" y="102"
+    font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
+    font-size="62" font-weight="900"
+    fill="#1B56B0">Prime</text>
+
+  <!-- "Pasal" — orange -->
+  <text x="310" y="102"
+    font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
+    font-size="62" font-weight="900"
+    fill="#E8731A">Pasal</text>
+
+</svg>

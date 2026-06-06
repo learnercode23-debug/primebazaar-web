@@ -61,9 +61,8 @@ export default function Footer() {
 
       {/* Bottom footer */}
       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-white font-bold text-xl">primepasal</span>
-          <span className="text-amazon-yellow text-2xl font-black">.</span>
+        <div className="flex items-center">
+          <img src="/brand/logo.svg" alt="PrimePasal" className="h-8 w-auto brightness-0 invert" />
         </div>
         <div className="flex gap-4">
           <a href="#" className="text-gray-400 hover:text-white transition-colors"><FiFacebook className="text-xl" /></a>
