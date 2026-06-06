@@ -53,7 +53,8 @@ export default function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex-shrink-0 flex items-center">
-              <img src="/brand/logo.svg" alt="PrimePasal" className="h-8 sm:h-10 w-auto" />
+              <img src="/brand/logo.png" alt="PrimePasal" className="h-8 sm:h-10 w-auto"
+                onError={(e) => { (e.target as HTMLImageElement).src = '/brand/logo.svg' }} />
             </Link>
 
             {/* Search — DESKTOP only (mobile has its own row below) */}
