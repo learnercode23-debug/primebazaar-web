@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   FiShoppingCart, FiUser, FiMenu, FiX,
   FiHeart, FiPackage, FiLogOut, FiSettings,
-  FiChevronDown, FiMapPin, FiNavigation, FiLoader, FiCheck, FiDollarSign
+  FiChevronDown, FiMapPin, FiDollarSign
 } from 'react-icons/fi'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
@@ -14,34 +14,20 @@ import SearchAutocomplete from './SearchAutocomplete'
 import MegaMenu from './MegaMenu'
 import NotificationBell from '@/components/ui/NotificationBell'
 
-const QUICK_CITIES = ['Kathmandu', 'Pokhara', 'Lalitpur', 'Bharatpur', 'Biratnagar', 'Birgunj']
-
 export default function Navbar() {
   const { user, logout } = useAuth()
   const { itemCount } = useCart()
   const router = useRouter()
 
-  const [mobileOpen, setMobileOpen]       = useState(false)
-  const [userMenuOpen, setUserMenuOpen]   = useState(false)
-  const [locationOpen, setLocationOpen]   = useState(false)
-  const [deliveryCity, setDeliveryCity]   = useState('Set location')
-  const [locating, setLocating]           = useState(false)
-  const [locationSaved, setLocationSaved] = useState(false)
+  const [mobileOpen, setMobileOpen]     = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
 
-  const userMenuRef     = useRef<HTMLDivElement>(null)
-  const locationMenuRef = useRef<HTMLDivElement>(null)
-
-  // Restore saved location
-  useEffect(() => {
-    const saved = localStorage.getItem('deliveryCity')
-    if (saved) setDeliveryCity(saved)
-  }, [])
+  const userMenuRef = useRef<HTMLDivElement>(null)
 
   // Close dropdowns on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setUserMenuOpen(false)
-      if (locationMenuRef.current && !locationMenuRef.current.contains(e.target as Node)) setLocationOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -51,85 +37,6 @@ export default function Navbar() {
     await logout()
     setUserMenuOpen(false)
     router.push('/')
-  }
-
-  async function detectLocation() {
-    setLocating(true)
-    setLocationSaved(false)
-    try {
-      const pos = await new Promise<GeolocationPosition>((res, rej) =>
-        navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 8000 })
-      )
-      const r = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=10`,
-        { headers: { 'Accept-Language': 'en' } }
-      )
-      const data = await r.json()
-      const city = data.address?.city || data.address?.town || data.address?.village || data.address?.state || 'Your Location'
-      saveCity(city)
-    } catch {
-      alert('Unable to detect location. Please allow location access.')
-    } finally {
-      setLocating(false)
-    }
-  }
-
-  function saveCity(city: string) {
-    setDeliveryCity(city)
-    localStorage.setItem('deliveryCity', city)
-    setLocationSaved(true)
-    setLocationOpen(false)
-    setTimeout(() => setLocationSaved(false), 2000)
-  }
-
-  /* ── Location dropdown (shared by desktop + mobile) ── */
-  function LocationDropdown() {
-    return (
-      <div className="absolute top-full left-0 mt-1 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 z-[60]">
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">📍 Choose Delivery Location</p>
-
-        {/* GPS button */}
-        <button
-          onClick={detectLocation}
-          disabled={locating}
-          className="w-full flex items-center gap-2.5 px-4 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition-colors disabled:opacity-60 mb-3"
-        >
-          {locating
-            ? <><FiLoader className="animate-spin text-base flex-shrink-0" /> Detecting your location…</>
-            : <><FiNavigation className="text-base flex-shrink-0" /> Use my current location</>
-          }
-        </button>
-
-        {/* Current city display */}
-        {deliveryCity !== 'Set location' && (
-          <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2 mb-3">
-            <FiCheck className="text-green-600 flex-shrink-0" />
-            <div>
-              <p className="text-xs text-gray-500">Currently delivering to</p>
-              <p className="text-sm font-bold text-gray-900">{deliveryCity}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Quick city picks */}
-        <p className="text-xs text-gray-400 mb-2">Or pick a city:</p>
-        <div className="grid grid-cols-3 gap-1.5">
-          {QUICK_CITIES.map((city) => (
-            <button
-              key={city}
-              onClick={() => saveCity(city)}
-              className={`text-xs py-2 px-1 rounded-xl text-center transition-all font-medium ${
-                deliveryCity === city
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'bg-gray-100 hover:bg-brand-100 text-gray-700 hover:text-brand-700'
-              }`}
-            >
-              {city}
-            </button>
-          ))}
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -149,31 +56,6 @@ export default function Navbar() {
               <span className="text-white font-black text-base sm:text-xl tracking-tight">primepasal</span>
               <span className="text-amazon-yellow text-xl sm:text-2xl font-black leading-none">.</span>
             </Link>
-
-            {/* ── Deliver to — DESKTOP only ── */}
-            <div className="relative hidden xl:block flex-shrink-0" ref={locationMenuRef}>
-              <button
-                onClick={() => setLocationOpen(!locationOpen)}
-                className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition-all border ${
-                  locationOpen ? 'ring-1 ring-white border-white/30' : 'border-transparent hover:border-white/20'
-                }`}
-              >
-                {locating
-                  ? <FiLoader className="text-amazon-yellow animate-spin text-base flex-shrink-0" />
-                  : locationSaved
-                  ? <FiCheck className="text-green-400 text-base flex-shrink-0" />
-                  : <FiMapPin className="text-amazon-yellow text-base flex-shrink-0" />
-                }
-                <div className="text-left">
-                  <p className="text-[10px] text-gray-400 leading-tight">Deliver to</p>
-                  <p className="text-xs font-bold text-white leading-tight max-w-[110px] truncate">
-                    {locating ? 'Detecting…' : locationSaved ? 'Saved! ✓' : deliveryCity}
-                  </p>
-                </div>
-                <FiChevronDown className={`text-gray-400 text-xs transition-transform ${locationOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {locationOpen && <LocationDropdown />}
-            </div>
 
             {/* Search — DESKTOP only (mobile has its own row below) */}
             <div className="flex-1 min-w-0 hidden sm:block">
