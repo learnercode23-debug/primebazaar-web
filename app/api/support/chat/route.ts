@@ -17,13 +17,16 @@ async function botReply(customerId: string, userMessage: string): Promise<string
 
   // Order status intent
   if (lower.includes('order') || lower.includes('track') || lower.includes('shipping')) {
-    const recentOrder = await Order.findOne({ user: customerId })
-      .sort({ createdAt: -1 })
-      .select('orderNumber status totalAmount createdAt')
-      .lean()
-    if (recentOrder) {
-      return `Your most recent order #${recentOrder.orderNumber} is currently **${recentOrder.status}** (Rs.${recentOrder.totalAmount?.toLocaleString()}). Would you like more help with this order, or shall I connect you to a support agent?`
+    if (customerId) {
+      const recentOrder = await Order.findOne({ user: customerId })
+        .sort({ createdAt: -1 })
+        .select('orderNumber status totalAmount createdAt')
+        .lean()
+      if (recentOrder) {
+        return `Your most recent order #${recentOrder.orderNumber} is currently **${recentOrder.status}** (Rs.${recentOrder.totalAmount?.toLocaleString()}). Would you like more help with this order, or shall I connect you to a support agent?`
+      }
     }
+    return `To track your order, please go to **My Orders** in your account. If you need help with a specific order, please log in and say **"agent"** to connect with our support team.`
   }
 
   // Return/refund intent
@@ -72,14 +75,19 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getAuthUser(req)
-    if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     await connectDB()
+    const user = await getAuthUser(req)
 
     const { message } = await req.json()
     if (!message?.trim()) return NextResponse.json({ success: false, error: 'Message required' }, { status: 400 })
 
-    // Get or create active session
+    // Guest users: run bot without saving session
+    if (!user) {
+      const botResponse = await botReply('', message)
+      return NextResponse.json({ success: true, botReply: botResponse })
+    }
+
+    // Logged-in users: persist chat session
     let session = await ChatSession.findOne({
       customer: user._id,
       status:   { $in: ['active', 'waiting_agent', 'with_agent'] },
