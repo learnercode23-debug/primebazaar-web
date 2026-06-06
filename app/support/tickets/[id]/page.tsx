@@ -39,6 +39,19 @@ export default function TicketDetailPage() {
       .finally(() => setLoading(false))
   }, [id, user, authLoading, router])
 
+  // Poll for new messages every 20 seconds while ticket is open
+  useEffect(() => {
+    if (!user || loading) return
+    const interval = setInterval(async () => {
+      try {
+        const r = await axios.get(`/api/support/tickets/${id}`)
+        setMessages(r.data.data.messages || [])
+        setTicket(r.data.data.ticket)
+      } catch {}
+    }, 20000)
+    return () => clearInterval(interval)
+  }, [id, user, loading])
+
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   async function sendReply(e: React.FormEvent) {

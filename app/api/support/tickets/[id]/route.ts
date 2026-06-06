@@ -55,9 +55,7 @@ export async function PATCH(
 ) {
   try {
     const user = await getAuthUser(req)
-    if (!user || (user.role !== 'agent' && user.role !== 'admin' && user.role !== 'seller')) {
-      return NextResponse.json({ success: false, error: 'Agent/Admin only' }, { status: 403 })
-    }
+    if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     await connectDB()
 
     const ticket = await SupportTicket.findById(params.id)
@@ -66,23 +64,36 @@ export async function PATCH(
     const { status, priority, assignedAgent, csat } = await req.json()
     const now = new Date()
 
-    if (status)         ticket.status = status
-    if (priority)       ticket.priority = priority
-    if (assignedAgent)  ticket.assignedAgent = assignedAgent
-    if (csat)           ticket.csat = csat
+    // Customers can only submit CSAT on their own closed/resolved tickets
+    if (user.role === 'customer') {
+      if (ticket.customer.toString() !== user._id.toString()) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
+      }
+      if (csat) ticket.csat = csat
+      await ticket.save()
+      return NextResponse.json({ success: true, data: ticket })
+    }
 
-    // Set timestamps
+    // Agents/admins can update status, priority, assignment
+    if (user.role !== 'agent' && user.role !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Agent/Admin only' }, { status: 403 })
+    }
+
+    if (status)        ticket.status = status
+    if (priority)      ticket.priority = priority
+    if (assignedAgent) ticket.assignedAgent = assignedAgent
+    if (csat)          ticket.csat = csat
+
     if (status === 'resolved' && !ticket.resolvedAt) ticket.resolvedAt = now
     if (status === 'closed'   && !ticket.closedAt)   ticket.closedAt   = now
     if (!ticket.firstResponseAt) ticket.firstResponseAt = now
 
     await ticket.save()
 
-    // Notify customer of status change
     await createNotification(
       ticket.customer.toString(),
       'Support Ticket Updated',
-      `Your ticket #${ticket.ticketNumber} status: ${status || ticket.status}`,
+      `Your ticket #${ticket.ticketNumber} is now: ${ticket.status.replace(/_/g, ' ')}`,
       'info',
       `/support/tickets/${ticket._id}`
     ).catch(console.error)

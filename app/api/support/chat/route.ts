@@ -11,49 +11,102 @@ import ChatSession from '@/models/ChatSession'
 import HelpArticle from '@/models/HelpArticle'
 import Order from '@/models/Order'
 
-// Simple bot: find relevant articles + recent order status
 async function botReply(customerId: string, userMessage: string): Promise<string> {
   const lower = userMessage.toLowerCase()
 
-  // Order status intent
-  if (lower.includes('order') || lower.includes('track') || lower.includes('shipping')) {
+  // Greeting
+  if (/^(hi|hello|hey|namaste|namaskar|help)\b/.test(lower)) {
+    return `Namaste! 🙏 I'm the PrimePasal support bot. I can help you with:\n\n• Order tracking & status\n• Returns & refunds\n• Payment issues (Khalti, eSewa, COD)\n• Cancellations\n• Account problems\n\nWhat do you need help with today?`
+  }
+
+  // Order tracking
+  if (lower.includes('track') || lower.includes('where') || (lower.includes('order') && (lower.includes('status') || lower.includes('deliver') || lower.includes('arriv')))) {
     if (customerId) {
       const recentOrder = await Order.findOne({ user: customerId })
         .sort({ createdAt: -1 })
         .select('orderNumber status totalAmount createdAt')
         .lean()
       if (recentOrder) {
-        return `Your most recent order #${recentOrder.orderNumber} is currently **${recentOrder.status}** (Rs.${recentOrder.totalAmount?.toLocaleString()}). Would you like more help with this order, or shall I connect you to a support agent?`
+        const statusMsg: Record<string, string> = {
+          pending:    'pending confirmation',
+          confirmed:  'confirmed and being prepared',
+          processing: 'being processed',
+          shipped:    'shipped and on the way!',
+          delivered:  'delivered',
+          cancelled:  'cancelled',
+        }
+        const s = statusMsg[recentOrder.status] || recentOrder.status
+        return `Your latest order **#${recentOrder.orderNumber}** (Rs.${recentOrder.totalAmount?.toLocaleString()}) is currently **${s}**.\n\nYou can view full tracking details in [My Orders](/orders). Need more help? Say **"agent"** to talk to our team.`
       }
     }
-    return `To track your order, please go to **My Orders** in your account. If you need help with a specific order, please log in and say **"agent"** to connect with our support team.`
+    return `To track your order:\n1. Go to **My Orders** in your account menu\n2. Click on the order to see full tracking details\n\nIf you're not logged in, please [sign in](/login) first. Still having trouble? Say **"agent"** and I'll connect you with support.`
   }
 
-  // Return/refund intent
-  if (lower.includes('return') || lower.includes('refund')) {
-    return `For returns and refunds, you can go to **My Orders → Return/Refund** to request a return. Returns are accepted within 30 days of delivery. Would you like me to connect you to an agent for help with a specific return?`
+  // Return / refund
+  if (lower.includes('return') || lower.includes('refund') || lower.includes('money back') || lower.includes('feri')) {
+    return `**Return & Refund Policy:**\n\n✓ Returns accepted within **30 days** of delivery\n✓ Item must be unused and in original packaging\n✓ Refunds processed within **5-7 business days**\n\nTo request a return:\n1. Go to **My Orders**\n2. Click the order → **Request Return**\n\nFor refund to Khalti or eSewa wallet, it takes 2-3 days. For bank transfer, 5-7 days. Say **"agent"** if you need help with a specific order.`
   }
 
-  // Payment intent
-  if (lower.includes('payment') || lower.includes('pay') || lower.includes('charge')) {
-    return `For payment issues, please check your payment method and try again. If money was deducted but order wasn't placed, it will be refunded within 5-7 business days. Would you like to speak with an agent?`
+  // Khalti / eSewa payment
+  if (lower.includes('khalti') || lower.includes('esewa') || lower.includes('e-sewa')) {
+    return `**Khalti & eSewa Payments:**\n\nWe accept both Khalti and eSewa for instant payment.\n\n**If payment failed but money was deducted:**\n• Wait 24 hours — it usually reverses automatically\n• If not reversed, contact us with your transaction ID\n• Refund goes back to your Khalti/eSewa wallet\n\n**To pay with Khalti/eSewa:**\n1. Add items to cart\n2. Choose Khalti or eSewa at checkout\n3. Complete payment in the app\n\nNeed help? Say **"agent"** to connect with our payment team.`
   }
 
-  // Cancel intent
+  // COD (Cash on Delivery)
+  if (lower.includes('cod') || lower.includes('cash') || lower.includes('delivery payment') || lower.includes('cash on delivery')) {
+    return `**Cash on Delivery (COD):**\n\n✓ Available in most areas of Nepal\n✓ Pay in cash when your order arrives\n✓ A verification code will be sent to your phone — share it with the delivery person\n\n**Important:** Please keep exact change ready. Our delivery partners may not carry change.\n\nIs COD not available for your area? Some remote locations require prepayment. Say **"agent"** for help.`
+  }
+
+  // Payment issues (general)
+  if (lower.includes('payment') || lower.includes('pay') || lower.includes('charge') || lower.includes('deduct')) {
+    return `**Payment Help:**\n\n• **Payment failed?** Try again with a different method or clear your browser cache\n• **Double charged?** This auto-corrects within 24 hours — contact us with your transaction ID if it doesn't\n• **Accepted methods:** Khalti, eSewa, COD, bank transfer\n\nIf your money was deducted but no order was placed, it will be **fully refunded within 5-7 business days**. Say **"agent"** and share your transaction ID for faster help.`
+  }
+
+  // Cancel order
   if (lower.includes('cancel')) {
-    return `You can cancel an order from **My Orders** if it hasn't been shipped yet. Once shipped, you'll need to request a return after delivery. Would you like help cancelling a specific order?`
+    return `**Cancelling an Order:**\n\n✓ You can cancel **before it's shipped** from [My Orders](/orders)\n✗ Once shipped, cancellation is not possible — request a return instead after delivery\n\n**Steps to cancel:**\n1. Go to **My Orders**\n2. Click the order\n3. Select **Cancel Order**\n\nRefund (if prepaid) will be processed within 5-7 business days. Need help? Say **"agent"**.`
+  }
+
+  // Not received / missing item
+  if (lower.includes('not received') || lower.includes('missing') || lower.includes('didn\'t receive') || lower.includes('pakaina') || lower.includes('aayena')) {
+    return `**Order Not Received?**\n\nFirst, check the tracking status in [My Orders](/orders).\n\n**If it shows "Delivered" but you didn't receive it:**\n• Check with neighbors or building security\n• Look for a missed delivery notice\n• Contact us immediately — we'll investigate\n\n**If it shows "In Transit" past the expected date:**\n• Allow 1-2 extra business days\n• Check for any delivery alerts\n\nSay **"agent"** and I'll open a priority ticket for you right now.`
+  }
+
+  // Wrong item
+  if (lower.includes('wrong') || lower.includes('incorrect') || lower.includes('different')) {
+    return `**Received Wrong Item?**\n\nWe're sorry about that! Here's what to do:\n\n1. **Don't use or damage** the item\n2. Go to **My Orders → Request Return** and select "Wrong Item Received"\n3. Upload a photo of the item received\n4. We'll arrange pickup and send the correct item\n\nThis is fully covered — no extra charge. Say **"agent"** to escalate immediately and we'll prioritize your case.`
+  }
+
+  // Account / login / password
+  if (lower.includes('account') || lower.includes('login') || lower.includes('password') || lower.includes('sign in') || lower.includes('forgot')) {
+    return `**Account Help:**\n\n**Forgot password?**\n→ Go to [Login](/login) → Click "Forgot Password" → Check your email\n\n**Can't log in?**\n• Make sure your email is correct\n• Check caps lock\n• Try resetting your password\n\n**Email not verified?**\n→ Check your spam/junk folder\n\nStill stuck? Say **"agent"** and we'll help you regain access.`
+  }
+
+  // Seller / become a seller
+  if (lower.includes('seller') || lower.includes('sell') || lower.includes('bech') || lower.includes('product add')) {
+    return `**Become a Seller on PrimePasal:**\n\n✓ Free to register\n✓ Reach customers across Nepal\n✓ Easy product listing\n✓ Fast payout to Khalti/eSewa/bank\n\n**To get started:**\n1. [Register as a seller](/register?role=seller)\n2. Complete your shop profile\n3. Add your products\n4. Start selling!\n\nFor business accounts or bulk selling, say **"agent"** to talk to our seller support team.`
+  }
+
+  // Delivery time
+  if (lower.includes('delivery time') || lower.includes('how long') || lower.includes('kati din') || lower.includes('when will')) {
+    return `**Delivery Times:**\n\n📍 **Kathmandu Valley:** 1-2 business days\n📍 **Major cities** (Pokhara, Biratnagar, Butwal): 2-4 business days\n📍 **Other areas:** 4-7 business days\n\nDelivery times may vary during festivals (Dashain, Tihar) and bad weather. You'll receive SMS/notification when your order ships.\n\nCheck your specific order's estimated date in [My Orders](/orders).`
   }
 
   // Search articles
-  const articles = await HelpArticle.find({ $text: { $search: userMessage }, isPublished: true })
-    .select('title').limit(3).lean()
+  const articles = await HelpArticle.find({
+    isPublished: true,
+    $or: [
+      { title: { $regex: userMessage.split(' ').filter(w => w.length > 3).join('|'), $options: 'i' } },
+      { tags:  { $regex: userMessage.split(' ').filter(w => w.length > 3).join('|'), $options: 'i' } },
+    ]
+  }).select('title').limit(3).lean()
 
   if (articles.length > 0) {
     const list = articles.map(a => `• ${a.title}`).join('\n')
-    return `I found some articles that might help:\n${list}\n\nWould you like me to connect you with a support agent for more help?`
+    return `I found some helpful articles:\n\n${list}\n\nYou can find these in our [Help Center](/support). Still need help? Say **"agent"** to talk to a person.`
   }
 
-  return `Thank you for contacting support. I'm here to help! Could you give me more details about your issue? Or I can connect you to a human support agent right away — just say **"agent"** or **"human"**.`
+  return `I'm not sure I understand that completely. Here's what I can help with:\n\n• **Track order** — say "track my order"\n• **Return/refund** — say "I want a refund"\n• **Payment issue** — say "payment problem"\n• **Cancel order** — say "cancel my order"\n• **Khalti/eSewa** — say "khalti payment"\n\nOr say **"agent"** to connect with a human support agent right now.`
 }
 
 export async function GET(req: NextRequest) {

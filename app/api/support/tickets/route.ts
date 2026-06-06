@@ -20,13 +20,28 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
-    const filter: Record<string, unknown> = { customer: user._id }
+    // Admin/agent can see all tickets; customers only see their own
+    const filter: Record<string, unknown> = (user.role === 'admin' || user.role === 'agent')
+      ? {}
+      : { customer: user._id }
     if (status) filter.status = status
 
+    const { searchParams: sp } = new URL(req.url)
+    const priority = sp.get('priority')
+    const category = sp.get('category')
+    const q        = sp.get('q')
+    if (priority) filter.priority = priority
+    if (category) filter.category = category
+    if (q) filter.$or = [
+      { subject:      { $regex: q, $options: 'i' } },
+      { ticketNumber: { $regex: q, $options: 'i' } },
+    ]
+
     const tickets = await SupportTicket.find(filter)
+      .populate('customer',      'name email')
       .populate('assignedAgent', 'name')
-      .sort({ createdAt: -1 })
-      .limit(50)
+      .sort({ updatedAt: -1 })
+      .limit(100)
       .lean()
 
     return NextResponse.json({ success: true, data: tickets })

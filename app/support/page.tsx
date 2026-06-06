@@ -26,7 +26,7 @@ const CATEGORIES = [
 ]
 
 export default function SupportPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
   const router = useRouter()
 
   // Help center
@@ -281,21 +281,24 @@ export default function SupportPage() {
 
       {/* ══ Live Chat Widget ══ */}
       {chatOpen && (
-        <div className="fixed bottom-4 right-4 z-50 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col" style={{ height: '480px' }}>
+        <div className="fixed bottom-4 right-4 z-50 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col" style={{ height: '520px' }}>
           {/* Chat header */}
-          <div className="bg-indigo-600 text-white px-4 py-3 rounded-t-2xl flex items-center justify-between">
+          <div className="bg-indigo-600 text-white px-4 py-3 rounded-t-2xl flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"/>
-              <p className="font-bold text-sm">Support Chat</p>
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"/>
+              <div>
+                <p className="font-bold text-sm leading-none">PrimePasal Support</p>
+                <p className="text-indigo-200 text-[10px] mt-0.5">Typically replies instantly</p>
+              </div>
             </div>
             <button onClick={() => setChatOpen(false)}><FiX className="text-white/80 hover:text-white"/></button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
             {chatMsgs.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
+                <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap ${
                   msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'
                 }`}>
                   {msg.text}
@@ -304,33 +307,55 @@ export default function SupportPage() {
             ))}
             {chatBusy && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-2xl px-3 py-2 text-sm text-gray-500">
-                  <span className="animate-pulse">Typing...</span>
+                <div className="bg-gray-100 rounded-2xl px-4 py-2.5 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}/>
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}/>
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}/>
                 </div>
               </div>
             )}
             <div ref={chatEndRef}/>
           </div>
 
+          {/* Quick suggestion chips — only show when at start */}
+          {chatMsgs.length <= 1 && !escalated && (
+            <div className="px-3 pb-2 flex flex-wrap gap-1.5 flex-shrink-0">
+              {[
+                'Track my order',
+                'Return & refund',
+                'Khalti payment',
+                'Cancel order',
+                'Delivery time',
+                'Talk to agent',
+              ].map(chip => (
+                <button key={chip}
+                  onClick={() => { setChatInput(chip); setTimeout(() => sendChat(), 50) }}
+                  className="text-[11px] bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-2.5 py-1 hover:bg-indigo-100 transition-colors">
+                  {chip}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Escalate note */}
-          {!escalated && (
-            <p className="text-center text-[10px] text-gray-400 px-3 pb-1">
+          {!escalated && chatMsgs.length > 1 && (
+            <p className="text-center text-[10px] text-gray-400 px-3 pb-1 flex-shrink-0">
               Say <strong>&quot;agent&quot;</strong> to talk to a human
             </p>
           )}
 
           {/* Input */}
-          <div className="p-3 border-t flex gap-2">
+          <div className="p-3 border-t flex gap-2 flex-shrink-0">
             <input
               value={chatInput}
               onChange={e => setChatInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') sendChat() }}
-              placeholder="Type a message..."
+              placeholder={escalated ? 'Check your tickets for updates' : 'Type a message...'}
               disabled={chatBusy || escalated}
               className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
             />
             <button onClick={sendChat} disabled={chatBusy || !chatInput.trim() || escalated}
-              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white p-2.5 rounded-xl">
+              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white p-2.5 rounded-xl flex-shrink-0">
               <FiSend className="text-sm"/>
             </button>
           </div>
