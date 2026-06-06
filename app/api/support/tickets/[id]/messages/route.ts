@@ -59,9 +59,9 @@ export async function POST(
     if (notifyId && !internal) {
       await createNotification(
         notifyId,
-        'New reply on ticket',
-        `#${ticket.ticketNumber}: ${body.trim().slice(0, 80)}`,
-        'info',
+        'admin_alert',
+        `New reply on #${ticket.ticketNumber}`,
+        body.trim().slice(0, 100),
         `/support/tickets/${ticket._id}`
       ).catch(console.error)
     }

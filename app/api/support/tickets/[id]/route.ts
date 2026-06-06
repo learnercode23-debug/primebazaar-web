@@ -92,9 +92,9 @@ export async function PATCH(
 
     await createNotification(
       ticket.customer.toString(),
-      'Support Ticket Updated',
-      `Your ticket #${ticket.ticketNumber} is now: ${ticket.status.replace(/_/g, ' ')}`,
-      'info',
+      'admin_alert',
+      `Ticket #${ticket.ticketNumber} Updated`,
+      `Your ticket status is now: ${ticket.status.replace(/_/g, ' ')}`,
       `/support/tickets/${ticket._id}`
     ).catch(console.error)
 

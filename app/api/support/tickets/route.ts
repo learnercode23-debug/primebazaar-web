@@ -85,9 +85,9 @@ export async function POST(req: NextRequest) {
     for (const admin of admins) {
       await createNotification(
         admin._id.toString(),
+        'admin_alert',
         'New Support Ticket',
         `#${ticket.ticketNumber}: ${subject}`,
-        'info',
         `/agent/tickets/${ticket._id}`
       ).catch(console.error)
     }

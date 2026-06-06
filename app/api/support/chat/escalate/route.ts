@@ -68,9 +68,9 @@ export async function POST(req: NextRequest) {
     for (const admin of admins) {
       await createNotification(
         admin._id.toString(),
-        'Chat Escalated',
-        `Customer requesting human agent — Ticket #${ticket.ticketNumber}`,
-        'warning',
+        'admin_alert',
+        'Chat Escalated — Agent Requested',
+        `Customer needs human support. Ticket #${ticket.ticketNumber}`,
         `/agent/tickets/${ticket._id}`
       ).catch(console.error)
     }
