@@ -249,7 +249,7 @@ export default function ForgotPasswordPage() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full pl-10 pr-11 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all"
-                    placeholder="At least 6 characters"
+                    placeholder="At least 8 characters"
                     autoFocus
                     required
                     minLength={8}
