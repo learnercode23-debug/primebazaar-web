@@ -24,13 +24,22 @@ export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (!user) return
+  function loadNotifications() {
     axios.get('/api/notifications?limit=10').then((r) => {
       setNotifications(r.data.data || [])
       setUnreadCount(r.data.unreadCount || 0)
-    })
+    }).catch(() => {})
+  }
+
+  useEffect(() => {
+    if (!user) return
+    loadNotifications()
   }, [user])
+
+  // Re-fetch every time the panel opens so count + dots are always fresh
+  useEffect(() => {
+    if (open && user) loadNotifications()
+  }, [open])
 
   useEffect(() => {
     function click(e: MouseEvent) {
@@ -90,7 +99,7 @@ export default function NotificationBell() {
               notifications.map((n) => (
                 <div
                   key={n._id}
-                  className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${!n.isRead ? 'bg-blue-50/50' : ''}`}
+                  className={`relative px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer ${!n.isRead ? 'bg-blue-50/50' : ''}`}
                   onClick={async () => {
                     if (!n.isRead) {
                       await axios.put('/api/notifications', { notificationId: n._id })
