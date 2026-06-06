@@ -52,8 +52,8 @@ export default function Navbar() {
           <div className="flex items-center h-12 sm:h-16 gap-2 sm:gap-3">
 
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center">
-              <img src="/brand/logo.png" alt="PrimePasal" className="h-8 sm:h-10 w-auto"
+            <Link href="/" className="flex-shrink-0 flex items-center bg-white rounded-xl px-2 py-1">
+              <img src="/brand/logo.png" alt="PrimePasal" className="h-7 sm:h-9 w-auto"
                 onError={(e) => { (e.target as HTMLImageElement).src = '/brand/logo.svg' }} />
             </Link>
 
