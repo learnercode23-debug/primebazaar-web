@@ -20,9 +20,10 @@ import { addDays, format } from 'date-fns'
 
 // Valid seller-driven transitions
 const ALLOWED_TRANSITIONS: Record<string, string> = {
-  processing: 'packed',
-  packed: 'shipped',
-  shipped: 'delivered',
+  processing:       'packed',
+  packed:           'shipped',
+  shipped:          'delivered',
+  out_for_delivery: 'delivered',
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {

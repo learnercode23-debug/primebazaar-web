@@ -13,10 +13,11 @@ import SellerPerformance from '@/models/SellerPerformance'
 import { deriveParentStatus } from '@/lib/splitOrder'
 
 const ALLOWED_TRANSITIONS: Record<string, string> = {
-  confirmed:  'processing',
-  processing: 'packed',
-  packed:     'shipped',
-  shipped:    'delivered',
+  confirmed:        'processing',
+  processing:       'packed',
+  packed:           'shipped',
+  shipped:          'delivered',
+  out_for_delivery: 'delivered',
 }
 
 export async function PUT(

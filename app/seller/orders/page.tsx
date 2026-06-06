@@ -126,12 +126,13 @@ const TABS = [
 type TabStatus = typeof TABS[number]['key']
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; icon: React.ComponentType<{className?: string}> }> = {
-  confirmed:  { label: 'New Order',  bg: 'bg-orange-100', text: 'text-orange-700', icon: FiClock },
-  processing: { label: 'Accepted',   bg: 'bg-blue-100',   text: 'text-blue-700',   icon: FiCheck },
-  packed:     { label: 'Packed',     bg: 'bg-indigo-100', text: 'text-indigo-700', icon: FiPackage },
-  shipped:    { label: 'Shipped',    bg: 'bg-purple-100', text: 'text-purple-700', icon: FiTruck },
-  delivered:  { label: 'Delivered',  bg: 'bg-green-100',  text: 'text-green-700',  icon: FiCheckCircle },
-  cancelled:  { label: 'Cancelled',  bg: 'bg-red-100',    text: 'text-red-700',    icon: FiX },
+  confirmed:        { label: 'New Order',     bg: 'bg-orange-100', text: 'text-orange-700', icon: FiClock },
+  processing:       { label: 'Accepted',      bg: 'bg-blue-100',   text: 'text-blue-700',   icon: FiCheck },
+  packed:           { label: 'Packed',        bg: 'bg-indigo-100', text: 'text-indigo-700', icon: FiPackage },
+  shipped:          { label: 'Shipped',       bg: 'bg-purple-100', text: 'text-purple-700', icon: FiTruck },
+  out_for_delivery: { label: 'Out for Delivery', bg: 'bg-amber-100', text: 'text-amber-700', icon: FiTruck },
+  delivered:        { label: 'Delivered',     bg: 'bg-green-100',  text: 'text-green-700',  icon: FiCheckCircle },
+  cancelled:        { label: 'Cancelled',     bg: 'bg-red-100',    text: 'text-red-700',    icon: FiX },
 }
 
 const REJECTION_CATEGORIES = [
@@ -850,6 +851,22 @@ function ActionBar({
           Confirm Delivered
         </button>
         <p className="text-xs text-gray-400">Confirm once customer receives the item</p>
+      </div>
+    )
+  }
+
+  if (order.status === 'out_for_delivery') {
+    return (
+      <div className="px-4 pb-4 flex items-center gap-2 flex-wrap">
+        <button
+          onClick={onMarkDelivered}
+          disabled={isLoading}
+          className="flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-bold py-2.5 px-5 rounded-full text-sm transition-colors"
+        >
+          {isLoading ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiCheckCircle />}
+          Confirm Delivered
+        </button>
+        <p className="text-xs text-gray-400">Delivery agent is on the way</p>
       </div>
     )
   }
