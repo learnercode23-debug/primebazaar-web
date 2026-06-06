@@ -1,105 +1,82 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 160" width="580" height="160">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 165" width="580" height="165">
   <defs>
-    <!-- Bag body gradient (blue, darker left to lighter right) -->
-    <linearGradient id="bagGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"   style="stop-color:#1535A8"/>
-      <stop offset="50%"  style="stop-color:#1E55C0"/>
-      <stop offset="100%" style="stop-color:#2060CC"/>
+    <linearGradient id="bagGrad" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#1030AA"/>
+      <stop offset="60%"  stop-color="#1A50C8"/>
+      <stop offset="100%" stop-color="#2265D8"/>
     </linearGradient>
-    <!-- Orange swoosh gradient -->
-    <linearGradient id="swooshGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"   style="stop-color:#F07818"/>
-      <stop offset="100%" style="stop-color:#CC5500"/>
+    <linearGradient id="swooshGrad" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#CC5000"/>
+      <stop offset="100%" stop-color="#F07818"/>
     </linearGradient>
-    <!-- Handle gradient -->
-    <linearGradient id="handleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"   style="stop-color:#1840B8"/>
-      <stop offset="100%" style="stop-color:#2060CC"/>
-    </linearGradient>
-    <!-- Clip to bag body -->
-    <clipPath id="bagBody">
-      <path d="M 10 58 L 10 140 Q 10 152 22 152 L 108 152 Q 120 152 120 140 L 120 58 Z"/>
+    <clipPath id="bagClip">
+      <path d="M 10,60 L 10,152 Q 10,164 22,164 L 114,164 Q 126,164 126,152 L 126,60 Z"/>
     </clipPath>
-    <!-- Drop shadow filter -->
-    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-color="#00000033"/>
+    <filter id="dropshadow" x="-5%" y="-5%" width="115%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.28"/>
     </filter>
   </defs>
 
-  <!-- ══════════════════════════════════════
-       BAG HANDLE (thick rounded arch)
-  ══════════════════════════════════════ -->
-  <!-- Handle outer (blue ring / arch) -->
-  <path d="M 32 62 C 32 14 98 14 98 62"
-    fill="none" stroke="url(#handleGrad)" stroke-width="16"
-    stroke-linecap="round" filter="url(#shadow)"/>
-  <!-- Handle inner cutout (white = transparent look) -->
-  <path d="M 37 62 C 37 26 93 26 93 62"
-    fill="none" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+  <!-- ════════════════════════════
+       BAG HANDLE (thick rounded ring)
+  ════════════════════════════ -->
+  <path d="M 30,66 C 30,8 106,8 106,66"
+    fill="none" stroke="#1640CC" stroke-width="20" stroke-linecap="round"
+    filter="url(#dropshadow)"/>
+  <path d="M 38,66 C 38,26 98,26 98,66"
+    fill="none" stroke="white" stroke-width="6" stroke-linecap="round" opacity="0.65"/>
 
-  <!-- ══════════════════════════════════════
+  <!-- ════════════════════════════
        BAG BODY
-  ══════════════════════════════════════ -->
-  <path d="M 10 58 L 10 140 Q 10 152 22 152 L 108 152 Q 120 152 120 140 L 120 58 Z"
-    fill="url(#bagGrad)" filter="url(#shadow)"/>
+  ════════════════════════════ -->
+  <path d="M 10,60 L 10,152 Q 10,164 22,164 L 114,164 Q 126,164 126,152 L 126,60 Z"
+    fill="url(#bagGrad)" filter="url(#dropshadow)"/>
 
-  <!-- Bag body inner highlight (subtle shine, left edge) -->
-  <rect x="10" y="58" width="8" height="94" fill="white" opacity="0.06" rx="2"/>
+  <!-- Left shadow (3D depth) -->
+  <rect x="10" y="60" width="20" height="104" fill="black" opacity="0.20" rx="3"/>
 
-  <!-- ══════════════════════════════════════
-       ORANGE SWOOSH (bottom of bag)
-  ══════════════════════════════════════ -->
-  <path d="M 44 152 Q 75 118 120 122 L 120 152 Z"
-    fill="url(#swooshGrad)" clip-path="url(#bagBody)"/>
+  <!-- ════════════════════════════
+       ORANGE SWOOSH
+  ════════════════════════════ -->
+  <path d="M 42,164 Q 82,130 126,134 L 126,164 Z"
+    fill="url(#swooshGrad)" clip-path="url(#bagClip)"/>
 
-  <!-- ══════════════════════════════════════
-       P LETTER — double-P design
-  ══════════════════════════════════════ -->
+  <!-- ════════════════════════════
+       DOUBLE-P LETTER
+       Uses evenodd fill so inner holes
+       are transparent (bag shows through)
+  ════════════════════════════ -->
+  <path fill="white" fill-rule="evenodd" d="
+    M 24,72
+    L 24,156
+    L 40,156
+    L 40,150
+    L 60,150
+    Q 80,150 80,132
+    Q 80,116 60,116
+    L 40,116
+    L 40,110
+    L 62,110
+    Q 90,110 90,91
+    Q 90,72 62,72
+    Z
 
-  <!-- Main large P (bold white) -->
-  <!-- Stem -->
-  <rect x="18" y="64" width="14" height="82" rx="3" fill="white"/>
-  <!-- Bowl top bar -->
-  <rect x="18" y="64" width="40" height="12" rx="6" fill="white"/>
-  <!-- Bowl right curve -->
-  <ellipse cx="58" cy="92" rx="12" ry="28" fill="white"/>
-  <!-- Bowl fill (covers ellipse left half) -->
-  <rect x="18" y="64" width="42" height="56" fill="white"/>
-  <!-- Bowl cutout (hollow center) -->
-  <ellipse cx="52" cy="92" rx="9" ry="20" fill="url(#bagGrad)"/>
-  <!-- Cutout left edge clean -->
-  <rect x="18" y="76" width="25" height="28" fill="url(#bagGrad)"/>
+    M 40,86 L 58,86 Q 76,86 76,91 Q 76,96 58,96 L 40,96 Z
 
-  <!-- Secondary smaller P below (the second loop of the double-P) -->
-  <!-- Stem extension already covered by main stem -->
-  <!-- Second bowl bar -->
-  <rect x="18" y="118" width="32" height="10" rx="5" fill="white"/>
-  <!-- Second bowl right curve -->
-  <ellipse cx="46" cy="134" rx="10" ry="18" fill="white"/>
-  <!-- Second bowl fill -->
-  <rect x="18" y="118" width="38" height="34" fill="white"/>
-  <!-- Second bowl cutout -->
-  <ellipse cx="42" cy="134" rx="7" ry="12" fill="url(#bagGrad)"/>
-  <!-- Cutout left clean -->
-  <rect x="18" y="126" width="20" height="16" fill="url(#bagGrad)"/>
+    M 40,122 L 56,122 Q 68,122 68,130 Q 68,138 56,138 L 40,138 Z
+  "/>
 
-  <!-- Bottom of stem (below second P) -->
-  <rect x="18" y="146" width="14" height="6" rx="2" fill="white"/>
-
-  <!-- ══════════════════════════════════════
-       TEXT — "Prime" + "Pasal"
-  ══════════════════════════════════════ -->
-
-  <!-- "Prime" — dark blue -->
-  <text x="138" y="118"
+  <!-- ════════════════════════════
+       TEXT
+  ════════════════════════════ -->
+  <text x="146" y="124"
     font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
-    font-size="78" font-weight="900" letter-spacing="-1"
-    fill="#1535A8">Prime</text>
+    font-size="75" font-weight="900" letter-spacing="-1"
+    fill="#1030AA">Prime</text>
 
-  <!-- "Pasal" — orange -->
-  <text x="352" y="118"
+  <text x="358" y="124"
     font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
-    font-size="78" font-weight="900" letter-spacing="-1"
+    font-size="75" font-weight="900" letter-spacing="-1"
     fill="#E87018">Pasal</text>
 
 </svg>
