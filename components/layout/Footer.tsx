@@ -66,7 +66,7 @@ export default function Footer() {
             onError={(e) => { (e.target as HTMLImageElement).src = '/brand/logo.svg' }} />
         </div>
         <div className="flex gap-4">
-          <a href="#" className="text-gray-400 hover:text-white transition-colors"><FiFacebook className="text-xl" /></a>
+          <a href="https://www.facebook.com/primepasal" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors"><FiFacebook className="text-xl" /></a>
           <a href="#" className="text-gray-400 hover:text-white transition-colors"><FiTwitter className="text-xl" /></a>
           <a href="#" className="text-gray-400 hover:text-white transition-colors"><FiInstagram className="text-xl" /></a>
           <a href="#" className="text-gray-400 hover:text-white transition-colors"><FiYoutube className="text-xl" /></a>
