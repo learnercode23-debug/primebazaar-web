@@ -24,7 +24,8 @@ import { useWishlist } from '@/contexts/WishlistContext'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   FiShoppingCart, FiHeart, FiShare2, FiTruck, FiShield,
-  FiRefreshCw, FiStar, FiMinus, FiPlus, FiCheck, FiZap
+  FiRefreshCw, FiStar, FiMinus, FiPlus, FiCheck, FiZap,
+  FiMessageCircle, FiX, FiSend,
 } from 'react-icons/fi'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -69,6 +70,30 @@ export default function ProductDetailPage() {
   const [submittingReview, setSubmittingReview] = useState(false)
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'reviews' | 'qa'>('description')
+  const [chatOpen, setChatOpen]     = useState(false)
+  const [chatMsg, setChatMsg]       = useState('')
+  const [chatSending, setChatSending] = useState(false)
+
+  async function startChat() {
+    if (!user) { router.push('/login'); return }
+    if (!chatMsg.trim()) return
+    setChatSending(true)
+    try {
+      const sellerId = typeof product!.seller === 'string'
+        ? product!.seller
+        : (product!.seller as { _id?: string })?._id
+      const res = await axios.post('/api/messages', {
+        sellerId,
+        productId: product!._id,
+        message:   chatMsg.trim(),
+      })
+      router.push(`/messages/${res.data.data.conversationId}`)
+    } catch {
+      toast.error('Failed to start chat')
+    } finally {
+      setChatSending(false)
+    }
+  }
 
   const trackView = useCallback(async () => {
     await axios.post('/api/recently-viewed', { productId: id }).catch(() => {})
@@ -302,7 +327,7 @@ export default function ProductDetailPage() {
             </button>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <button
               onClick={() => toggleWishlist(product._id)}
               className={cn(
@@ -312,6 +337,12 @@ export default function ProductDetailPage() {
             >
               <FiHeart className={wishlisted ? 'fill-current' : ''} />
               {wishlisted ? 'Saved' : 'Add to Wishlist'}
+            </button>
+            <button
+              onClick={() => setChatOpen(true)}
+              className="flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+            >
+              <FiMessageCircle /> Chat with Seller
             </button>
             <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 transition-colors">
               <FiShare2 /> Share
@@ -500,6 +531,54 @@ export default function ProductDetailPage() {
 
       {/* Recently viewed */}
       <RecentlyViewed excludeId={id} />
+
+      {/* Chat with Seller modal */}
+      {chatOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="font-bold text-gray-900">Chat with Seller</h3>
+                <p className="text-xs text-gray-500">{sellerName} · {product.title.slice(0, 40)}{product.title.length > 40 ? '…' : ''}</p>
+              </div>
+              <button onClick={() => setChatOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                <FiX className="text-xl"/>
+              </button>
+            </div>
+
+            <div className="space-y-2 mb-3">
+              {['Is this item available?', 'What are the payment options?', 'How fast is delivery?'].map(q => (
+                <button key={q} onClick={() => setChatMsg(q)}
+                  className={`w-full text-left text-xs border rounded-xl px-3 py-2 transition-colors ${
+                    chatMsg === q ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-600 hover:border-indigo-300'
+                  }`}>
+                  {q}
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              value={chatMsg}
+              onChange={e => setChatMsg(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); startChat() } }}
+              placeholder="Write your message to the seller..."
+              rows={3}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none mb-3"
+            />
+
+            <div className="flex gap-2">
+              <button onClick={() => setChatOpen(false)}
+                className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-medium">
+                Cancel
+              </button>
+              <button onClick={startChat} disabled={!chatMsg.trim() || chatSending}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2">
+                <FiSend className="text-sm"/> {chatSending ? 'Sending…' : 'Send Message'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

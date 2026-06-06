@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { formatPrice, formatDate } from '@/lib/utils'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiPlus } from 'react-icons/fi'
+import { FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiPlus, FiMessageSquare } from 'react-icons/fi'
 
 interface Analytics {
   totalRevenue: number
@@ -104,6 +104,7 @@ export default function SellerDashboard() {
         {[
           { href: '/seller/products', label: 'Manage Products', desc: 'Add, edit, or remove your listings', icon: FiPackage, color: 'bg-purple-50 border-purple-200' },
           { href: '/seller/orders', label: 'View Orders', desc: 'See orders for your products', icon: FiShoppingBag, color: 'bg-blue-50 border-blue-200' },
+          { href: '/messages', label: 'Customer Messages', desc: 'Chat with customers about your products', icon: FiMessageSquare, color: 'bg-indigo-50 border-indigo-200' },
         ].map(({ href, label, desc, icon: Icon, color }) => (
           <Link key={href} href={href} className={`bg-white border rounded-xl p-5 hover:shadow-md transition-shadow ${color}`}>
             <Icon className="text-2xl text-gray-700 mb-2" />

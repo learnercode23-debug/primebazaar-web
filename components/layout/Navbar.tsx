@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation'
 import {
   FiShoppingCart, FiUser, FiMenu, FiX,
   FiHeart, FiPackage, FiLogOut, FiSettings,
-  FiChevronDown, FiMapPin, FiDollarSign
+  FiChevronDown, FiMapPin, FiDollarSign, FiMessageSquare,
 } from 'react-icons/fi'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
+import axios from 'axios'
 import SearchAutocomplete from './SearchAutocomplete'
 import MegaMenu from './MegaMenu'
 import NotificationBell from '@/components/ui/NotificationBell'
@@ -19,8 +20,18 @@ export default function Navbar() {
   const { itemCount } = useCart()
   const router = useRouter()
 
-  const [mobileOpen, setMobileOpen]     = useState(false)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [mobileOpen, setMobileOpen]       = useState(false)
+  const [userMenuOpen, setUserMenuOpen]   = useState(false)
+  const [unreadMessages, setUnreadMessages] = useState(0)
+
+  // Poll unread message count every 30s
+  useEffect(() => {
+    if (!user) return
+    const fetch = () => axios.get('/api/messages/unread').then(r => setUnreadMessages(r.data.count || 0)).catch(() => {})
+    fetch()
+    const t = setInterval(fetch, 30000)
+    return () => clearInterval(t)
+  }, [user])
 
   const userMenuRef = useRef<HTMLDivElement>(null)
 
@@ -123,6 +134,18 @@ export default function Navbar() {
 
               {/* Notification bell */}
               <NotificationBell />
+
+              {/* Messages */}
+              {user && (
+                <Link href="/messages" className="relative hidden md:flex items-center text-white hover:ring-1 hover:ring-white rounded p-2">
+                  <FiMessageSquare className="text-xl" />
+                  {unreadMessages > 0 && (
+                    <span className="absolute top-0.5 right-0.5 bg-indigo-500 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                      {unreadMessages > 9 ? '9+' : unreadMessages}
+                    </span>
+                  )}
+                </Link>
+              )}
 
               <Link href="/wishlist" className="hidden md:flex items-center text-white hover:ring-1 hover:ring-white rounded p-2"><FiHeart className="text-xl" /></Link>
 
