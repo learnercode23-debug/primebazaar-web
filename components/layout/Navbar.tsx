@@ -52,9 +52,12 @@ export default function Navbar() {
           <div className="flex items-center h-12 sm:h-16 gap-2 sm:gap-3">
 
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center">
-              <img src="/brand/logo.png" alt="PrimePasal" className="h-9 sm:h-11 w-auto"
-                onError={(e) => { (e.target as HTMLImageElement).src = '/brand/logo.svg' }} />
+            <Link href="/" className="flex-shrink-0 flex items-center gap-1.5">
+              <img src="/brand/bag.png" alt="" className="h-9 sm:h-11 w-auto drop-shadow-md" />
+              <span className="flex items-baseline leading-none">
+                <span className="font-black text-white text-xl sm:text-2xl tracking-tight">Prime</span>
+                <span className="font-black text-orange-400 text-xl sm:text-2xl tracking-tight">Pasal</span>
+              </span>
             </Link>
 
             {/* Search — DESKTOP only (mobile has its own row below) */}
