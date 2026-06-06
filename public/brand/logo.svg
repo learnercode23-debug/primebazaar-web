@@ -1,82 +1,94 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 165" width="580" height="165">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 165">
   <defs>
-    <linearGradient id="bagGrad" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
-      <stop offset="0%"   stop-color="#1030AA"/>
-      <stop offset="60%"  stop-color="#1A50C8"/>
-      <stop offset="100%" stop-color="#2265D8"/>
+    <linearGradient id="bagG" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#1232B0"/>
+      <stop offset="100%" stop-color="#1D58DC"/>
     </linearGradient>
-    <linearGradient id="swooshGrad" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
-      <stop offset="0%"   stop-color="#CC5000"/>
+    <linearGradient id="orgG" x1="0" y1="1" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#C84800"/>
       <stop offset="100%" stop-color="#F07818"/>
     </linearGradient>
+    <linearGradient id="hndG" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse"
+      y1="14" y2="70">
+      <stop offset="0%"   stop-color="#1848D0"/>
+      <stop offset="100%" stop-color="#0B20A0"/>
+    </linearGradient>
     <clipPath id="bagClip">
-      <path d="M 10,60 L 10,152 Q 10,164 22,164 L 114,164 Q 126,164 126,152 L 126,60 Z"/>
+      <path d="M 10,68 L 138,68 L 138,154 Q 138,164 128,164 L 20,164 Q 10,164 10,154 Z"/>
     </clipPath>
-    <filter id="dropshadow" x="-5%" y="-5%" width="115%" height="120%">
-      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.28"/>
-    </filter>
   </defs>
 
-  <!-- ════════════════════════════
-       BAG HANDLE (thick rounded ring)
-  ════════════════════════════ -->
-  <path d="M 30,66 C 30,8 106,8 106,66"
-    fill="none" stroke="#1640CC" stroke-width="20" stroke-linecap="round"
-    filter="url(#dropshadow)"/>
-  <path d="M 38,66 C 38,26 98,26 98,66"
-    fill="none" stroke="white" stroke-width="6" stroke-linecap="round" opacity="0.65"/>
+  <!-- ══════════════════════════════
+       LEFT HANDLE RING (drawn behind bag)
+  ══════════════════════════════ -->
+  <ellipse cx="46" cy="41" rx="20" ry="27"
+    fill="none" stroke="url(#hndG)" stroke-width="16"/>
+  <ellipse cx="46" cy="41" rx="10" ry="17"
+    fill="none" stroke="#6090F0" stroke-width="4" opacity="0.45"/>
 
-  <!-- ════════════════════════════
-       BAG BODY
-  ════════════════════════════ -->
-  <path d="M 10,60 L 10,152 Q 10,164 22,164 L 114,164 Q 126,164 126,152 L 126,60 Z"
-    fill="url(#bagGrad)" filter="url(#dropshadow)"/>
+  <!-- RIGHT HANDLE RING -->
+  <ellipse cx="102" cy="41" rx="20" ry="27"
+    fill="none" stroke="url(#hndG)" stroke-width="16"/>
+  <ellipse cx="102" cy="41" rx="10" ry="17"
+    fill="none" stroke="#6090F0" stroke-width="4" opacity="0.45"/>
 
-  <!-- Left shadow (3D depth) -->
-  <rect x="10" y="60" width="20" height="104" fill="black" opacity="0.20" rx="3"/>
+  <!-- ══════════════════════════════
+       BAG BODY (overlaps handle bottoms)
+  ══════════════════════════════ -->
+  <path d="M 10,68 L 138,68 L 138,154 Q 138,164 128,164 L 20,164 Q 10,164 10,154 Z"
+    fill="url(#bagG)"/>
 
-  <!-- ════════════════════════════
-       ORANGE SWOOSH
-  ════════════════════════════ -->
-  <path d="M 42,164 Q 82,130 126,134 L 126,164 Z"
-    fill="url(#swooshGrad)" clip-path="url(#bagClip)"/>
+  <!-- Dark left edge (3-D shadow) -->
+  <path d="M 10,68 L 28,68 L 28,164 L 20,164 Q 10,164 10,154 Z"
+    fill="#081890" opacity="0.65"/>
 
-  <!-- ════════════════════════════
-       DOUBLE-P LETTER
-       Uses evenodd fill so inner holes
-       are transparent (bag shows through)
-  ════════════════════════════ -->
+  <!-- ══════════════════════════════
+       LARGE ORANGE SECTION (bottom-right ~35 % of bag)
+  ══════════════════════════════ -->
+  <path d="M 46,164 Q 88,116 138,120 L 138,154 Q 138,164 128,164 Z"
+    fill="url(#orgG)" clip-path="url(#bagClip)"/>
+
+  <!-- ══════════════════════════════
+       GROMMET DOTS at handle/bag junction
+  ══════════════════════════════ -->
+  <circle cx="29"  cy="70" r="5" fill="white" opacity="0.92"/>
+  <circle cx="63"  cy="70" r="5" fill="white" opacity="0.92"/>
+  <circle cx="85"  cy="70" r="5" fill="white" opacity="0.92"/>
+  <circle cx="119" cy="70" r="5" fill="white" opacity="0.92"/>
+
+  <!-- ══════════════════════════════
+       DOUBLE-P  (fill-rule evenodd: outer boundary + two inner holes)
+  ══════════════════════════════ -->
   <path fill="white" fill-rule="evenodd" d="
-    M 24,72
-    L 24,156
-    L 40,156
-    L 40,150
-    L 60,150
-    Q 80,150 80,132
-    Q 80,116 60,116
-    L 40,116
-    L 40,110
-    L 62,110
-    Q 90,110 90,91
-    Q 90,72 62,72
+    M 30,80
+    L 68,80
+    Q 108,80 108,99
+    Q 108,118 68,118
+    L 44,118
+    L 44,124
+    L 62,124
+    Q 90,124 90,138
+    Q 90,152 62,152
+    L 44,152
+    L 44,160
+    L 30,160
     Z
 
-    M 40,86 L 58,86 Q 76,86 76,91 Q 76,96 58,96 L 40,96 Z
+    M 44,91  L 63,91  Q 94,91  94,99  Q 94,107 63,107 L 44,107 Z
 
-    M 40,122 L 56,122 Q 68,122 68,130 Q 68,138 56,138 L 40,138 Z
+    M 44,130 L 58,130 Q 78,130 78,138 Q 78,146 58,146 L 44,146 Z
   "/>
 
-  <!-- ════════════════════════════
+  <!-- ══════════════════════════════
        TEXT
-  ════════════════════════════ -->
-  <text x="146" y="124"
+  ══════════════════════════════ -->
+  <text x="158" y="122"
     font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
-    font-size="75" font-weight="900" letter-spacing="-1"
-    fill="#1030AA">Prime</text>
+    font-size="72" font-weight="900" letter-spacing="-1"
+    fill="#1232B0">Prime</text>
 
-  <text x="358" y="124"
+  <text x="366" y="122"
     font-family="'Arial Black', 'Arial Bold', Arial, sans-serif"
-    font-size="75" font-weight="900" letter-spacing="-1"
+    font-size="72" font-weight="900" letter-spacing="-1"
     fill="#E87018">Pasal</text>
-
 </svg>
