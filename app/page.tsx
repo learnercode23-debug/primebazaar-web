@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import Link from 'next/link'
 import HeroBanner from '@/components/home/HeroBanner'
 import CategorySection from '@/components/home/CategorySection'
 import DealOfTheDay from '@/components/home/DealOfTheDay'
@@ -7,10 +8,10 @@ import FeaturedProducts from '@/components/home/FeaturedProducts'
 import { FiTruck, FiShield, FiRefreshCw, FiHeadphones } from 'react-icons/fi'
 
 const TRUST_BADGES = [
-  { icon: FiTruck,      title: 'Free Shipping',  desc: 'Orders over Rs.500',  color: 'text-violet-600 bg-violet-50' },
-  { icon: FiShield,     title: 'Secure Payment', desc: 'SSL encrypted',        color: 'text-indigo-600 bg-indigo-50' },
-  { icon: FiRefreshCw,  title: 'Easy Returns',   desc: '30-day return',        color: 'text-purple-600 bg-purple-50' },
-  { icon: FiHeadphones, title: '24/7 Support',   desc: "Always here",          color: 'text-fuchsia-600 bg-fuchsia-50' },
+  { icon: FiTruck,      title: 'Free Shipping',  desc: 'Orders over Rs.500',  color: 'text-violet-600 bg-violet-50', href: '/products?sort=createdAt&order=desc' },
+  { icon: FiShield,     title: 'Secure Payment', desc: 'SSL encrypted',        color: 'text-indigo-600 bg-indigo-50', href: '/about#payment' },
+  { icon: FiRefreshCw,  title: 'Easy Returns',   desc: '30-day return',        color: 'text-purple-600 bg-purple-50', href: '/support#returns' },
+  { icon: FiHeadphones, title: '24/7 Support',   desc: "Always here",          color: 'text-fuchsia-600 bg-fuchsia-50', href: '/support' },
 ]
 
 export default function HomePage() {
@@ -21,8 +22,8 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-6 sm:space-y-10">
         {/* Trust badges — 2 cols mobile, 4 cols desktop */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-          {TRUST_BADGES.map(({ icon: Icon, title, desc, color }) => (
-            <div key={title} className="bg-white border border-brand-100 rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3 hover:shadow-purple transition-all">
+          {TRUST_BADGES.map(({ icon: Icon, title, desc, color, href }) => (
+            <Link key={title} href={href} className="bg-white border border-brand-100 rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3 hover:shadow-purple hover:border-violet-200 transition-all cursor-pointer">
               <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
                 <Icon className="text-sm sm:text-lg" />
               </div>
@@ -30,7 +31,7 @@ export default function HomePage() {
                 <p className="font-semibold text-xs sm:text-sm text-gray-900 leading-tight">{title}</p>
                 <p className="text-xs text-gray-500 hidden sm:block">{desc}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
