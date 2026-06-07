@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         'admin_alert',
         'New Support Ticket',
         `#${ticket.ticketNumber}: ${subject}`,
-        `/agent/tickets/${ticket._id}`
+        `/support/tickets/${ticket._id}`
       ).catch(console.error)
     }
 

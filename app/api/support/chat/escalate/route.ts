@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         'admin_alert',
         'Chat Escalated — Agent Requested',
         `Customer needs human support. Ticket #${ticket.ticketNumber}`,
-        `/agent/tickets/${ticket._id}`
+        `/support/tickets/${ticket._id}`
       ).catch(console.error)
     }
 
