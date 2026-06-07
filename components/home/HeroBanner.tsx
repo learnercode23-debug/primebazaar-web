@@ -3,41 +3,52 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { FiChevronLeft, FiChevronRight, FiZap } from 'react-icons/fi'
+import { FiChevronLeft, FiChevronRight, FiZap, FiTag, FiTrendingUp } from 'react-icons/fi'
+import type { IconType } from 'react-icons'
 
-const SLIDES = [
+const SLIDES: {
+  id: number; title: string; subtitle: string; cta: string; href: string
+  bg: string; tag: string; tagColor: string; tagIcon: IconType; badge: string
+  image: string
+}[] = [
   {
     id: 1,
     title: 'Biggest Tech Sale',
-    subtitle: 'Up to 40% off on laptops, phones & more',
+    subtitle: 'Up to 40% off on laptops, phones & more. Delivered across Nepal.',
     cta: 'Shop Electronics',
     href: '/products?category=Electronics',
     bg: 'from-[#1E1B4B] via-[#312E81] to-[#4C1D95]',
-    tag: '⚡ Up to 40% off',
+    tag: 'Up to 40% Off',
     tagColor: 'bg-amber-500 text-gray-900',
-    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800',
+    tagIcon: FiZap,
+    badge: '−40%',
+    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1200&q=85&auto=format&fit=crop',
   },
   {
     id: 2,
     title: 'Fashion That Defines You',
-    subtitle: 'New arrivals in clothing, shoes & accessories',
+    subtitle: 'New arrivals in clothing, shoes & accessories for every style.',
     cta: 'Explore Fashion',
     href: '/products?category=Fashion',
     bg: 'from-[#1E1B4B] via-[#4A1D96] to-[#6D28D9]',
-    tag: '🆕 New Arrivals',
+    tag: 'New Arrivals',
     tagColor: 'bg-pink-500 text-white',
-    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800',
+    tagIcon: FiTag,
+    badge: 'NEW',
+    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=85&auto=format&fit=crop',
   },
   {
     id: 3,
     title: "Today's Best Deals",
-    subtitle: "Limited time — grab them before they're gone!",
+    subtitle: "Limited time offers — grab them before they're gone!",
     cta: 'See All Deals',
     href: '/products?dealOfDay=true',
     bg: 'from-[#1E1B4B] via-[#2D2464] to-[#1E1B4B]',
-    tag: '🔥 Deal of the Day',
+    tag: 'Deal of the Day',
     tagColor: 'bg-red-500 text-white',
-    image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800',
+    tagIcon: FiTrendingUp,
+    badge: 'DEAL',
+    image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&q=85&auto=format&fit=crop',
   },
 ]
 
@@ -50,6 +61,7 @@ export default function HeroBanner() {
   }, [])
 
   const slide = SLIDES[current]
+  const TagIcon = slide.tagIcon
 
   return (
     <div className={`relative bg-gradient-to-r ${slide.bg} overflow-hidden`} style={{ minHeight: 180 }}>
@@ -59,7 +71,8 @@ export default function HeroBanner() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 lg:py-14 flex items-center justify-between gap-4">
         <div className="text-white flex-1 min-w-0">
-          <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full mb-3 ${slide.tagColor}`}>
+          <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full mb-3 ${slide.tagColor}`}>
+            <TagIcon className="text-sm" />
             {slide.tag}
           </span>
           <h1 className="text-xl sm:text-3xl lg:text-4xl font-bold mb-2 leading-tight">{slide.title}</h1>
@@ -79,7 +92,7 @@ export default function HeroBanner() {
             <Image src={slide.image} alt={slide.title} fill className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
           </div>
-          <div className="absolute -bottom-2 -right-2 bg-amber-500 text-gray-900 font-black text-xs px-3 py-1.5 rounded-full shadow-lg">Up to -40%</div>
+          <div className="absolute -bottom-2 -right-2 bg-amber-500 text-gray-900 font-black text-xs px-3 py-1.5 rounded-full shadow-lg">{slide.badge}</div>
         </div>
       </div>
 

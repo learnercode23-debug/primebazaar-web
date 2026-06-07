@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { formatPrice, formatDate } from '@/lib/utils'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiPlus, FiMessageSquare, FiStar, FiCreditCard, FiTruck } from 'react-icons/fi'
+import RevenueChart from '@/components/ui/RevenueChart'
 
 interface Analytics {
   totalRevenue: number
@@ -51,10 +52,6 @@ export default function SellerDashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Seller Dashboard</h1>
           <p className="text-gray-500 text-sm">Welcome back, {user.name}</p>
         </div>
-        <Link href="/seller/deliveries"
-          className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2.5 rounded-full text-sm transition-colors flex items-center gap-2">
-          📸 Delivery Proofs
-        </Link>
         <Link
           href="/seller/products/new"
           className="bg-amazon-yellow hover:bg-yellow-400 text-gray-900 font-bold px-4 py-2.5 rounded-full text-sm transition-colors flex items-center gap-2"
@@ -80,22 +77,7 @@ export default function SellerDashboard() {
       {analytics?.monthlyRevenue && analytics.monthlyRevenue.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
           <h2 className="font-bold text-gray-900 mb-4">Monthly Revenue</h2>
-          <div className="flex items-end gap-2 h-32">
-            {analytics.monthlyRevenue.map(({ month, revenue }) => {
-              const max = Math.max(...analytics.monthlyRevenue.map((m) => m.revenue))
-              const pct = max > 0 ? (revenue / max) * 100 : 0
-              return (
-                <div key={month} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-xs text-gray-500">{formatPrice(revenue)}</span>
-                  <div
-                    className="w-full bg-amazon-orange rounded-t transition-all"
-                    style={{ height: `${Math.max(pct, 4)}%` }}
-                  />
-                  <span className="text-xs text-gray-400">{month.slice(5)}</span>
-                </div>
-              )
-            })}
-          </div>
+          <RevenueChart data={analytics.monthlyRevenue} height={160} />
         </div>
       )}
 

@@ -50,9 +50,9 @@ export default function HomePage() {
             <p className="text-white/70 mb-5 sm:mb-7 text-sm sm:text-base max-w-md mx-auto">
               List your products and reach millions of customers. Set up your store in minutes.
             </p>
-            <a href="/register?role=seller" className="inline-block bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold px-6 sm:px-8 py-2.5 sm:py-3 rounded-full transition-all shadow-lg shadow-amber-500/30 text-sm sm:text-base">
+            <Link href="/register?role=seller" className="inline-block bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold px-6 sm:px-8 py-2.5 sm:py-3 rounded-full transition-all shadow-lg shadow-amber-500/30 text-sm sm:text-base">
               Start Selling →
-            </a>
+            </Link>
           </div>
         </div>
       </div>

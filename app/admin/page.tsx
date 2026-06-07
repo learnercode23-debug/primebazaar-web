@@ -10,8 +10,12 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { formatPrice, formatDate } from '@/lib/utils'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { FiUsers, FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiShield, FiCpu } from 'react-icons/fi'
-// FiTrendingUp re-used for Order Tracking card
+import {
+  FiUsers, FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiShield, FiCpu,
+  FiLayers, FiImage, FiClock, FiRotateCcw, FiPercent, FiMapPin, FiUnlock,
+  FiSmartphone, FiBriefcase, FiTag, FiStar, FiMessageSquare, FiHeadphones, FiRefreshCw,
+} from 'react-icons/fi'
+import RevenueChart from '@/components/ui/RevenueChart'
 
 interface AdminAnalytics {
   totalRevenue: number
@@ -87,51 +91,64 @@ export default function AdminDashboard() {
       {analytics?.monthlyRevenue && analytics.monthlyRevenue.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
           <h2 className="font-bold text-gray-900 mb-4">Monthly Revenue</h2>
-          <div className="flex items-end gap-2 h-40">
-            {analytics.monthlyRevenue.map(({ month, revenue }) => {
-              const max = Math.max(...analytics.monthlyRevenue.map((m) => m.revenue))
-              const pct = max > 0 ? (revenue / max) * 100 : 0
-              return (
-                <div key={month} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-xs text-gray-500 font-medium">{formatPrice(revenue)}</span>
-                  <div className="w-full bg-amazon-orange rounded-t" style={{ height: `${Math.max(pct, 2)}%` }} />
-                  <span className="text-xs text-gray-400">{month.slice(5)}</span>
-                </div>
-              )
-            })}
-          </div>
+          <RevenueChart data={analytics.monthlyRevenue} height={180} />
         </div>
       )}
 
-      {/* Quick actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {[
-          { href: '/admin/products', label: 'Manage Products', desc: 'Approve, edit, or remove product listings', icon: FiPackage, color: 'bg-purple-50 border-purple-200' },
-          { href: '/admin/users', label: 'Manage Users', desc: 'View and manage all customers and sellers', icon: FiUsers, color: 'bg-blue-50 border-blue-200' },
-          { href: '/admin/orders', label: 'All Orders', desc: 'View and update all platform orders', icon: FiShoppingBag, color: 'bg-green-50 border-green-200' },
-          { href: '/admin/categories', label: 'Categories', desc: 'Manage product category tree and commissions', icon: FiPackage, color: 'bg-yellow-50 border-yellow-200' },
-          { href: '/admin/banners', label: 'Banners', desc: 'Manage homepage promotional banners', icon: FiShoppingBag, color: 'bg-pink-50 border-pink-200' },
-          { href: '/admin/reviews', label: 'Review Moderation', desc: 'Approve and moderate customer reviews', icon: FiUsers, color: 'bg-red-50 border-red-200' },
-          { href: '/admin/returns', label: 'Returns & Refunds', desc: 'Process return and refund requests', icon: FiShoppingBag, color: 'bg-orange-50 border-orange-200' },
-          { href: '/admin/seller-banks', label: 'Seller Bank KYC', desc: 'Verify seller bank accounts for payouts', icon: FiDollarSign, color: 'bg-emerald-50 border-emerald-200' },
-          { href: '/admin/payouts', label: 'Seller Payouts', desc: 'Run settlements and track COD cash', icon: FiDollarSign, color: 'bg-teal-50 border-teal-200' },
-          { href: '/admin/assignments', label: 'Seller Assignments', desc: 'View, filter & reassign orders to sellers', icon: FiCpu, color: 'bg-indigo-50 border-indigo-200' },
-          { href: '/admin/tracking', label: 'Order Tracking & SLA', desc: 'SLA timers, auto-reassign, seller performance scores', icon: FiTrendingUp, color: 'bg-rose-50 border-rose-200' },
-          { href: '/admin/cod-collections', label: 'COD Collections', desc: 'Live delivery verifications, cash per agent, unlock codes', icon: FiTrendingUp, color: 'bg-green-50 border-green-200' },
-          { href: '/admin/commission', label: 'Commission Tracking', desc: 'Earnings per product, seller, category + rule management', icon: FiDollarSign, color: 'bg-violet-50 border-violet-200' },
-          { href: '/admin/coupons', label: 'Coupon Codes', desc: 'Create and manage discount coupon codes', icon: FiDollarSign, color: 'bg-lime-50 border-lime-200' },
-          { href: '/admin/khalti', label: 'Khalti Pending', desc: 'Verify and approve pending Khalti payment orders', icon: FiDollarSign, color: 'bg-purple-50 border-purple-200' },
-          { href: '/admin/cod', label: 'COD Unlock Codes', desc: 'Unlock locked delivery codes for COD orders', icon: FiShield, color: 'bg-amber-50 border-amber-200' },
-          { href: '/admin/support', label: 'Customer Support', desc: 'Help articles, ticket metrics, CSAT scores', icon: FiUsers, color: 'bg-cyan-50 border-cyan-200' },
-          { href: '/agent', label: 'Agent Dashboard', desc: 'Handle support tickets and customer queries', icon: FiUsers, color: 'bg-sky-50 border-sky-200' },
-        ].map(({ href, label, desc, icon: Icon, color }) => (
-          <Link key={href} href={href} className={`bg-white border rounded-xl p-5 hover:shadow-md transition-shadow ${color}`}>
-            <Icon className="text-2xl text-gray-700 mb-2" />
-            <h3 className="font-bold text-gray-900">{label}</h3>
-            <p className="text-sm text-gray-500 mt-1">{desc}</p>
-          </Link>
-        ))}
-      </div>
+      {/* Quick actions — grouped by domain */}
+      {[
+        {
+          group: 'Catalog',
+          cards: [
+            { href: '/admin/products',   label: 'Products',          desc: 'Approve, edit, or remove listings',          icon: FiPackage,     color: 'bg-purple-50 border-purple-200' },
+            { href: '/admin/categories', label: 'Categories',        desc: 'Category tree and commission rules',          icon: FiLayers,      color: 'bg-yellow-50 border-yellow-200' },
+            { href: '/admin/banners',    label: 'Banners',           desc: 'Homepage promotional banners',                icon: FiImage,       color: 'bg-pink-50 border-pink-200' },
+          ],
+        },
+        {
+          group: 'Orders & Fulfillment',
+          cards: [
+            { href: '/admin/orders',      label: 'All Orders',        desc: 'View and update all platform orders',            icon: FiShoppingBag, color: 'bg-green-50 border-green-200' },
+            { href: '/admin/tracking',    label: 'Tracking & SLA',    desc: 'SLA timers, auto-reassign, performance scores',  icon: FiClock,       color: 'bg-rose-50 border-rose-200' },
+            { href: '/admin/assignments', label: 'Assignments',       desc: 'View, filter & reassign orders to sellers',      icon: FiRefreshCw,   color: 'bg-indigo-50 border-indigo-200' },
+            { href: '/admin/returns',     label: 'Returns & Refunds', desc: 'Process return and refund requests',             icon: FiRotateCcw,   color: 'bg-orange-50 border-orange-200' },
+          ],
+        },
+        {
+          group: 'Finance',
+          cards: [
+            { href: '/admin/payouts',       label: 'Seller Payouts',   desc: 'Run settlements and track COD cash',          icon: FiDollarSign, color: 'bg-teal-50 border-teal-200' },
+            { href: '/admin/commission',    label: 'Commission',        desc: 'Earnings per product, seller, category',      icon: FiPercent,    color: 'bg-violet-50 border-violet-200' },
+            { href: '/admin/cod-collections',label:'COD Collections',   desc: 'Live delivery verifications, cash per agent', icon: FiMapPin,     color: 'bg-green-50 border-green-200' },
+            { href: '/admin/cod',           label: 'COD Unlock Codes',  desc: 'Unlock locked delivery codes for COD orders', icon: FiUnlock,     color: 'bg-amber-50 border-amber-200' },
+            { href: '/admin/khalti',        label: 'Khalti Pending',    desc: 'Verify and approve pending Khalti payments',  icon: FiSmartphone, color: 'bg-purple-50 border-purple-200' },
+            { href: '/admin/seller-banks',  label: 'Seller Bank KYC',   desc: 'Verify seller bank accounts for payouts',     icon: FiBriefcase,  color: 'bg-emerald-50 border-emerald-200' },
+            { href: '/admin/coupons',       label: 'Coupon Codes',      desc: 'Create and manage discount coupon codes',     icon: FiTag,        color: 'bg-lime-50 border-lime-200' },
+          ],
+        },
+        {
+          group: 'People & Support',
+          cards: [
+            { href: '/admin/users',   label: 'Manage Users',      desc: 'View and manage all customers and sellers',  icon: FiUsers,         color: 'bg-blue-50 border-blue-200' },
+            { href: '/admin/reviews', label: 'Review Moderation', desc: 'Approve and moderate customer reviews',      icon: FiStar,          color: 'bg-red-50 border-red-200' },
+            { href: '/admin/support', label: 'Customer Support',  desc: 'Help articles, ticket metrics, CSAT scores', icon: FiMessageSquare, color: 'bg-cyan-50 border-cyan-200' },
+            { href: '/agent',         label: 'Agent Dashboard',   desc: 'Handle support tickets and queries',         icon: FiHeadphones,    color: 'bg-sky-50 border-sky-200' },
+          ],
+        },
+      ].map(({ group, cards }) => (
+        <div key={group} className="mb-6">
+          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">{group}</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {cards.map(({ href, label, desc, icon: Icon, color }) => (
+              <Link key={href} href={href} className={`bg-white border rounded-xl p-5 hover:shadow-md transition-shadow ${color}`}>
+                <Icon className="text-2xl text-gray-700 mb-2" />
+                <h3 className="font-bold text-gray-900">{label}</h3>
+                <p className="text-sm text-gray-500 mt-1">{desc}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      ))}
 
       {/* Market Basket Analysis — Apriori engine */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">

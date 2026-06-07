@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { FiHeart, FiShoppingCart } from 'react-icons/fi'
+import { FiHeart, FiShoppingCart, FiCheckCircle } from 'react-icons/fi'
 import { Product } from '@/types'
 import { formatPrice } from '@/lib/utils'
 import StarRating from '@/components/ui/StarRating'
@@ -168,7 +168,7 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
             ) : product.stock <= 5 ? (
               <span className="text-amber-600 font-medium">Only {product.stock} left!</span>
             ) : (
-              <span className="text-amazon-green font-medium">✓ In Stock</span>
+              <span className="text-amazon-green font-medium flex items-center gap-1"><FiCheckCircle className="text-xs flex-shrink-0" /> In Stock</span>
             )}
           </div>
 
