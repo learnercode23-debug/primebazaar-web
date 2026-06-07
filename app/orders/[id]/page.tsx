@@ -125,8 +125,8 @@ export default function OrderDetailPage() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>
         <div className="flex items-center gap-2 flex-wrap">
-          {order.invoiceNumber && order.status === 'delivered' && (
-            <a href={`/api/orders/${id}/invoice`} target="_blank" rel="noreferrer"
+          {['shipped', 'out_for_delivery', 'delivered'].includes(order.status) && (
+            <a href={`/orders/${id}/invoice`} target="_blank" rel="noreferrer"
               className="flex items-center gap-1 text-sm border border-gray-300 text-gray-700 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors">
               <FiDownload /> Download Invoice
             </a>
