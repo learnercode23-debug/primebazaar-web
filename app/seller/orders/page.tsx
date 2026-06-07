@@ -261,10 +261,16 @@ export default function SellerOrdersHub() {
     }
   }
 
+  function generateTrackingNumber() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    const rand = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+    return `PP-${rand}`
+  }
+
   function openShipModal(order: SellerOrder) {
     setShipModal({ orderId: order._id, orderNumber: order.orderNumber })
-    setTrackingNumber('')
-    setTrackingCarrier('')
+    setTrackingNumber(generateTrackingNumber())
+    setTrackingCarrier('PrimePasal Delivery')
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -513,28 +519,38 @@ export default function SellerOrdersHub() {
           </p>
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tracking Number <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Tracking Number <span className="text-red-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setTrackingNumber(generateTrackingNumber())}
+                  className="text-xs text-amazon-teal hover:underline flex items-center gap-1"
+                >
+                  <FiRefreshCw className="text-xs" /> Regenerate
+                </button>
+              </div>
               <div className="relative">
                 <FiHash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   value={trackingNumber}
                   onChange={(e) => setTrackingNumber(e.target.value)}
-                  placeholder="e.g. 1Z999AA1012345678"
-                  className="w-full pl-9 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                  placeholder="Auto-generated tracking number"
+                  className="w-full pl-9 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange font-mono"
                 />
               </div>
+              <p className="text-xs text-gray-400 mt-1">Auto-generated. You can edit or regenerate.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Carrier (optional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Carrier</label>
               <select
                 value={trackingCarrier}
                 onChange={(e) => setTrackingCarrier(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange"
               >
                 <option value="">Select carrier…</option>
-                {['FedEx', 'UPS', 'DHL', 'USPS', 'BlueDart', 'Delhivery', 'Aramex', 'Other'].map((c) => (
+                {['PrimePasal Delivery', 'Nepal Post', 'Hulas Cargo', 'Prabhu Cargo & Courier', 'City Express', 'Darchula Cargo', 'DHL', 'FedEx', 'Other'].map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
