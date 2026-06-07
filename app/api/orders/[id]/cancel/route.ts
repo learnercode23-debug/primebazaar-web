@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import Order from '@/models/Order'
 import Product from '@/models/Product'
+import SubOrder from '@/models/SubOrder'
 import { createNotification } from '@/lib/notifications'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -32,13 +33,27 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } })
     }
 
+    // Notify the customer
     await createNotification(
-      user._id.toString(),
+      order.user.toString(),
       'order_cancelled',
       'Order Cancelled',
       `Order ${order.orderNumber} has been cancelled.`,
       `/orders/${order._id}`
-    )
+    ).catch(() => {})
+
+    // Notify each unique seller who had sub-orders in this order
+    const subOrders = await SubOrder.find({ parentOrder: order._id }).select('seller').lean()
+    const sellerIds = Array.from(new Set(subOrders.map((s) => s.seller.toString())))
+    for (const sellerId of sellerIds) {
+      await createNotification(
+        sellerId,
+        'order_cancelled',
+        'Order Cancelled by Customer',
+        `Order ${order.orderNumber} was cancelled by the customer.`,
+        `/seller/orders`
+      ).catch(() => {})
+    }
 
     return NextResponse.json({ success: true, data: order })
   } catch {

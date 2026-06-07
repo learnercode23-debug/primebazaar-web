@@ -119,6 +119,9 @@ export default function AdminDashboard() {
           { href: '/admin/tracking', label: 'Order Tracking & SLA', desc: 'SLA timers, auto-reassign, seller performance scores', icon: FiTrendingUp, color: 'bg-rose-50 border-rose-200' },
           { href: '/admin/cod-collections', label: 'COD Collections', desc: 'Live delivery verifications, cash per agent, unlock codes', icon: FiTrendingUp, color: 'bg-green-50 border-green-200' },
           { href: '/admin/commission', label: 'Commission Tracking', desc: 'Earnings per product, seller, category + rule management', icon: FiDollarSign, color: 'bg-violet-50 border-violet-200' },
+          { href: '/admin/coupons', label: 'Coupon Codes', desc: 'Create and manage discount coupon codes', icon: FiDollarSign, color: 'bg-lime-50 border-lime-200' },
+          { href: '/admin/khalti', label: 'Khalti Pending', desc: 'Verify and approve pending Khalti payment orders', icon: FiDollarSign, color: 'bg-purple-50 border-purple-200' },
+          { href: '/admin/cod', label: 'COD Unlock Codes', desc: 'Unlock locked delivery codes for COD orders', icon: FiShield, color: 'bg-amber-50 border-amber-200' },
           { href: '/admin/support', label: 'Customer Support', desc: 'Help articles, ticket metrics, CSAT scores', icon: FiUsers, color: 'bg-cyan-50 border-cyan-200' },
           { href: '/agent', label: 'Agent Dashboard', desc: 'Handle support tickets and customer queries', icon: FiUsers, color: 'bg-sky-50 border-sky-200' },
         ].map(({ href, label, desc, icon: Icon, color }) => (

@@ -28,9 +28,14 @@ import { createNotification } from '@/lib/notifications'
 
 export async function GET(req: NextRequest) {
   // Security: Vercel sends Authorization: Bearer <CRON_SECRET>
+  // In production, always require the secret (even if not set — reject open access)
   const authHeader = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (process.env.NODE_ENV === 'production') {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+  } else if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

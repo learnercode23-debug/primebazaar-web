@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { formatDate } from '@/lib/utils'
 import {
   FiUser, FiMail, FiPhone, FiMapPin, FiSave,
-  FiPackage, FiHeart, FiShield, FiDollarSign, FiEdit2, FiX,
+  FiPackage, FiHeart, FiShield, FiDollarSign, FiEdit2, FiX, FiLock, FiEye, FiEyeOff,
 } from 'react-icons/fi'
 import Link from 'next/link'
 
@@ -23,6 +23,9 @@ export default function ProfilePage() {
     name: '', phone: '',
     address: { street: '', city: '', state: '', zipCode: '', country: 'Nepal' },
   })
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' })
+  const [pwSaving, setPwSaving] = useState(false)
+  const [showPw, setShowPw] = useState(false)
 
   // Sync form whenever user data changes (on load + after save)
   useEffect(() => {
@@ -61,6 +64,22 @@ export default function ProfilePage() {
       toast.error('Failed to update profile')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault()
+    if (pwForm.next !== pwForm.confirm) { toast.error('Passwords do not match'); return }
+    if (pwForm.next.length < 8) { toast.error('Password must be at least 8 characters'); return }
+    setPwSaving(true)
+    try {
+      await axios.put('/api/auth/profile', { currentPassword: pwForm.current, newPassword: pwForm.next })
+      toast.success('Password changed successfully!')
+      setPwForm({ current: '', next: '', confirm: '' })
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to change password')
+    } finally {
+      setPwSaving(false)
     }
   }
 
@@ -165,6 +184,56 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
+          )}
+
+          {/* ── CHANGE PASSWORD ── */}
+          {!editing && (
+            <form onSubmit={handlePasswordChange} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <h2 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                <FiLock className="text-gray-400" /> Change Password
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPw ? 'text' : 'password'}
+                      value={pwForm.current}
+                      onChange={(e) => setPwForm(p => ({ ...p, current: e.target.value }))}
+                      required
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm pr-9 focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                    />
+                    <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-2.5 top-2.5 text-gray-400">
+                      {showPw ? <FiEyeOff /> : <FiEye />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                  <input
+                    type={showPw ? 'text' : 'password'}
+                    value={pwForm.next}
+                    onChange={(e) => setPwForm(p => ({ ...p, next: e.target.value }))}
+                    required minLength={8} placeholder="Min 8 characters"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                  <input
+                    type={showPw ? 'text' : 'password'}
+                    value={pwForm.confirm}
+                    onChange={(e) => setPwForm(p => ({ ...p, confirm: e.target.value }))}
+                    required minLength={8}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                  />
+                </div>
+              </div>
+              <button type="submit" disabled={pwSaving}
+                className="bg-amazon-yellow hover:bg-yellow-400 disabled:opacity-70 text-gray-900 font-bold px-6 py-2.5 rounded-full text-sm flex items-center gap-2 transition-colors">
+                <FiLock /> {pwSaving ? 'Saving...' : 'Update Password'}
+              </button>
+            </form>
           )}
 
           {/* ── EDIT MODE ── */}

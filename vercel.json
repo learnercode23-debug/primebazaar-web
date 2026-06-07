@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/sla-check",
-      "schedule": "0 0 * * *"
+      "schedule": "0 * * * *"
     }
   ],
   "buildCommand": "next build",
