@@ -17,9 +17,14 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     await connectDB()
 
-    const filter = user.role === 'seller' || user.role === 'admin'
-      ? { seller: user._id, status: 'active' }
-      : { customer: user._id, status: 'active' }
+    let filter: Record<string, unknown>
+    if (user.role === 'admin') {
+      filter = { status: 'active' }
+    } else if (user.role === 'seller') {
+      filter = { seller: user._id, status: 'active' }
+    } else {
+      filter = { customer: user._id, status: 'active' }
+    }
 
     const conversations = await Conversation.find(filter)
       .populate('customer', 'name avatar')
@@ -91,9 +96,9 @@ export async function POST(req: NextRequest) {
     // Notify seller
     await createNotification(
       sellerId,
+      'admin_alert',
       'New message from customer',
       `${user.name}: ${message.trim().slice(0, 60)}`,
-      'info',
       `/messages/${convo._id}`
     ).catch(console.error)
 
