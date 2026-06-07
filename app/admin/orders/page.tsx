@@ -31,6 +31,7 @@ export default function AdminOrdersPage() {
     if (!user) return
     if (user.role !== 'admin') { router.push('/'); return }
     axios.get('/api/orders?limit=50').then((r) => setOrders(r.data.data || []))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [user, router])
 

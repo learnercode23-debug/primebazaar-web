@@ -59,6 +59,7 @@ export default function FrequentlyBoughtTogether({ anchorProduct }: FrequentlyBo
         // Select all by default (Amazon behaviour)
         setSelected(new Set(data.map((item) => item.product._id)))
       })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [anchorProduct._id])
 

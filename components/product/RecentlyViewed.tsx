@@ -12,7 +12,7 @@ export default function RecentlyViewed({ excludeId }: { excludeId?: string }) {
     axios.get('/api/recently-viewed').then((r) => {
       const data = (r.data.data || []).filter((p: Product) => p._id !== excludeId)
       setProducts(data.slice(0, 6))
-    })
+    }).catch(() => {})
   }, [excludeId])
 
   if (products.length === 0) return null

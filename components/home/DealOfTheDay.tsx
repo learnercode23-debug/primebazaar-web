@@ -16,7 +16,7 @@ export default function DealOfTheDay() {
   const { addToCart } = useCart()
 
   useEffect(() => {
-    axios.get('/api/products?dealOfDay=true&limit=4').then((r) => setDeals(r.data.data || []))
+    axios.get('/api/products?dealOfDay=true&limit=4').then((r) => setDeals(r.data.data || [])).catch(() => {})
   }, [])
 
   if (!deals.length) return null

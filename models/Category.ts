@@ -35,6 +35,5 @@ const CategorySchema = new Schema<ICategory>(
 )
 
 CategorySchema.index({ parent: 1, order: 1 })
-CategorySchema.index({ slug: 1 })
 
 export default mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema)

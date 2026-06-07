@@ -24,6 +24,7 @@ export default function SellerProductsPage() {
     if (!user) return
     if (user.role !== 'seller' && user.role !== 'admin') { router.push('/'); return }
     axios.get('/api/seller/products').then((r) => setProducts(r.data.data || []))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [user, router])
 

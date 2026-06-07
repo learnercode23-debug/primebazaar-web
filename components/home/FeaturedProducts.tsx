@@ -24,6 +24,7 @@ export default function FeaturedProducts({
   useEffect(() => {
     axios.get(`/api/products?${query}&limit=${limit}`)
       .then((r) => setProducts(r.data.data || []))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [query, limit])
 

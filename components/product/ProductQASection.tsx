@@ -39,6 +39,7 @@ export default function ProductQASection({ productId }: { productId: string }) {
   useEffect(() => {
     axios.get(`/api/products/${productId}/qa`)
       .then((r) => setQas(r.data.data || []))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [productId])
 

@@ -38,6 +38,7 @@ export default function AdminReviewsPage() {
     if (user.role !== 'admin') { router.push('/'); return }
     const q = filter === 'flagged' ? '?flagged=true' : ''
     axios.get(`/api/admin/reviews${q}`).then((r) => setReviews(r.data.data || []))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [user, router, filter])
 

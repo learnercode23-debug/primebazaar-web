@@ -29,6 +29,7 @@ export default function OrdersPage() {
   useEffect(() => {
     if (!user) return
     axios.get('/api/orders').then((r) => setOrders(r.data.data || []))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [user])
 

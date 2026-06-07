@@ -13,6 +13,7 @@ export default function Recommendations({ productId }: { productId: string }) {
   useEffect(() => {
     axios.get(`/api/products/${productId}/recommendations`)
       .then((r) => setProducts(r.data.data || []))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [productId])
 
