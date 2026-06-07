@@ -170,7 +170,7 @@ export default function InvoicePage() {
             </div>
             <div className="flex justify-between text-gray-600">
               <span>Shipping</span>
-              <span>{order.shippingCost === 0 ? 'FREE' : `Rs. ${Math.round(order.shippingCost).toLocaleString()}`}</span>
+              <span>{!order.shippingCost ? 'FREE' : `Rs. ${Math.round(order.shippingCost).toLocaleString()}`}</span>
             </div>
             {order.discount > 0 && (
               <div className="flex justify-between text-green-600">
@@ -204,6 +204,7 @@ export default function InvoicePage() {
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           @page { margin: 1cm; size: A4; }
+          header, footer, nav { display: none !important; }
         }
       `}</style>
     </>
