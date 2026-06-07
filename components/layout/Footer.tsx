@@ -19,19 +19,19 @@ export default function Footer() {
         <div>
           <h3 className="font-bold text-sm mb-3">Get to Know Us</h3>
           <ul className="space-y-2 text-sm text-gray-400">
-            <li><Link href="#" className="hover:underline">About Primepasal</Link></li>
-            <li><Link href="#" className="hover:underline">Careers</Link></li>
-            <li><Link href="#" className="hover:underline">Press Releases</Link></li>
-            <li><Link href="#" className="hover:underline">Investor Relations</Link></li>
+            <li><Link href="/about" className="hover:underline">About Primepasal</Link></li>
+            <li><Link href="/about" className="hover:underline">Careers</Link></li>
+            <li><Link href="/about" className="hover:underline">Press Releases</Link></li>
+            <li><Link href="/about" className="hover:underline">Investor Relations</Link></li>
           </ul>
         </div>
         <div>
           <h3 className="font-bold text-sm mb-3">Make Money with Us</h3>
           <ul className="space-y-2 text-sm text-gray-400">
             <li><Link href="/register?role=seller" className="hover:underline">Sell on Primepasal</Link></li>
-            <li><Link href="#" className="hover:underline">Become an Affiliate</Link></li>
-            <li><Link href="#" className="hover:underline">Advertise Your Products</Link></li>
-            <li><Link href="#" className="hover:underline">Sell Apps on Primepasal</Link></li>
+            <li><Link href="/register?role=seller" className="hover:underline">Become an Affiliate</Link></li>
+            <li><Link href="/register?role=seller" className="hover:underline">Advertise Your Products</Link></li>
+            <li><Link href="/register?role=seller" className="hover:underline">Sell Apps on Primepasal</Link></li>
           </ul>
         </div>
         <div>
@@ -39,9 +39,9 @@ export default function Footer() {
           <ul className="space-y-2 text-sm text-gray-400">
             <li><Link href="/profile" className="hover:underline">Your Account</Link></li>
             <li><Link href="/orders" className="hover:underline">Your Orders</Link></li>
-            <li><Link href="#" className="hover:underline">Shipping Rates & Policies</Link></li>
-            <li><Link href="#" className="hover:underline">Returns & Replacements</Link></li>
-            <li><Link href="#" className="hover:underline">Help Center</Link></li>
+            <li><Link href="/support" className="hover:underline">Shipping Rates & Policies</Link></li>
+            <li><Link href="/support" className="hover:underline">Returns & Replacements</Link></li>
+            <li><Link href="/support" className="hover:underline">Help Center</Link></li>
           </ul>
         </div>
         <div>
@@ -73,8 +73,8 @@ export default function Footer() {
         </div>
         <div className="text-xs text-gray-500 text-center">
           © {new Date().getFullYear()} Primepasal. All rights reserved.{' '}
-          <Link href="#" className="hover:underline">Privacy</Link> ·{' '}
-          <Link href="#" className="hover:underline">Terms</Link>
+          <Link href="/privacy" className="hover:underline">Privacy</Link> ·{' '}
+          <Link href="/terms" className="hover:underline">Terms</Link>
         </div>
       </div>
     </footer>
