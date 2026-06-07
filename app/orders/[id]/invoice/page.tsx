@@ -78,7 +78,7 @@ export default function InvoicePage() {
             Save as PDF / Print
           </button>
           <button
-            onClick={() => router.back()}
+            onClick={() => { window.close(); router.push(`/orders/${id}`) }}
             className="border border-gray-300 text-gray-700 px-5 py-2 rounded-full text-sm hover:bg-gray-50"
           >
             Back
@@ -178,10 +178,10 @@ export default function InvoicePage() {
                 <span>-Rs. {Math.round(order.discount).toLocaleString()}</span>
               </div>
             )}
-            {order.tax && order.tax > 0 && (
+            {Number(order.tax) > 0 && (
               <div className="flex justify-between text-gray-600">
                 <span>Tax</span>
-                <span>Rs. {Math.round(order.tax).toLocaleString()}</span>
+                <span>Rs. {Math.round(order.tax ?? 0).toLocaleString()}</span>
               </div>
             )}
             <div className="flex justify-between font-black text-base border-t border-gray-200 pt-2 mt-2 text-gray-900">
