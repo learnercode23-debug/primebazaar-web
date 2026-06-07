@@ -164,8 +164,8 @@ export default function Navbar() {
                 )}
               </Link>
 
-              {/* Hamburger — desktop only */}
-              <button onClick={() => setMobileOpen(!mobileOpen)} className="hidden sm:flex text-white p-2 rounded hover:ring-1 hover:ring-white" aria-label="Menu">
+              {/* Hamburger — mobile only */}
+              <button onClick={() => setMobileOpen(!mobileOpen)} className="flex sm:hidden text-white p-2 rounded hover:ring-1 hover:ring-white" aria-label="Menu">
                 {mobileOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
               </button>
             </div>
