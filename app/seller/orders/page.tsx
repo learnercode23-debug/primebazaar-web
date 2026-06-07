@@ -432,7 +432,7 @@ export default function SellerOrdersHub() {
             {search ? `No results for "${search}"` : `No ${TABS.find((t) => t.key === activeTab)?.label.toLowerCase()} orders`}
           </p>
           {!search && activeTab === 'confirmed' && (
-            <div className="max-w-sm mx-auto space-y-3">
+            <div className="max-w-sm mx-auto">
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-left">
                 <p className="text-sm font-semibold text-blue-800 mb-1">💡 How orders appear here</p>
                 <p className="text-xs text-blue-700">
@@ -441,7 +441,6 @@ export default function SellerOrdersHub() {
                   Make sure the product belongs to <strong>your seller account</strong>.
                 </p>
               </div>
-              <ClaimDemoButton onClaimed={fetchOrders} />
             </div>
           )}
         </div>
