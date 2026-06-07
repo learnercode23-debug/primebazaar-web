@@ -56,9 +56,9 @@ export async function PATCH(
     // Notify customer
     await createNotification(
       order.user.toString(),
+      'admin_alert',
       '❌ Payment Rejected',
       `Your Khalti payment for order #${order.orderNumber} was rejected. Reason: ${reason.trim()}. Please contact support.`,
-      'warning',
       `/orders/${order._id}`
     ).catch(console.error)
 

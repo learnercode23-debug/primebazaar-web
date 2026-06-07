@@ -125,9 +125,9 @@ export async function POST(req: NextRequest) {
     for (const admin of admins) {
       await createNotification(
         admin._id.toString(),
+        'admin_alert',
         'Khalti QR Payment Pending',
         `Order #${order.orderNumber} — Rs.${totalAmount} — TXN: ${txnId} — needs verification`,
-        'warning',
         '/admin/khalti'
       ).catch(console.error)
     }

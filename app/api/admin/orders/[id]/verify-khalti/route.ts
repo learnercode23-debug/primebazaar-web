@@ -43,9 +43,9 @@ export async function PATCH(
     // Notify customer
     await createNotification(
       order.user.toString(),
+      'admin_alert',
       '✅ Payment Verified!',
       `Your Khalti payment for order #${order.orderNumber} (Rs.${order.totalAmount}) is verified. Order is now confirmed!`,
-      'success',
       `/orders/${order._id}`
     ).catch(console.error)
 

@@ -208,9 +208,9 @@ export async function GET(req: NextRequest) {
     for (const adminUser of admins) {
       await createNotification(
         adminUser._id.toString(),
+        'admin_alert',
         'SLA Alert',
         `${stats.acceptBreaches} accept breach(es), ${stats.shipBreaches} ship breach(es) detected. ${stats.reassigned} reassigned, ${stats.cancelled} cancelled.`,
-        'warning',
         '/admin/tracking'
       ).catch(console.error)
     }

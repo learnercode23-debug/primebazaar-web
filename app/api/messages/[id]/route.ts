@@ -106,9 +106,9 @@ export async function POST(
     // Notify the other party
     await createNotification(
       notifyId,
+      'admin_alert',
       isCustomer ? `Message from ${user.name}` : `Reply from seller ${user.name}`,
       body.trim().slice(0, 80),
-      'info',
       notifyPath
     ).catch(console.error)
 
