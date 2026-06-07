@@ -160,7 +160,7 @@ export async function sendOrderConfirmation(to: string, order: {
       <td style="padding:8px;border-bottom:1px solid #eee"><img src="${item.image}" width="48" height="48" style="border-radius:4px;object-fit:cover"/></td>
       <td style="padding:8px;border-bottom:1px solid #eee">${item.title}</td>
       <td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${item.quantity}</td>
-      <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">$${(item.price * item.quantity).toFixed(2)}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">Rs. ${Math.round(item.price * item.quantity).toLocaleString()}</td>
     </tr>`).join('')
 
   const content = `
@@ -176,7 +176,7 @@ export async function sendOrderConfirmation(to: string, order: {
       </tr></thead>
       <tbody>${itemsHtml}</tbody>
     </table>
-    <p style="text-align:right;font-size:18px"><strong>Total: $${order.total.toFixed(2)}</strong></p>
+    <p style="text-align:right;font-size:18px"><strong>Total: Rs. ${Math.round(order.total).toLocaleString()}</strong></p>
     <div style="text-align:center;margin-top:16px">
       <a href="${BASE}/orders" style="display:inline-block;background:#7C3AED;color:#fff;padding:12px 24px;border-radius:24px;text-decoration:none;font-weight:bold">View Order</a>
     </div>`
@@ -205,7 +205,7 @@ export async function sendReturnUpdate(to: string, data: {
   const messages: Record<string, string> = {
     approved:  'Your return has been approved. Please ship the item back.',
     rejected:  'Unfortunately, your return request has been rejected.',
-    completed: `Your refund of $${data.refundAmount?.toFixed(2)} has been processed.`,
+    completed: `Your refund of Rs. ${Math.round(data.refundAmount || 0).toLocaleString()} has been processed.`,
   }
   const content = `
     <h2 style="color:#1E1B4B">Return Request Update</h2>
