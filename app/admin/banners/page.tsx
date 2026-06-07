@@ -33,6 +33,7 @@ export default function AdminBannersPage() {
   const [form, setForm] = useState({ title: '', subtitle: '', image: '', link: '', buttonText: 'Shop Now', position: 'hero', order: '0', isActive: true })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadingLink, setUploadingLink] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -99,6 +100,25 @@ export default function AdminBannersPage() {
     }
   }
 
+  async function handleLinkImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLink(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (ev) => {
+        const base64 = ev.target?.result as string
+        const res = await axios.post('/api/upload', { image: base64, folder: 'primebazaar/banners' })
+        setForm((p) => ({ ...p, link: res.data.data.url }))
+        setUploadingLink(false)
+      }
+      reader.readAsDataURL(file)
+    } catch {
+      toast.error('Upload failed')
+      setUploadingLink(false)
+    }
+  }
+
   function openEdit(b: Banner) {
     setForm({ title: b.title, subtitle: b.subtitle || '', image: b.image, link: b.link || '', buttonText: b.buttonText || 'Shop Now', position: b.position, order: String(b.order), isActive: b.isActive })
     setEditId(b._id)
@@ -155,6 +175,13 @@ export default function AdminBannersPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Link URL</label>
+              <div className="flex gap-2 items-center mb-1">
+                <label className={`cursor-pointer bg-gray-900 hover:bg-gray-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg whitespace-nowrap ${uploadingLink ? 'opacity-60 pointer-events-none' : ''}`}>
+                  {uploadingLink ? 'Uploading...' : 'Upload file'}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleLinkImageUpload} disabled={uploadingLink} />
+                </label>
+                <span className="text-xs text-gray-400">or type a path below</span>
+              </div>
               <input value={form.link} onChange={(e) => setForm((p) => ({ ...p, link: e.target.value }))} placeholder="/products?category=Electronics"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange" />
             </div>
