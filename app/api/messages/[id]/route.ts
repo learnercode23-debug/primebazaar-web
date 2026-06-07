@@ -76,13 +76,15 @@ export async function POST(
     const uid = user._id.toString()
     const isCustomer = convo.customer.toString() === uid
     const isSeller   = convo.seller.toString()   === uid
-    if (!isCustomer && !isSeller) {
+    const isAdmin    = user.role === 'admin'
+    if (!isCustomer && !isSeller && !isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const { body } = await req.json()
     if (!body?.trim()) return NextResponse.json({ error: 'Message required' }, { status: 400 })
 
+    // Admin replies appear as seller (support), and notifies the customer
     const senderRole = isCustomer ? 'customer' : 'seller'
     const notifyId   = isCustomer ? convo.seller.toString() : convo.customer.toString()
     const notifyPath = `/messages/${convo._id}`
