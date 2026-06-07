@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { formatPrice, formatDate } from '@/lib/utils'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiPlus, FiMessageSquare } from 'react-icons/fi'
+import { FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiPlus, FiMessageSquare, FiStar, FiCreditCard, FiTruck } from 'react-icons/fi'
 
 interface Analytics {
   totalRevenue: number
@@ -100,11 +100,17 @@ export default function SellerDashboard() {
       )}
 
       {/* Quick links */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
         {[
-          { href: '/seller/products', label: 'Manage Products', desc: 'Add, edit, or remove your listings', icon: FiPackage, color: 'bg-purple-50 border-purple-200' },
-          { href: '/seller/orders', label: 'View Orders', desc: 'See orders for your products', icon: FiShoppingBag, color: 'bg-blue-50 border-blue-200' },
-          { href: '/messages', label: 'Customer Messages', desc: 'Chat with customers about your products', icon: FiMessageSquare, color: 'bg-indigo-50 border-indigo-200' },
+          { href: '/seller/products',  label: 'My Products',        desc: 'Add, edit, or remove your listings',         icon: FiPackage,     color: 'bg-purple-50 border-purple-200' },
+          { href: '/seller/orders',    label: 'Orders',             desc: 'Accept, pack and ship customer orders',      icon: FiShoppingBag, color: 'bg-blue-50 border-blue-200' },
+          { href: '/seller/earnings',  label: 'Earnings & Payouts', desc: 'Wallet balance, ledger, bank accounts',      icon: FiDollarSign,  color: 'bg-green-50 border-green-200' },
+          { href: '/seller/cod-orders',label: 'COD Orders',         desc: 'Track cash-on-delivery collections',         icon: FiCreditCard,  color: 'bg-amber-50 border-amber-200' },
+          { href: '/seller/deliveries',label: 'Delivery Proofs',    desc: 'View and dispute delivery photo proofs',     icon: FiTruck,       color: 'bg-orange-50 border-orange-200' },
+          { href: '/seller/reviews',   label: 'Customer Reviews',   desc: 'See what buyers say about your products',    icon: FiStar,        color: 'bg-yellow-50 border-yellow-200' },
+          { href: '/messages',         label: 'Messages',           desc: 'Chat with customers about your products',    icon: FiMessageSquare, color: 'bg-indigo-50 border-indigo-200' },
+          { href: '/support',          label: 'Help & Support',     desc: 'Submit a ticket or browse help articles',    icon: FiPackage,     color: 'bg-teal-50 border-teal-200' },
+          { href: '/profile',          label: 'My Profile',         desc: 'Update account info and password',           icon: FiTrendingUp,  color: 'bg-gray-50 border-gray-200' },
         ].map(({ href, label, desc, icon: Icon, color }) => (
           <Link key={href} href={href} className={`bg-white border rounded-xl p-5 hover:shadow-md transition-shadow ${color}`}>
             <Icon className="text-2xl text-gray-700 mb-2" />
