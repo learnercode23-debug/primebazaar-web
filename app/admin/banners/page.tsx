@@ -32,6 +32,7 @@ export default function AdminBannersPage() {
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState({ title: '', subtitle: '', image: '', link: '', buttonText: 'Shop Now', position: 'hero', order: '0', isActive: true })
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -79,6 +80,25 @@ export default function AdminBannersPage() {
     toast.success('Banner deleted')
   }
 
+  async function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (ev) => {
+        const base64 = ev.target?.result as string
+        const res = await axios.post('/api/upload', { image: base64, folder: 'primebazaar/banners' })
+        setForm((p) => ({ ...p, image: res.data.data.url }))
+        setUploading(false)
+      }
+      reader.readAsDataURL(file)
+    } catch {
+      toast.error('Image upload failed')
+      setUploading(false)
+    }
+  }
+
   function openEdit(b: Banner) {
     setForm({ title: b.title, subtitle: b.subtitle || '', image: b.image, link: b.link || '', buttonText: b.buttonText || 'Shop Now', position: b.position, order: String(b.order), isActive: b.isActive })
     setEditId(b._id)
@@ -117,7 +137,19 @@ export default function AdminBannersPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange" />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Image URL *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Image *</label>
+              <div className="flex gap-2 items-center mb-2">
+                <label className={`cursor-pointer bg-gray-900 hover:bg-gray-700 text-white text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
+                  {uploading ? 'Uploading...' : 'Upload from computer'}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageFile} disabled={uploading} />
+                </label>
+                <span className="text-xs text-gray-400">or paste a URL below</span>
+              </div>
+              {form.image && (
+                <div className="mb-2 relative w-40 h-20 rounded-lg overflow-hidden bg-gray-100">
+                  <Image src={form.image} alt="preview" fill className="object-cover" />
+                </div>
+              )}
               <input value={form.image} onChange={(e) => setForm((p) => ({ ...p, image: e.target.value }))} required placeholder="https://..."
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange" />
             </div>
