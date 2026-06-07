@@ -93,9 +93,9 @@ export default function ProfilePage() {
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <div className="text-center mb-4">
               <div className="w-16 h-16 rounded-full bg-amazon-dark text-white flex items-center justify-center text-2xl font-bold mx-auto mb-2">
-                {user.name.charAt(0).toUpperCase()}
+                {(user.name || '?').charAt(0).toUpperCase()}
               </div>
-              <p className="font-semibold text-gray-900">{user.name}</p>
+              <p className="font-semibold text-gray-900">{user.name || 'My Account'}</p>
               <p className="text-xs text-gray-500 capitalize">{user.role}</p>
               <p className="text-xs text-gray-400 mt-1">Member since {formatDate(user.createdAt)}</p>
             </div>
