@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
-import { sendVerificationEmail } from '@/lib/email'
+import { sendVerificationEmail, sendWelcomeEmail } from '@/lib/email'
 import crypto from 'crypto'
 
 export async function POST(req: NextRequest) {
@@ -32,8 +32,10 @@ export async function POST(req: NextRequest) {
       emailVerificationExpiry: verificationExpiry,
     })
 
-    // Send verification email (non-blocking)
+    // Send both emails non-blocking
+    const userRole = role === 'seller' ? 'seller' : 'customer'
     sendVerificationEmail(email, name, verificationToken).catch(() => {})
+    sendWelcomeEmail(email, name, userRole).catch(() => {})
 
     return NextResponse.json({
       success: true,
