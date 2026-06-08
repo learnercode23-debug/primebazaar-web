@@ -36,13 +36,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
 
     // Send cancellation email to customer (awaited so Vercel doesn't kill it early)
+    console.log('[CANCEL] Looking up customer for order.user:', order.user?.toString())
     const customer = await User.findById(order.user).select('email name').lean() as { email: string; name: string } | null
+    console.log('[CANCEL] Customer found:', customer ? customer.email : 'NOT FOUND')
     if (customer) {
       const cancelledBy = user.role === 'admin' ? 'admin' : 'customer'
       const itemList = order.items.map((i: { title: string; quantity: number }) => ({
         title: i.title,
         quantity: i.quantity,
       }))
+      console.log('[CANCEL] Sending cancel email to:', customer.email, 'order:', order.orderNumber)
       await sendOrderCancelledEmail(customer.email, {
         name: customer.name,
         orderNumber: order.orderNumber,
@@ -50,6 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         cancelledBy,
         items: itemList,
       }).catch((err) => console.error('[EMAIL] Order cancel email failed:', err))
+      console.log('[CANCEL] Email send completed')
     }
 
     // Notify the customer
