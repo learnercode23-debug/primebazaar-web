@@ -22,27 +22,33 @@ function resolveRecipient(to: string): string {
   return process.env.RESEND_TO_OVERRIDE || to
 }
 
-// ── Unified send — Gmail SMTP first, then Resend, then console log ────────────
+// ── Unified send — Gmail first, Resend fallback, console last ────────────────
 export async function sendEmail(to: string, subject: string, html: string) {
   const gmail = gmailTransporter
   const r = resend
+
+  // 1. Try Gmail SMTP — sends to the real address regardless of any override
   if (gmail) {
-    // Gmail SMTP always sends to the real address — no override
-    await gmail.sendMail({
-      from: `Primepasal <${process.env.GMAIL_USER}>`,
-      to, subject, html,
-    })
-    console.log('[EMAIL] Sent via Gmail SMTP to:', to)
-    return
+    try {
+      await gmail.sendMail({
+        from: `Primepasal <${process.env.GMAIL_USER}>`,
+        to, subject, html,
+      })
+      console.log('[EMAIL] Sent via Gmail SMTP to:', to)
+      return
+    } catch (gmailErr) {
+      console.error('[EMAIL] Gmail SMTP failed, trying Resend fallback:', gmailErr)
+    }
   }
+
+  // 2. Resend fallback (free plan only delivers to verified account email)
   if (r) {
-    // Resend free plan can only deliver to the account owner email,
-    // so RESEND_TO_OVERRIDE lets you test against a real inbox
     const recipient = resolveRecipient(to)
     await r.emails.send({ from: FROM, to: recipient, subject, html })
     console.log('[EMAIL] Sent via Resend to:', recipient)
     return
   }
+
   console.log('[EMAIL] No provider configured. Subject:', subject, '→', to)
 }
 
