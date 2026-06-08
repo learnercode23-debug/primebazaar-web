@@ -25,7 +25,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import {
   FiShoppingCart, FiHeart, FiShare2, FiTruck, FiShield,
   FiRefreshCw, FiStar, FiMinus, FiPlus, FiCheck, FiZap,
-  FiMessageCircle, FiX, FiSend,
+  FiMessageCircle, FiX, FiSend, FiCopy,
 } from 'react-icons/fi'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -70,9 +70,36 @@ export default function ProductDetailPage() {
   const [submittingReview, setSubmittingReview] = useState(false)
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'reviews' | 'qa'>('description')
-  const [chatOpen, setChatOpen]     = useState(false)
-  const [chatMsg, setChatMsg]       = useState('')
+  const [chatOpen, setChatOpen]       = useState(false)
+  const [chatMsg, setChatMsg]         = useState('')
   const [chatSending, setChatSending] = useState(false)
+  const [shareOpen, setShareOpen]     = useState(false)
+  const [stockAlertEmail, setStockAlertEmail]   = useState('')
+  const [stockAlertLoading, setStockAlertLoading] = useState(false)
+  const [stockAlertDone, setStockAlertDone]     = useState(false)
+
+  async function handleShare() {
+    const url = `https://primepasal.com/products/${id}`
+    if (navigator.share) {
+      try { await navigator.share({ title: product!.title, url }) } catch { /* cancelled */ }
+    } else {
+      setShareOpen((o) => !o)
+    }
+  }
+
+  async function subscribeStockAlert(e: React.FormEvent) {
+    e.preventDefault()
+    setStockAlertLoading(true)
+    try {
+      await axios.post(`/api/products/${id}/stock-alert`, { email: stockAlertEmail })
+      setStockAlertDone(true)
+      toast.success("We'll notify you when it's back in stock!")
+    } catch {
+      toast.error('Failed. Please try again.')
+    } finally {
+      setStockAlertLoading(false)
+    }
+  }
 
   async function startChat() {
     if (!user) { router.push('/login'); return }
@@ -229,7 +256,7 @@ export default function ProductDetailPage() {
               </p>
             ) : (
               <p className="text-sm text-gray-600 mt-1">
-                Delivery: <span className="font-medium">{formatPrice(product.shippingCost || 5.99)}</span>
+                Delivery: <span className="font-medium">{formatPrice(product.shippingCost || 99)}</span>
               </p>
             )}
           </div>
@@ -267,7 +294,32 @@ export default function ProductDetailPage() {
           {/* Stock */}
           <div className="mb-3">
             {stock === 0 ? (
-              <p className="text-red-600 font-semibold">Out of Stock</p>
+              <div>
+                <p className="text-red-600 font-semibold">Out of Stock</p>
+                {!stockAlertDone ? (
+                  <form onSubmit={subscribeStockAlert} className="mt-2 flex gap-2">
+                    <input
+                      type="email"
+                      value={stockAlertEmail}
+                      onChange={(e) => setStockAlertEmail(e.target.value)}
+                      placeholder="Get notified when back in stock"
+                      className="flex-1 border border-gray-300 rounded-full px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-400"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={stockAlertLoading}
+                      className="bg-gray-900 text-white text-xs px-3 py-1.5 rounded-full whitespace-nowrap disabled:opacity-60"
+                    >
+                      {stockAlertLoading ? '…' : 'Notify Me'}
+                    </button>
+                  </form>
+                ) : (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <FiCheck className="text-xs" /> You&apos;ll be notified when back in stock!
+                  </p>
+                )}
+              </div>
             ) : stock <= 5 ? (
               <p className="text-amazon-red font-medium">Only {stock} left in stock – order soon</p>
             ) : (
@@ -344,9 +396,47 @@ export default function ProductDetailPage() {
             >
               <FiMessageCircle /> Chat with Seller
             </button>
-            <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 transition-colors">
-              <FiShare2 /> Share
-            </button>
+            <div className="relative">
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+              >
+                <FiShare2 /> Share
+              </button>
+              {shareOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShareOpen(false)} />
+                  <div className="absolute bottom-full left-0 mb-2 bg-white border border-gray-200 rounded-xl shadow-lg p-1.5 min-w-[170px] z-20">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://primepasal.com/products/${id}`)
+                        toast.success('Link copied!')
+                        setShareOpen(false)
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 rounded-lg flex items-center gap-2"
+                    >
+                      <FiCopy className="text-gray-500" /> Copy Link
+                    </button>
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent((product?.title || '') + '\nhttps://primepasal.com/products/' + id)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      onClick={() => setShareOpen(false)}
+                      className="px-3 py-2 text-xs hover:bg-gray-50 rounded-lg flex items-center gap-2 block"
+                    >
+                      <span className="text-green-500">💬</span> WhatsApp
+                    </a>
+                    <a
+                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://primepasal.com/products/' + id)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      onClick={() => setShareOpen(false)}
+                      className="px-3 py-2 text-xs hover:bg-gray-50 rounded-lg flex items-center gap-2 block"
+                    >
+                      <span className="text-blue-500">📘</span> Facebook
+                    </a>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

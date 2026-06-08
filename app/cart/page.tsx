@@ -86,7 +86,7 @@ export default function CartPage() {
   const { toggleWishlist } = useWishlist()
   const router = useRouter()
 
-  const shippingCost = subtotal > 50 ? 0 : 5.99
+  const shippingCost = subtotal > 500 ? 0 : 99
   const total = subtotal + shippingCost
 
   const cartProductIds = items
@@ -222,13 +222,13 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span>Shipping</span>
-                <span className={subtotal > 50 ? 'text-green-600 font-medium' : ''}>
-                  {subtotal > 50 ? 'FREE' : formatPrice(shippingCost)}
+                <span className={subtotal > 500 ? 'text-green-600 font-medium' : ''}>
+                  {subtotal > 500 ? 'FREE' : formatPrice(shippingCost)}
                 </span>
               </div>
-              {subtotal < 50 && (
+              {subtotal < 500 && (
                 <p className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                  Add <strong>{formatPrice(50 - subtotal)}</strong> more for free shipping
+                  Add <strong>{formatPrice(500 - subtotal)}</strong> more for free shipping
                 </p>
               )}
             </div>

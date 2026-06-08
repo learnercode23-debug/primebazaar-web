@@ -42,7 +42,7 @@ export default function SellerDashboard() {
     { label: 'Total Revenue', value: formatPrice(analytics?.totalRevenue || 0), icon: FiDollarSign, color: 'text-green-600 bg-green-50' },
     { label: 'Total Orders', value: analytics?.totalOrders || 0, icon: FiShoppingBag, color: 'text-blue-600 bg-blue-50' },
     { label: 'Active Products', value: analytics?.totalProducts || 0, icon: FiPackage, color: 'text-purple-600 bg-purple-50' },
-    { label: 'Avg. Order Value', value: analytics?.totalOrders ? formatPrice((analytics?.totalRevenue || 0) / analytics.totalOrders) : '$0', icon: FiTrendingUp, color: 'text-orange-600 bg-orange-50' },
+    { label: 'Avg. Order Value', value: formatPrice(analytics?.totalOrders ? (analytics.totalRevenue || 0) / analytics.totalOrders : 0), icon: FiTrendingUp, color: 'text-orange-600 bg-orange-50' },
   ]
 
   return (
