@@ -159,3 +159,76 @@ html { scroll-behavior: smooth; }
   animation: marquee 40s linear infinite;
 }
 .animate-marquee:hover { animation-play-state: paused; }
+
+/* ── Slide-in entrances ──────────────────────────────────────────────────────── */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in-left {
+  opacity: 0;
+  animation: slide-in-left 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in-right {
+  opacity: 0;
+  animation: slide-in-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in-up {
+  opacity: 0;
+  animation: slide-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Floating / bobbing ──────────────────────────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%      { transform: translateY(-7px) rotate(-1deg); }
+  66%      { transform: translateY(-3px) rotate(1deg); }
+}
+.animate-float { animation: float 4s ease-in-out infinite; }
+
+/* ── CTA glow pulse ──────────────────────────────────────────────────────────── */
+@keyframes glow-amber {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.5), 0 4px 12px rgba(251, 191, 36, 0.2); }
+  50%      { box-shadow: 0 0 0 8px rgba(251, 191, 36, 0), 0 4px 20px rgba(251, 191, 36, 0.4); }
+}
+.animate-glow-amber { animation: glow-amber 2.5s ease-in-out infinite; }
+
+@keyframes glow-violet {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+  50%      { box-shadow: 0 0 0 10px rgba(124, 58, 237, 0); }
+}
+.animate-glow-violet { animation: glow-violet 2.5s ease-in-out infinite; }
+
+/* ── Scale pop-in ────────────────────────────────────────────────────────────── */
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in {
+  opacity: 0;
+  animation: scale-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ── Gradient text shimmer (headings) ────────────────────────────────────────── */
+@keyframes text-shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.animate-text-shimmer {
+  background: linear-gradient(90deg, #fff 0%, #FCD34D 40%, #fff 80%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer 4s linear infinite;
+}

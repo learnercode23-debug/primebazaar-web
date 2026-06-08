@@ -218,7 +218,8 @@ export default function ProductDetailPage() {
             {product.isFeatured && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium">Featured</span>}
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-medium text-gray-900 mb-3 leading-snug">{product.title}</h1>
+          <h1 className="text-xl sm:text-2xl font-medium text-gray-900 mb-2 leading-snug">{product.title}</h1>
+
 
           <div className="flex items-center gap-3 mb-3">
             <StarRating rating={product.rating} size="md" />
@@ -439,10 +440,6 @@ export default function ProductDetailPage() {
                 <FiTruck className="text-xs" /> FREE delivery on this item
               </p>
             ) : null}
-            <p className="text-sm text-gray-600">
-              Sold by <span className="font-medium text-amazon-teal">{sellerName}</span>
-            </p>
-
             <hr />
 
             <div className="space-y-2 text-xs text-gray-600">
@@ -619,7 +616,7 @@ export default function ProductDetailPage() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <h3 className="font-bold text-gray-900">Chat with Seller</h3>
-                <p className="text-xs text-gray-500">{sellerName} · {product.title.slice(0, 40)}{product.title.length > 40 ? '…' : ''}</p>
+                <p className="text-xs text-gray-500">{product.title.slice(0, 40)}{product.title.length > 40 ? '…' : ''}</p>
               </div>
               <button onClick={() => setChatOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
                 <FiX className="text-xl"/>

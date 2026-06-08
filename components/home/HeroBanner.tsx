@@ -70,15 +70,34 @@ export default function HeroBanner() {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 lg:py-14 flex items-center justify-between gap-4">
-        <div className="text-white flex-1 min-w-0">
-          <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full mb-3 ${slide.tagColor}`}>
+        <div key={current} className="text-white flex-1 min-w-0">
+          <span
+            className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full mb-3 ${slide.tagColor} animate-slide-in-left`}
+            style={{ animationDelay: '0ms' }}
+          >
             <TagIcon className="text-sm" />
             {slide.tag}
           </span>
-          <h1 className="text-xl sm:text-3xl lg:text-4xl font-bold mb-2 leading-tight">{slide.title}</h1>
-          <p className="text-sm sm:text-base text-white/70 mb-4 line-clamp-2">{slide.subtitle}</p>
-          <div className="flex gap-3 flex-wrap">
-            <Link href={slide.href} className="inline-flex items-center bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold px-4 sm:px-6 py-2.5 rounded-full text-sm sm:text-base transition-all shadow-lg shadow-amber-500/30">
+          <h1
+            className="text-xl sm:text-3xl lg:text-4xl font-bold mb-2 leading-tight animate-slide-in-left"
+            style={{ animationDelay: '80ms' }}
+          >
+            {slide.title}
+          </h1>
+          <p
+            className="text-sm sm:text-base text-white/70 mb-4 line-clamp-2 animate-slide-in-left"
+            style={{ animationDelay: '160ms' }}
+          >
+            {slide.subtitle}
+          </p>
+          <div
+            className="flex gap-3 flex-wrap animate-slide-in-left"
+            style={{ animationDelay: '240ms' }}
+          >
+            <Link
+              href={slide.href}
+              className="inline-flex items-center bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold px-4 sm:px-6 py-2.5 rounded-full text-sm sm:text-base transition-all shadow-lg shadow-amber-500/30 animate-glow-amber"
+            >
               {slide.cta} →
             </Link>
             <Link href="/products" className="hidden sm:inline-flex items-center gap-1 border border-white/30 hover:border-white/60 text-white px-4 py-2.5 rounded-full text-sm">
@@ -87,12 +106,17 @@ export default function HeroBanner() {
           </div>
         </div>
 
-        <div className="hidden sm:block relative flex-shrink-0">
-          <div className="relative w-40 h-28 sm:w-56 sm:h-40 md:w-72 md:h-52 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+        <div key={`img-${current}`} className="hidden sm:block relative flex-shrink-0">
+          <div
+            className="relative w-40 h-28 sm:w-56 sm:h-40 md:w-72 md:h-52 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 animate-slide-in-right"
+            style={{ animationDelay: '120ms' }}
+          >
             <Image src={slide.image} alt={slide.title} fill className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
           </div>
-          <div className="absolute -bottom-2 -right-2 bg-amber-500 text-gray-900 font-black text-xs px-3 py-1.5 rounded-full shadow-lg">{slide.badge}</div>
+          <div className="absolute -bottom-2 -right-2 bg-amber-500 text-gray-900 font-black text-xs px-3 py-1.5 rounded-full shadow-lg animate-float">
+            {slide.badge}
+          </div>
         </div>
       </div>
 
