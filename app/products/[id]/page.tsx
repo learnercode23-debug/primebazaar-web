@@ -407,7 +407,7 @@ export default function ProductDetailPage() {
               {shareOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShareOpen(false)} />
-                  <div className="absolute bottom-full left-0 mb-2 bg-white border border-gray-200 rounded-xl shadow-lg p-1.5 min-w-[170px] z-20">
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl p-1.5 min-w-[180px] z-20">
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(`https://primepasal.com/products/${id}`)
