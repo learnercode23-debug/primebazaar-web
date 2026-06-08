@@ -78,10 +78,11 @@ export default function ProductDetailPage() {
   const [stockAlertLoading, setStockAlertLoading] = useState(false)
   const [stockAlertDone, setStockAlertDone]     = useState(false)
 
-  async function handleShare() {
+  function handleShare() {
     const url = `https://primepasal.com/products/${id}`
-    if (navigator.share) {
-      try { await navigator.share({ title: product!.title, url }) } catch { /* cancelled */ }
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    if (isMobile && navigator.share) {
+      navigator.share({ title: product?.title || '', url }).catch(() => setShareOpen(true))
     } else {
       setShareOpen((o) => !o)
     }
