@@ -24,23 +24,26 @@ function resolveRecipient(to: string): string {
 
 // ── Unified send — Gmail SMTP first, then Resend, then console log ────────────
 export async function sendEmail(to: string, subject: string, html: string) {
-  const recipient = resolveRecipient(to)
   const gmail = gmailTransporter
   const r = resend
   if (gmail) {
+    // Gmail SMTP always sends to the real address — no override
     await gmail.sendMail({
       from: `Primepasal <${process.env.GMAIL_USER}>`,
-      to: recipient, subject, html,
+      to, subject, html,
     })
-    console.log('[EMAIL] Sent via Gmail SMTP to:', recipient)
+    console.log('[EMAIL] Sent via Gmail SMTP to:', to)
     return
   }
   if (r) {
+    // Resend free plan can only deliver to the account owner email,
+    // so RESEND_TO_OVERRIDE lets you test against a real inbox
+    const recipient = resolveRecipient(to)
     await r.emails.send({ from: FROM, to: recipient, subject, html })
     console.log('[EMAIL] Sent via Resend to:', recipient)
     return
   }
-  console.log('[EMAIL] No provider configured. Subject:', subject, '→', recipient)
+  console.log('[EMAIL] No provider configured. Subject:', subject, '→', to)
 }
 
 // ── HTML wrapper ──────────────────────────────────────────────────────────────

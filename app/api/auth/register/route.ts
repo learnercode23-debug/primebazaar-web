@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
 
     // Send both emails non-blocking
     const userRole = role === 'seller' ? 'seller' : 'customer'
-    sendVerificationEmail(email, name, verificationToken).catch(() => {})
-    sendWelcomeEmail(email, name, userRole).catch(() => {})
+    sendVerificationEmail(email, name, verificationToken).catch((err) => console.error('[EMAIL] Verification email failed:', err))
+    sendWelcomeEmail(email, name, userRole).catch((err) => console.error('[EMAIL] Welcome email failed:', err))
 
     return NextResponse.json({
       success: true,
