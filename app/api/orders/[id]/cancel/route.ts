@@ -6,6 +6,8 @@ import Order from '@/models/Order'
 import Product from '@/models/Product'
 import SubOrder from '@/models/SubOrder'
 import { createNotification } from '@/lib/notifications'
+import { sendOrderCancelledEmail } from '@/lib/email'
+import User from '@/models/User'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -31,6 +33,23 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // Restore stock
     for (const item of order.items) {
       await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } })
+    }
+
+    // Send cancellation email to customer
+    const customer = await User.findById(order.user).select('email name').lean() as { email: string; name: string } | null
+    if (customer) {
+      const cancelledBy = user.role === 'admin' ? 'admin' : 'customer'
+      const itemList = order.items.map((i: { title: string; quantity: number }) => ({
+        title: i.title,
+        quantity: i.quantity,
+      }))
+      sendOrderCancelledEmail(customer.email, {
+        name: customer.name,
+        orderNumber: order.orderNumber,
+        total: order.totalAmount,
+        cancelledBy,
+        items: itemList,
+      }).catch((err) => console.error('[EMAIL] Order cancel email failed:', err))
     }
 
     // Notify the customer

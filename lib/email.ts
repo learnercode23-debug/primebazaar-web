@@ -223,6 +223,43 @@ export async function sendShippingNotification(to: string, data: {
   await sendEmail(to, `Your order ${data.orderNumber} has shipped!`, emailWrapper(content))
 }
 
+// ── Order cancelled ───────────────────────────────────────────────────────────
+export async function sendOrderCancelledEmail(to: string, data: {
+  name: string; orderNumber: string; total: number
+  cancelledBy: 'customer' | 'admin'
+  items: Array<{ title: string; quantity: number }>
+}) {
+  const itemsHtml = data.items.map(item =>
+    `<li style="padding:4px 0;font-size:13px;color:#374151">${item.title} × ${item.quantity}</li>`
+  ).join('')
+  const content = `
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="display:inline-block;background:#FEE2E2;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:16px">❌</div>
+      <h2 style="margin:0 0 8px;color:#1E1B4B;font-size:24px;font-weight:800">Order Cancelled</h2>
+      <p style="margin:0;color:#6B7280;font-size:15px">Hi ${data.name}, your order has been cancelled.</p>
+    </div>
+    <div style="background:#F5F3FF;border-radius:12px;padding:20px;margin-bottom:16px">
+      <p style="margin:0 0 4px;font-size:12px;color:#7C3AED;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Order Number</p>
+      <p style="margin:0;font-size:18px;font-weight:800;color:#1E1B4B">${data.orderNumber}</p>
+    </div>
+    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:20px;margin-bottom:16px">
+      <p style="margin:0 0 10px;font-size:13px;color:#6B7280;font-weight:600">Items in this order:</p>
+      <ul style="margin:0;padding-left:18px">${itemsHtml}</ul>
+      <p style="margin:12px 0 0;font-size:15px;font-weight:700;color:#1E1B4B;text-align:right">Total: Rs. ${Math.round(data.total).toLocaleString()}</p>
+    </div>
+    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:16px;margin-bottom:24px">
+      <p style="margin:0;font-size:13px;color:#991B1B">
+        ${data.cancelledBy === 'admin'
+          ? '⚠️ This order was cancelled by our team. If you have questions, please contact support.'
+          : 'ℹ️ You cancelled this order. If this was a mistake, please place a new order.'}
+      </p>
+    </div>
+    <div style="text-align:center">
+      <a href="${BASE}/orders" style="display:inline-block;background:#7C3AED;color:#fff;padding:14px 32px;border-radius:999px;text-decoration:none;font-weight:800;font-size:15px">View My Orders →</a>
+    </div>`
+  await sendEmail(to, `Order ${data.orderNumber} has been cancelled`, emailWrapper(content))
+}
+
 // ── Back-in-stock alert ───────────────────────────────────────────────────────
 export async function sendBackInStockEmail(to: string, productTitle: string, productUrl: string) {
   const content = `
