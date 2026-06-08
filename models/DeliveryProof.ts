@@ -83,7 +83,6 @@ const DeliveryProofSchema = new Schema<IDeliveryProof>(
   { timestamps: true }
 )
 
-DeliveryProofSchema.index({ order: 1 }, { unique: true })
 DeliveryProofSchema.index({ agent: 1, createdAt: -1 })
 DeliveryProofSchema.index({ confirmationStatus: 1 })
 
