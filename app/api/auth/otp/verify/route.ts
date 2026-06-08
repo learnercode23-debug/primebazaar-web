@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         phone,
         password: Math.random().toString(36) + Math.random().toString(36), // random unused password
         role: 'customer',
-        emailVerified: false,
+        emailVerified: true,
       })
     }
 
