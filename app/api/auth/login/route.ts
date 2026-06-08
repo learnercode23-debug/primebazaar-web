@@ -43,6 +43,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid credentials' }, { status: 401 })
     }
 
+    if (!user.emailVerified) {
+      return NextResponse.json({ success: false, error: 'Please verify your email before logging in. Check your inbox.' }, { status: 403 })
+    }
+
     const token = signToken(user._id.toString(), user.role)
 
     // Send login alert email (non-blocking)

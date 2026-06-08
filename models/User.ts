@@ -38,6 +38,8 @@ export interface IUser extends Document {
   stripeCustomerId?: string
   isActive: boolean
   emailVerified: boolean
+  emailVerificationToken?: string
+  emailVerificationExpiry?: Date
   notificationPrefs: {
     orderUpdates: boolean
     promotions: boolean
@@ -85,6 +87,8 @@ const UserSchema = new Schema<IUser>(
     stripeCustomerId: { type: String },
     isActive: { type: Boolean, default: true },
     emailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String },
+    emailVerificationExpiry: { type: Date },
     expoPushToken: { type: String },
     notificationPrefs: {
       orderUpdates: { type: Boolean, default: true },

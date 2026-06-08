@@ -68,6 +68,22 @@ function emailWrapper(content: string) {
 </body></html>`
 }
 
+// ── Email verification ────────────────────────────────────────────────────────
+export async function sendVerificationEmail(to: string, name: string, token: string) {
+  const link = `${BASE}/api/auth/verify-email?token=${token}`
+  const content = `
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="display:inline-block;background:#EDE9FE;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:16px">✉️</div>
+      <h2 style="margin:0 0 8px;color:#1E1B4B;font-size:24px;font-weight:800">Verify your email</h2>
+      <p style="margin:0;color:#6B7280;font-size:15px">Hi ${name}, click the button below to activate your account.</p>
+    </div>
+    <div style="text-align:center;margin-bottom:24px">
+      <a href="${link}" style="display:inline-block;background:#7C3AED;color:#fff;padding:16px 40px;border-radius:999px;text-decoration:none;font-weight:800;font-size:16px">Verify Email →</a>
+    </div>
+    <p style="text-align:center;font-size:12px;color:#9CA3AF">This link expires in 24 hours. If you didn't create an account, ignore this email.</p>`
+  await sendEmail(to, 'Verify your Primepasal account', emailWrapper(content))
+}
+
 // ── Welcome email ─────────────────────────────────────────────────────────────
 export async function sendWelcomeEmail(to: string, name: string, role: string) {
   const isSeller = role === 'seller'

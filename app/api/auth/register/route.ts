@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
-import { signToken } from '@/lib/auth'
 import User from '@/models/User'
-import { sendWelcomeEmail } from '@/lib/email'
+import { sendVerificationEmail } from '@/lib/email'
+import crypto from 'crypto'
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,37 +19,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Email already in use' }, { status: 409 })
     }
 
-    const user = await User.create({
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+
+    await User.create({
       name,
       email,
       password,
       role: role === 'seller' ? 'seller' : 'customer',
+      emailVerified: false,
+      emailVerificationToken: verificationToken,
+      emailVerificationExpiry: verificationExpiry,
     })
 
-    const token = signToken(user._id.toString(), user.role)
+    // Send verification email (non-blocking)
+    sendVerificationEmail(email, name, verificationToken).catch(() => {})
 
-    // Send welcome email (non-blocking)
-    sendWelcomeEmail(user.email, user.name, user.role).catch(() => {})
-
-    const res = NextResponse.json({
+    return NextResponse.json({
       success: true,
-      data: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      message: 'Account created. Please check your email to verify your account.',
     })
-
-    res.cookies.set('auth-token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    })
-
-    return res
   } catch (err) {
     console.error(err)
     return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 })

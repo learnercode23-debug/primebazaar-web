@@ -20,6 +20,7 @@ function RegisterForm() {
   const [form, setForm] = useState({ name: '', email: defaultEmail, password: '', role: defaultRole })
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -27,8 +28,7 @@ function RegisterForm() {
     setLoading(true)
     try {
       await register(form.name, form.email, form.password, form.role)
-      toast.success('Account created! Welcome to Primepasal.')
-      router.push(form.role === 'seller' ? '/seller' : '/')
+      setSubmitted(true)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Registration failed'
       toast.error(msg)
@@ -50,6 +50,21 @@ function RegisterForm() {
 
       <div className="w-full max-w-sm bg-white rounded-2xl border border-violet-100 shadow-lg shadow-violet-100/50 p-8">
 
+        {submitted ? (
+          <div className="text-center py-4">
+            <div className="text-5xl mb-4">✉️</div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Check your email</h2>
+            <p className="text-sm text-gray-500 mb-6">
+              We sent a verification link to <span className="font-semibold text-gray-900">{form.email}</span>.
+              Click the link to activate your account.
+            </p>
+            <p className="text-xs text-gray-400 mb-4">Didn&apos;t receive it? Check your spam folder.</p>
+            <Link href="/login" className="text-violet-600 text-sm font-semibold hover:underline">
+              Back to login →
+            </Link>
+          </div>
+        ) : (
+        <>
         <Link href="/login" className="flex items-center gap-1.5 text-violet-600 text-sm font-medium mb-6 hover:text-violet-800 transition-colors">
           <FiArrowLeft /> Back to sign in
         </Link>
@@ -161,6 +176,8 @@ function RegisterForm() {
         >
           Sign in instead
         </Link>
+        </>
+        )}
       </div>
     </div>
   )
