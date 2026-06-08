@@ -32,10 +32,12 @@ export async function POST(req: NextRequest) {
       emailVerificationExpiry: verificationExpiry,
     })
 
-    // Send both emails non-blocking
+    // Send both emails (awaited so Vercel doesn't kill them before they finish)
     const userRole = role === 'seller' ? 'seller' : 'customer'
-    sendVerificationEmail(email, name, verificationToken).catch((err) => console.error('[EMAIL] Verification email failed:', err))
-    sendWelcomeEmail(email, name, userRole).catch((err) => console.error('[EMAIL] Welcome email failed:', err))
+    await Promise.allSettled([
+      sendVerificationEmail(email, name, verificationToken).catch((err) => console.error('[EMAIL] Verification email failed:', err)),
+      sendWelcomeEmail(email, name, userRole).catch((err) => console.error('[EMAIL] Welcome email failed:', err)),
+    ])
 
     return NextResponse.json({
       success: true,

@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } })
     }
 
-    // Send cancellation email to customer
+    // Send cancellation email to customer (awaited so Vercel doesn't kill it early)
     const customer = await User.findById(order.user).select('email name').lean() as { email: string; name: string } | null
     if (customer) {
       const cancelledBy = user.role === 'admin' ? 'admin' : 'customer'
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         title: i.title,
         quantity: i.quantity,
       }))
-      sendOrderCancelledEmail(customer.email, {
+      await sendOrderCancelledEmail(customer.email, {
         name: customer.name,
         orderNumber: order.orderNumber,
         total: order.totalAmount,
