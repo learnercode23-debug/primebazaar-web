@@ -87,7 +87,7 @@ export default function InvoicePage() {
       </div>
 
       {/* Invoice document */}
-      <div className="max-w-2xl mx-auto px-8 py-10 bg-white min-h-screen print:max-w-full print:px-10">
+      <div className="max-w-2xl mx-auto px-8 py-10 bg-white min-h-screen print:min-h-0 print:max-w-full print:px-10">
 
         {/* Header */}
         <div className="flex items-start justify-between mb-10">
@@ -202,8 +202,9 @@ export default function InvoicePage() {
       {/* Print styles */}
       <style>{`
         @media print {
+          html, body { height: auto !important; min-height: 0 !important; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          @page { margin: 1cm; size: A4; }
+          @page { margin: 1.5cm; size: A4 portrait; }
           header, footer, nav { display: none !important; }
         }
       `}</style>
