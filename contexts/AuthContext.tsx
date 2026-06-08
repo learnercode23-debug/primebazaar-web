@@ -40,8 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function register(name: string, email: string, password: string, role = 'customer') {
-    const res = await axios.post('/api/auth/register', { name, email, password, role })
-    setUser(res.data.data)
+    await axios.post('/api/auth/register', { name, email, password, role })
+    // No auto-login — user must verify email first
   }
 
   async function logout() {
