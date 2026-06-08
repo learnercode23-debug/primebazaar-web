@@ -86,34 +86,39 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
 
   /* ── Grid variant ─────────────────────────────────────────────────────── */
   return (
-    <div className="bg-white rounded-xl border border-brand-100 overflow-hidden hover:shadow-purple hover:border-brand-200 hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full">
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:shadow-violet-200/60 hover:border-brand-200 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col h-full">
 
       {/* Image + Badges */}
       <div className="relative">
         <Link href={`/products/${product._id}`}>
-          <div className="relative h-36 sm:h-48 bg-gray-50 overflow-hidden">
+          <div className="relative h-40 sm:h-52 bg-gray-50 overflow-hidden">
             <Image
               src={product.images[0] || 'https://via.placeholder.com/400'}
               alt={product.title}
               fill
-              className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
+              className="object-contain p-3 group-hover:scale-110 transition-transform duration-500"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
+            <div className="absolute inset-x-0 bottom-0 flex justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-300 pb-2.5">
+              <span className="bg-gray-900/80 text-white text-[10px] font-semibold px-3 py-1 rounded-full backdrop-blur-sm">
+                Quick View →
+              </span>
+            </div>
           </div>
         </Link>
 
         {/* Only show ONE primary badge to avoid clutter */}
         <div className="absolute top-2 left-2 flex items-center gap-1">
           {hasDiscount ? (
-            <span className="bg-amazon-red text-white text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md shadow-sm">
+            <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
               -{product.discountPercent}%
             </span>
           ) : product.isDealOfDay ? (
-            <span className="bg-amber-500 text-gray-900 text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md shadow-sm">
+            <span className="bg-amber-500 text-gray-900 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
               🔥 Deal
             </span>
           ) : product.isFeatured ? (
-            <span className="bg-violet-600 text-white text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md shadow-sm">
+            <span className="bg-violet-600 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
               ⭐ Top Pick
             </span>
           ) : null}
@@ -135,8 +140,8 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
       </div>
 
       {/* Content */}
-      <div className="p-2.5 sm:p-3 flex flex-col flex-1 gap-1">
-        <p className="text-[10px] sm:text-xs text-gray-400 font-semibold uppercase tracking-wide">{product.brand}</p>
+      <div className="p-3 sm:p-3.5 flex flex-col flex-1 gap-1.5">
+        <p className="text-[10px] sm:text-xs text-violet-500 font-bold uppercase tracking-wider">{product.brand}</p>
 
         <Link href={`/products/${product._id}`}>
           <h3 className="text-xs sm:text-sm font-semibold text-gray-900 hover:text-brand-600 line-clamp-2 leading-snug transition-colors">
@@ -156,7 +161,7 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
         {/* Price + CTA */}
         <div className="mt-auto pt-1.5 space-y-1.5">
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-sm sm:text-base font-bold text-gray-900">{formatPrice(price)}</span>
+            <span className="text-sm sm:text-base font-black text-gray-900">{formatPrice(price)}</span>
             {hasDiscount && (
               <span className="text-[10px] sm:text-xs text-gray-400 line-through">{formatPrice(product.price)}</span>
             )}
@@ -178,15 +183,15 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
             className={cn(
               'w-full text-xs sm:text-sm font-semibold py-2 sm:py-2.5 rounded-full transition-all flex items-center justify-center gap-1.5',
               inCart
-                ? 'bg-green-100 text-green-700 border border-green-300'
+                ? 'bg-green-500 text-white'
                 : product.stock === 0
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-amazon-yellow hover:bg-yellow-400 text-gray-900 shadow-sm hover:shadow-md',
+                : 'bg-amber-400 hover:bg-amber-500 text-gray-900 shadow-sm hover:shadow-md hover:shadow-amber-200',
               bouncing && 'animate-cart-bounce'
             )}
           >
             <FiShoppingCart className="text-xs sm:text-sm flex-shrink-0" />
-            <span>{inCart ? 'In Cart' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+            <span>{inCart ? '✓ In Cart' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
           </button>
         </div>
       </div>

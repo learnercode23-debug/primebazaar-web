@@ -25,13 +25,19 @@ export default function DealOfTheDay() {
     <section className="bg-white rounded-2xl border border-brand-100 p-4 sm:p-6 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center">
-            <FiZap className="text-amber-600 text-lg" />
+        <div className="flex items-center gap-2.5">
+          <div className="relative">
+            <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+            </span>
+            <div className="w-9 h-9 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-sm">
+              <FiZap className="text-white text-lg" />
+            </div>
           </div>
           <div>
-            <h2 className="text-base sm:text-xl font-bold text-gray-900">Deal of the Day</h2>
-            <p className="text-xs text-gray-400 hidden sm:block">Limited time offers</p>
+            <h2 className="text-base sm:text-xl font-black text-gray-900">Deal of the Day</h2>
+            <p className="text-xs text-gray-400 hidden sm:block">Updated daily — don&apos;t miss out</p>
           </div>
         </div>
         <Link href="/products?dealOfDay=true" className="text-brand-600 text-xs sm:text-sm hover:underline font-semibold">

@@ -8,6 +8,16 @@ import FeaturedProducts from '@/components/home/FeaturedProducts'
 import RecentlyViewed from '@/components/product/RecentlyViewed'
 import { FiTruck, FiShield, FiRefreshCw, FiHeadphones } from 'react-icons/fi'
 
+const MARQUEE_ITEMS = [
+  '🚀 Free shipping on orders above Rs. 500',
+  '🔥 Flash Sale — Up to 50% off today',
+  '📦 Same-day dispatch on select items',
+  '⭐ Rated 4.8★ by 10,000+ customers',
+  '🎁 New users: 15% off with code NEWUSER',
+  '🔒 100% secure checkout guaranteed',
+  '🏪 1,000+ verified sellers on PrimePasal',
+]
+
 const TRUST_BADGES = [
   { icon: FiTruck,      title: 'Free Shipping',  desc: 'Orders over Rs.500',  color: 'text-violet-600 bg-violet-50', href: '/products?sort=createdAt&order=desc' },
   { icon: FiShield,     title: 'Secure Payment', desc: 'SSL encrypted',        color: 'text-indigo-600 bg-indigo-50', href: '/about#payment' },
@@ -19,6 +29,17 @@ export default function HomePage() {
   return (
     <div>
       <HeroBanner />
+
+      {/* Scrolling announcement bar */}
+      <div className="bg-[#1E1B4B] overflow-hidden border-y border-violet-800/40">
+        <div className="animate-marquee py-2">
+          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
+            <span key={i} className="whitespace-nowrap px-8 text-[11px] sm:text-xs font-medium text-violet-200 border-r border-violet-700/50">
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-6 sm:space-y-10">
         {/* Trust badges — 2 cols mobile, 4 cols desktop */}

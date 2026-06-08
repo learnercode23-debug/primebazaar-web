@@ -30,9 +30,12 @@ export default function FeaturedProducts({
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <h2 className="text-base sm:text-xl font-bold text-gray-900">{title}</h2>
-        <Link href="/products" className="text-amazon-teal text-xs sm:text-sm hover:underline font-medium">
+      <div className="flex items-center justify-between mb-4 sm:mb-5">
+        <div className="flex items-center gap-2.5">
+          <span className="block w-1 h-6 rounded-full bg-gradient-to-b from-violet-600 to-purple-400" />
+          <h2 className="text-base sm:text-xl font-black text-gray-900">{title}</h2>
+        </div>
+        <Link href="/products" className="text-xs sm:text-sm text-violet-600 font-semibold hover:underline">
           View all →
         </Link>
       </div>

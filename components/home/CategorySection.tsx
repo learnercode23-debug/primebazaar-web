@@ -20,9 +20,12 @@ const CATEGORY_META: Record<string, { icon: IconType; color: string; bg: string 
 export default function CategorySection() {
   return (
     <section>
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <h2 className="text-base sm:text-xl font-bold text-gray-900">Shop by Category</h2>
-        <Link href="/products" className="text-xs sm:text-sm text-brand-600 hover:underline font-medium">
+      <div className="flex items-center justify-between mb-4 sm:mb-5">
+        <div className="flex items-center gap-2.5">
+          <span className="block w-1 h-6 rounded-full bg-gradient-to-b from-violet-600 to-purple-400" />
+          <h2 className="text-base sm:text-xl font-black text-gray-900">Shop by Category</h2>
+        </div>
+        <Link href="/products" className="text-xs sm:text-sm text-violet-600 font-semibold hover:underline">
           All →
         </Link>
       </div>
