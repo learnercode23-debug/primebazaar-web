@@ -5,6 +5,7 @@ import HeroBanner from '@/components/home/HeroBanner'
 import CategorySection from '@/components/home/CategorySection'
 import DealOfTheDay from '@/components/home/DealOfTheDay'
 import FeaturedProducts from '@/components/home/FeaturedProducts'
+import RecentlyViewed from '@/components/product/RecentlyViewed'
 import { FiTruck, FiShield, FiRefreshCw, FiHeadphones } from 'react-icons/fi'
 
 const TRUST_BADGES = [
@@ -39,6 +40,8 @@ export default function HomePage() {
         <DealOfTheDay />
         <FeaturedProducts title="Featured Products" query="featured=true" limit={8} />
         <FeaturedProducts title="New Arrivals" query="sort=createdAt&order=desc" limit={8} />
+
+        <RecentlyViewed />
 
         {/* Seller promo banner */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#1E1B4B] via-[#312E81] to-[#4C1D95] p-6 sm:p-10 text-white text-center">

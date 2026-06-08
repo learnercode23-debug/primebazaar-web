@@ -7,7 +7,7 @@ import Cart from '@/models/Cart'
 import Product from '@/models/Product'
 import Coupon from '@/models/Coupon'
 import { generateTrackingNumber } from '@/lib/utils'
-import { notifyOrderPlaced, notifySellerNewOrder } from '@/lib/notifications'
+import { notifyOrderPlaced, notifySellerNewOrder, notifyLowStock } from '@/lib/notifications'
 import { splitOrderBySeller } from '@/lib/splitOrder'
 import { assignProductSeller } from '@/lib/assignmentEngine'
 import User from '@/models/User'
@@ -125,9 +125,16 @@ export async function POST(req: NextRequest) {
       stripePaymentIntentId,
     })
 
-    // Decrement stock
+    // Decrement stock + alert seller when critically low
     for (const item of cart.items) {
-      await Product.findByIdAndUpdate(item.product, { $inc: { stock: -item.quantity } })
+      const updated = await Product.findByIdAndUpdate(
+        item.product,
+        { $inc: { stock: -item.quantity } },
+        { new: true }
+      ).select('stock seller title')
+      if (updated && updated.stock <= 3) {
+        notifyLowStock(updated.seller.toString(), updated.title, updated.stock).catch(() => {})
+      }
     }
 
     // Clear cart

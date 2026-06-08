@@ -17,6 +17,7 @@ export type NotificationType =
   | 'admin_alert'
   | 'order_accepted'    // seller accepted
   | 'order_packed'      // seller packed
+  | 'stock_low'         // seller: product stock is critically low
 
 export interface INotification extends Document {
   user: mongoose.Types.ObjectId

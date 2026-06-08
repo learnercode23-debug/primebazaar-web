@@ -78,6 +78,18 @@ export async function notifySellerNewOrder(
   )
 }
 
+export async function notifyLowStock(sellerId: string, productTitle: string, remainingStock: number) {
+  await createNotification(
+    sellerId,
+    'stock_low',
+    remainingStock === 0 ? '🚨 Out of Stock' : '⚠️ Low Stock Alert',
+    remainingStock === 0
+      ? `"${productTitle}" is now out of stock. Restock immediately to keep selling.`
+      : `"${productTitle}" has only ${remainingStock} unit${remainingStock === 1 ? '' : 's'} left.`,
+    '/seller/products'
+  )
+}
+
 export async function notifyReturnUpdate(userId: string, returnNumber: string, status: string, returnId: string) {
   const messages: Record<string, string> = {
     approved: 'Return approved. Please ship the item back.',

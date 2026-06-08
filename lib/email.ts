@@ -198,6 +198,27 @@ export async function sendShippingNotification(to: string, data: {
   await sendEmail(to, `Your order ${data.orderNumber} has shipped!`, emailWrapper(content))
 }
 
+// ── Back-in-stock alert ───────────────────────────────────────────────────────
+export async function sendBackInStockEmail(to: string, productTitle: string, productUrl: string) {
+  const content = `
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="display:inline-block;background:#D1FAE5;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:16px">📦</div>
+      <h2 style="margin:0 0 8px;color:#1E1B4B;font-size:22px;font-weight:800">Back in Stock!</h2>
+      <p style="margin:0;color:#6B7280;font-size:14px">Great news — a product you wanted is available again.</p>
+    </div>
+    <div style="background:#F5F3FF;border-radius:12px;padding:20px;margin-bottom:24px">
+      <p style="margin:0 0 4px;font-size:13px;color:#7C3AED;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Product</p>
+      <p style="margin:0;font-size:16px;font-weight:700;color:#1E1B4B">${productTitle}</p>
+    </div>
+    <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:12px;padding:16px;margin-bottom:24px">
+      <p style="margin:0;font-size:13px;color:#065F46">⚡ Stock is limited — order quickly before it sells out again!</p>
+    </div>
+    <div style="text-align:center">
+      <a href="${productUrl}" style="display:inline-block;background:#7C3AED;color:#fff;padding:14px 32px;border-radius:999px;text-decoration:none;font-weight:800;font-size:15px">Buy Now →</a>
+    </div>`
+  await sendEmail(to, `${productTitle} is back in stock!`, emailWrapper(content))
+}
+
 // ── Return update ─────────────────────────────────────────────────────────────
 export async function sendReturnUpdate(to: string, data: {
   returnNumber: string; status: string; refundAmount?: number
