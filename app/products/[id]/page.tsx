@@ -78,16 +78,6 @@ export default function ProductDetailPage() {
   const [stockAlertLoading, setStockAlertLoading] = useState(false)
   const [stockAlertDone, setStockAlertDone]     = useState(false)
 
-  function handleShare() {
-    const url = `https://primepasal.com/products/${id}`
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-    if (isMobile && navigator.share) {
-      navigator.share({ title: product?.title || '', url }).catch(() => setShareOpen(true))
-    } else {
-      setShareOpen((o) => !o)
-    }
-  }
-
   async function subscribeStockAlert(e: React.FormEvent) {
     e.preventDefault()
     setStockAlertLoading(true)
@@ -397,48 +387,47 @@ export default function ProductDetailPage() {
             >
               <FiMessageCircle /> Chat with Seller
             </button>
-            <div className="relative">
-              <button
-                onClick={handleShare}
-                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-              >
-                <FiShare2 /> Share
-              </button>
-              {shareOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShareOpen(false)} />
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl p-1.5 min-w-[180px] z-20">
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(`https://primepasal.com/products/${id}`)
-                        toast.success('Link copied!')
-                        setShareOpen(false)
-                      }}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 rounded-lg flex items-center gap-2"
-                    >
-                      <FiCopy className="text-gray-500" /> Copy Link
-                    </button>
-                    <a
-                      href={`https://wa.me/?text=${encodeURIComponent((product?.title || '') + '\nhttps://primepasal.com/products/' + id)}`}
-                      target="_blank" rel="noopener noreferrer"
-                      onClick={() => setShareOpen(false)}
-                      className="px-3 py-2 text-xs hover:bg-gray-50 rounded-lg flex items-center gap-2 block"
-                    >
-                      <span className="text-green-500">💬</span> WhatsApp
-                    </a>
-                    <a
-                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://primepasal.com/products/' + id)}`}
-                      target="_blank" rel="noopener noreferrer"
-                      onClick={() => setShareOpen(false)}
-                      className="px-3 py-2 text-xs hover:bg-gray-50 rounded-lg flex items-center gap-2 block"
-                    >
-                      <span className="text-blue-500">📘</span> Facebook
-                    </a>
-                  </div>
-                </>
+            <button
+              onClick={() => setShareOpen((o) => !o)}
+              className={cn(
+                'flex items-center gap-1 text-sm transition-colors',
+                shareOpen ? 'text-violet-600' : 'text-gray-500 hover:text-gray-900'
               )}
-            </div>
+            >
+              <FiShare2 /> Share
+            </button>
           </div>
+
+          {shareOpen && (
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://primepasal.com/products/${id}`)
+                  toast.success('Link copied!')
+                  setShareOpen(false)
+                }}
+                className="flex items-center gap-1.5 text-xs bg-white border border-gray-200 hover:border-gray-400 text-gray-700 px-3 py-1.5 rounded-full transition-colors"
+              >
+                <FiCopy className="text-gray-400" /> Copy Link
+              </button>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent((product?.title || '') + '\nhttps://primepasal.com/products/' + id)}`}
+                target="_blank" rel="noopener noreferrer"
+                onClick={() => setShareOpen(false)}
+                className="flex items-center gap-1.5 text-xs bg-green-50 border border-green-200 hover:border-green-400 text-green-700 px-3 py-1.5 rounded-full transition-colors"
+              >
+                💬 WhatsApp
+              </a>
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://primepasal.com/products/' + id)}`}
+                target="_blank" rel="noopener noreferrer"
+                onClick={() => setShareOpen(false)}
+                className="flex items-center gap-1.5 text-xs bg-blue-50 border border-blue-200 hover:border-blue-400 text-blue-700 px-3 py-1.5 rounded-full transition-colors"
+              >
+                📘 Facebook
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Buy box sidebar */}
