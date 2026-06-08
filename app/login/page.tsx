@@ -32,7 +32,7 @@ export default function LoginPage() {
   const verified = searchParams.get('verified') === '1'
   const tokenError = searchParams.get('error')
 
-  // Already logged in â€” redirect away from login page
+  // Already logged in - redirect away from login page
   useEffect(() => {
     if (user) {
       if (user.role === 'admin') router.replace('/admin')
@@ -179,20 +179,20 @@ export default function LoginPage() {
         <span className="text-violet-600 text-4xl font-black leading-none">.</span>
       </Link>
 
-      <div className=”w-full max-w-sm”>
+      <div className="w-full max-w-sm">
 
         {verified && (
-          <div className=”bg-green-50 border border-green-200 text-green-800 text-sm rounded-xl px-4 py-3 mb-4 text-center font-medium”>
-            ✅ Email verified! You can now sign in.
+          <div className="bg-green-50 border border-green-200 text-green-800 text-sm rounded-xl px-4 py-3 mb-4 text-center font-medium">
+            Email verified! You can now sign in.
           </div>
         )}
         {tokenError === 'token-expired' && (
-          <div className=”bg-red-50 border border-red-200 text-red-800 text-sm rounded-xl px-4 py-3 mb-4 text-center”>
+          <div className="bg-red-50 border border-red-200 text-red-800 text-sm rounded-xl px-4 py-3 mb-4 text-center">
             Verification link expired. Please register again.
           </div>
         )}
         {tokenError === 'invalid-token' && (
-          <div className=”bg-red-50 border border-red-200 text-red-800 text-sm rounded-xl px-4 py-3 mb-4 text-center”>
+          <div className="bg-red-50 border border-red-200 text-red-800 text-sm rounded-xl px-4 py-3 mb-4 text-center">
             Invalid verification link.
           </div>
         )}

@@ -33,8 +33,8 @@ export default function RevenueChart({ data, height = 180 }: Props) {
           width={56}
         />
         <Tooltip
-          formatter={(value: number) => [`Rs. ${value.toLocaleString('en-NP')}`, 'Revenue']}
-          labelFormatter={(label: string) => label}
+          formatter={(value) => [`Rs. ${Number(value).toLocaleString('en-NP')}`, 'Revenue']}
+          labelFormatter={(label) => String(label)}
           contentStyle={{
             borderRadius: 8,
             border: '1px solid #e5e7eb',

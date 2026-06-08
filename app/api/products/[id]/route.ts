@@ -53,7 +53,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     // Back-in-stock: notify all subscribers if stock went from 0 to > 0
     if (oldStock === 0 && typeof body.stock === 'number' && body.stock > 0 && updated) {
-      const alerts = await StockAlert.find({ product: params.id }).lean() as { email: string; user?: string }[]
+      const alerts = await StockAlert.find({ product: params.id }).lean() as unknown as { email: string; user?: string }[]
       if (alerts.length > 0) {
         const productUrl = `https://primepasal.com/products/${params.id}`
         await Promise.all(alerts.map(async (alert) => {
