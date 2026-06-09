@@ -15,8 +15,8 @@ import { Product } from '@/types'
 import { FiCheck, FiTag, FiTruck, FiCreditCard, FiMapPin, FiChevronDown, FiNavigation } from 'react-icons/fi'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
-type Step = 'address' | 'payment' | 'review'
-type PaymentMethod = 'cod'
+type Step = 'guest' | 'address' | 'payment' | 'review'
+type PaymentMethod = 'cod' | 'bnpl'
 
 interface SavedAddress {
   _id: string
@@ -41,6 +41,18 @@ const PAYMENT_METHODS: { id: PaymentMethod; label: string; description: string; 
       <div className="flex items-center gap-1">
         <span className="text-2xl">💵</span>
         <span className="text-orange-700 font-bold text-sm">COD</span>
+      </div>
+    ),
+  },
+  {
+    id: 'bnpl',
+    label: 'Pay in 3 Installments',
+    description: 'Split your total into 3 equal monthly payments — no interest',
+    color: 'border-violet-400 bg-violet-50',
+    logo: (
+      <div className="flex items-center gap-1">
+        <span className="text-2xl">💳</span>
+        <span className="text-violet-700 font-bold text-sm">BNPL</span>
       </div>
     ),
   },
@@ -73,6 +85,11 @@ export default function CheckoutPage() {
   const [codEligible, setCodEligible] = useState(true)
   const [codFee, setCodFee] = useState(0)
   const [codIneligibleReason, setCodIneligibleReason] = useState('')
+  const [deliveryInstructions, setDeliveryInstructions] = useState('')
+  const [deliveryDate, setDeliveryDate] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
+  const [guestName, setGuestName] = useState('')
+  const [isGuest, setIsGuest] = useState(false)
 
   const shippingCost = subtotal > 500 ? 0 : 99
   const discount = couponData?.discount || 0
@@ -93,8 +110,9 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (authLoading || cartLoading) return
-    if (!user) { router.push('/login'); return }
+    if (!user && !isGuest) { setStep('guest'); return }
     if (items.length === 0) { router.push('/cart'); return }
+    if (!user) return
     axios.get('/api/addresses').then((r) => {
       const addrs = r.data.data || []
       setSavedAddresses(addrs)
@@ -182,6 +200,7 @@ export default function CheckoutPage() {
   }
 
   const steps: { key: Step; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    ...((!user) ? [{ key: 'guest' as Step, label: 'Account', icon: FiTag }] : []),
     { key: 'address', label: 'Address', icon: FiMapPin },
     { key: 'payment', label: 'Payment', icon: FiCreditCard },
     { key: 'review', label: 'Review', icon: FiCheck },
@@ -190,7 +209,7 @@ export default function CheckoutPage() {
 
   // Show spinner while auth/cart context hydrates — prevents blank-page flash
   if (authLoading || cartLoading) return <LoadingSpinner fullPage />
-  if (!user || items.length === 0) return null
+  if (items.length === 0 && step !== 'guest') return null
 
   return (
     <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
@@ -217,6 +236,52 @@ export default function CheckoutPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left: form */}
         <div className="lg:col-span-2 space-y-4">
+
+          {/* Step 0 — Guest / Account */}
+          {step === 'guest' && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="font-bold text-gray-900 text-lg mb-1">How would you like to continue?</h2>
+              <p className="text-sm text-gray-500 mb-5">Sign in for a faster checkout experience, or continue as a guest.</p>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {/* Sign in */}
+                <button
+                  onClick={() => router.push(`/login?redirect=/checkout`)}
+                  className="border-2 border-amazon-orange rounded-xl p-5 text-left hover:bg-orange-50 transition-colors"
+                >
+                  <p className="font-bold text-gray-900 mb-1">Sign in</p>
+                  <p className="text-xs text-gray-500">Access saved addresses, track orders, and faster future checkouts.</p>
+                  <span className="mt-3 inline-block bg-amazon-yellow text-gray-900 font-bold px-4 py-1.5 rounded-full text-sm">Sign in →</span>
+                </button>
+                {/* Guest */}
+                <div className="border-2 border-gray-200 rounded-xl p-5">
+                  <p className="font-bold text-gray-900 mb-1">Continue as guest</p>
+                  <p className="text-xs text-gray-500 mb-3">No account needed. Enter your details below.</p>
+                  <div className="space-y-2">
+                    <input
+                      value={guestName}
+                      onChange={e => setGuestName(e.target.value)}
+                      placeholder="Full name"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                    />
+                    <input
+                      type="email"
+                      value={guestEmail}
+                      onChange={e => setGuestEmail(e.target.value)}
+                      placeholder="Email address"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                    />
+                    <button
+                      onClick={() => { if (guestEmail && guestName) { setIsGuest(true); setAddress(p => ({ ...p, name: guestName })); setStep('address') } }}
+                      disabled={!guestEmail || !guestName}
+                      className="w-full bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white font-bold py-2 rounded-lg text-sm transition-colors"
+                    >
+                      Continue as Guest →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Step 1 — Address */}
           {step === 'address' && (
@@ -311,10 +376,48 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {/* Delivery preferences */}
+              <div className="mt-5 border border-gray-200 rounded-xl p-4 space-y-3">
+                <p className="text-sm font-bold text-gray-900">Delivery preferences</p>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Preferred delivery date (optional)</label>
+                  <input
+                    type="date"
+                    value={deliveryDate}
+                    min={new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0]}
+                    max={new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]}
+                    onChange={e => setDeliveryDate(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Delivery instructions (optional)</label>
+                  <div className="flex gap-2 flex-wrap mb-2">
+                    {['Leave at door', 'Ring doorbell', 'Call on arrival', 'Leave with security'].map(opt => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setDeliveryInstructions(opt)}
+                        className={`text-xs px-3 py-1 rounded-full border transition-colors ${deliveryInstructions === opt ? 'bg-amazon-orange text-white border-amazon-orange' : 'border-gray-300 text-gray-600 hover:border-gray-400'}`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={deliveryInstructions}
+                    onChange={e => setDeliveryInstructions(e.target.value)}
+                    placeholder="Any other delivery notes…"
+                    rows={2}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange resize-none"
+                  />
+                </div>
+              </div>
+
               <button
                 onClick={() => setStep('payment')}
                 disabled={!address.name || !address.street || !address.city || !address.phone}
-                className="mt-6 bg-amazon-yellow hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold px-6 py-2.5 rounded-full text-sm transition-colors"
+                className="mt-4 bg-amazon-yellow hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold px-6 py-2.5 rounded-full text-sm transition-colors"
               >
                 Continue to Payment →
               </button>
@@ -380,6 +483,22 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* BNPL info */}
+              {paymentMethod === 'bnpl' && (
+                <div className="mt-4 bg-violet-50 border border-violet-200 rounded-lg p-3">
+                  <p className="text-sm font-bold text-violet-800 mb-2">💳 Pay in 3 installments</p>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs mb-2">
+                    {[1, 2, 3].map(n => (
+                      <div key={n} className="bg-white rounded-lg py-2 border border-violet-100">
+                        <p className="font-bold text-violet-700">Rs.{Math.ceil(total / 3).toLocaleString()}</p>
+                        <p className="text-gray-500">Month {n}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-violet-600">0% interest · No processing fees · First payment today</p>
                 </div>
               )}
 

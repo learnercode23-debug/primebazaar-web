@@ -157,6 +157,9 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
       {/* Content */}
       <div className="p-3 sm:p-4 flex flex-col flex-1 gap-2">
 
+        {product.isFeatured && (
+          <p className="text-[10px] text-gray-400 leading-none">Sponsored</p>
+        )}
         {product.brand && (
           <p className="text-[10px] text-violet-500 font-bold uppercase tracking-widest leading-none">{product.brand}</p>
         )}

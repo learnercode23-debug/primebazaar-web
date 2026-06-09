@@ -115,11 +115,12 @@ export default function Footer() {
           <h3 className="font-bold text-xs mb-4 text-white/90 uppercase tracking-widest">Shop</h3>
           <ul className="space-y-2.5 text-sm text-gray-400">
             {[
-              ['Electronics',   '/products?category=Electronics'],
-              ['Fashion',       '/products?category=Fashion'],
-              ['Home & Garden', '/products?category=Home+%26+Garden'],
-              ['Books',         '/products?category=Books'],
-              ['Sports',        '/products?category=Sports'],
+              ['Electronics',      '/products?category=Electronics'],
+              ['Fashion',          '/products?category=Fashion'],
+              ['🥬 Primepasal Fresh', '/fresh'],
+              ['♻️ Renewed',         '/renewed'],
+              ['⚡ Digital',         '/digital'],
+              ['🎁 Gift Cards',      '/gift-cards'],
             ].map(([label, href]) => (
               <li key={label}><Link href={href} className="hover:text-violet-400 transition-colors link-underline inline-block">{label}</Link></li>
             ))}

@@ -10,6 +10,7 @@ import {
   FiSun, FiMoon,
 } from 'react-icons/fi'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useLang } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import axios from 'axios'
@@ -30,6 +31,7 @@ export default function Navbar() {
   const { user, logout } = useAuth()
   const { itemCount } = useCart()
   const { theme, toggle: toggleTheme } = useTheme()
+  const { lang, setLang } = useLang()
   const router = useRouter()
 
   const [mobileOpen, setMobileOpen]       = useState(false)
@@ -170,6 +172,16 @@ export default function Navbar() {
                 {user ? <UserAvatar name={user.name} /> : <FiUser className="text-xl" />}
               </Link>
 
+              {/* Language toggle */}
+              <button
+                onClick={() => setLang(lang === 'en' ? 'ne' : 'en')}
+                className="flex items-center gap-1 text-white/80 hover:text-white hover:bg-white/10 rounded-xl px-2 py-1.5 transition-all text-xs font-bold"
+                aria-label="Switch language"
+                title={lang === 'en' ? 'Switch to Nepali' : 'Switch to English'}
+              >
+                {lang === 'en' ? '🇳🇵 NE' : '🇬🇧 EN'}
+              </button>
+
               {/* Dark mode toggle */}
               <button
                 onClick={toggleTheme}
@@ -220,7 +232,10 @@ export default function Navbar() {
               { label: '⚡ Lightning Deals', href: '/products?lightning=true' },
               { label: '🏆 Best Sellers', href: '/products?sort=salesCount&order=desc' },
               { label: '🆕 New Releases', href: '/products?sort=createdAt&order=desc' },
-              { label: '📦 Free Delivery', href: '/products?freeShipping=true' },
+              { label: '🥬 Fresh', href: '/fresh' },
+              { label: '♻️ Renewed', href: '/renewed' },
+              { label: '⚡ Digital', href: '/digital' },
+              { label: '🎁 Gift Cards', href: '/gift-cards' },
             ].map(({ label, href }) => (
               <Link key={href} href={href} className="text-sm whitespace-nowrap px-3 py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all link-underline">
                 {label}

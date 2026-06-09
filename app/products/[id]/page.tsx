@@ -30,6 +30,9 @@ import {
 } from 'react-icons/fi'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import ClipCoupon from '@/components/product/ClipCoupon'
+import PriceHistoryChart from '@/components/product/PriceHistoryChart'
+import LookInsideModal from '@/components/product/LookInsideModal'
 
 interface IVariant {
   _id?: string
@@ -289,15 +292,28 @@ export default function ProductDetailPage() {
         {/* Images */}
         <div className="lg:col-span-4">
           <ImageGallery images={images} title={product.title} />
+          {category?.name?.toLowerCase().includes('book') && (
+            <LookInsideModal images={images} title={product.title} />
+          )}
         </div>
 
         {/* Product info */}
         <div className="lg:col-span-5">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <Link href={`/products?brand=${encodeURIComponent(product.brand)}`} className="text-sm text-amazon-teal hover:underline font-medium">
               {product.brand}
             </Link>
             {product.isFeatured && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium">Featured</span>}
+            {product.isApproved && (
+              <span className="flex items-center gap-1 bg-green-50 border border-green-200 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                <FiShield className="text-[10px]" /> Genuine Product
+              </span>
+            )}
+            {product.freeShipping && (
+              <span className="flex items-center gap-1 bg-violet-50 border border-violet-200 text-violet-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                <FiTruck className="text-[10px]" /> Fulfilled by Primepasal
+              </span>
+            )}
           </div>
 
           <h1 className="text-xl sm:text-2xl font-medium text-gray-900 mb-2 leading-snug">{product.title}</h1>
@@ -334,6 +350,14 @@ export default function ProductDetailPage() {
               </p>
             )}
           </div>
+
+          {/* Clip coupon */}
+          {hasDiscount && (
+            <ClipCoupon price={price} productId={id} />
+          )}
+
+          {/* Price history sparkline */}
+          <PriceHistoryChart currentPrice={price} originalPrice={originalPrice} />
 
           {/* Lightning deal */}
           {product.isLightningDeal && product.lightningDealEndTime && (
