@@ -51,6 +51,93 @@ const STATUS_IDX: Record<string, number> = {
   pending: 0, confirmed: 1, processing: 2, shipped: 3, out_for_delivery: 4, delivered: 5,
 }
 
+interface DriverLocation { lat: number; lng: number; speed: number | null; heading: number | null; at: string }
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function LiveMap({ driver, destCity }: { driver: DriverLocation; destCity: string }) {
+  // Map centred between driver and a rough destination pin
+  // We pick a static "destination" offset from driver for visual (real coords from address unavailable client-side)
+  const destLat = driver.lat + 0.018  // ~2km north as destination stand-in
+  const destLng = driver.lng + 0.012
+
+  const minLat = Math.min(driver.lat, destLat) - 0.01
+  const maxLat = Math.max(driver.lat, destLat) + 0.01
+  const minLng = Math.min(driver.lng, destLng) - 0.01
+  const maxLng = Math.max(driver.lng, destLng) + 0.01
+  const latRange = maxLat - minLat || 0.02
+  const lngRange = maxLng - minLng || 0.02
+
+  function toXY(lat: number, lng: number) {
+    return {
+      x: ((lng - minLng) / lngRange) * 100,
+      y: (1 - (lat - minLat) / latRange) * 100,
+    }
+  }
+
+  const d = toXY(driver.lat, driver.lng)
+  const dest = toXY(destLat, destLng)
+  const distKm = haversineKm(driver.lat, driver.lng, destLat, destLng)
+  const etaMin = Math.round(distKm / 0.35 * 60)  // ~21 km/h average delivery speed
+
+  const age = Date.now() - new Date(driver.at).getTime()
+  const isStale = age > 30000  // older than 30s = stale
+
+  return (
+    <div className="border border-violet-200 rounded-2xl overflow-hidden mt-4">
+      <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full ${isStale ? 'bg-yellow-400' : 'bg-green-400 animate-pulse'}`} />
+          <span className="text-white text-sm font-bold">{isStale ? 'GPS paused' : 'LIVE — Delivery Agent'}</span>
+        </div>
+        <div className="flex items-center gap-3 text-xs text-violet-100">
+          <span>~{distKm.toFixed(1)} km away</span>
+          <span>ETA ~{etaMin} min</span>
+          {driver.speed != null && driver.speed > 0 && <span>{Math.round(driver.speed * 3.6)} km/h</span>}
+        </div>
+      </div>
+
+      <div className="relative bg-violet-50" style={{ paddingTop: '56%' }}>
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          {/* Road grid background */}
+          <rect width="100" height="100" fill="#f3f0ff" />
+          <line x1="0" y1="33" x2="100" y2="33" stroke="#ddd6fe" strokeWidth="1.5" />
+          <line x1="0" y1="66" x2="100" y2="66" stroke="#ddd6fe" strokeWidth="1.5" />
+          <line x1="33" y1="0" x2="33" y2="100" stroke="#ddd6fe" strokeWidth="1.5" />
+          <line x1="66" y1="0" x2="66" y2="100" stroke="#ddd6fe" strokeWidth="1.5" />
+
+          {/* Route line */}
+          <line x1={d.x} y1={d.y} x2={dest.x} y2={dest.y} stroke="#7c3aed" strokeWidth="0.8" strokeDasharray="3 2" />
+
+          {/* Destination pin */}
+          <circle cx={dest.x} cy={dest.y} r="4" fill="#7c3aed" opacity="0.2" />
+          <circle cx={dest.x} cy={dest.y} r="2.5" fill="#7c3aed" />
+          <text x={dest.x} y={dest.y - 5} fontSize="3.5" textAnchor="middle" fill="#4c1d95" fontWeight="bold">{destCity}</text>
+
+          {/* Driver pin with pulse */}
+          <circle cx={d.x} cy={d.y} r="7" fill="#7c3aed" opacity="0.15">
+            <animate attributeName="r" values="5;9;5" dur="2s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.2;0.05;0.2" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx={d.x} cy={d.y} r="4" fill="#7c3aed" />
+          <text x={d.x} y={d.y + 1.5} fontSize="4" textAnchor="middle">🏍️</text>
+        </svg>
+      </div>
+
+      <div className="px-4 py-2.5 bg-white flex items-center justify-between text-xs text-gray-500 border-t border-violet-100">
+        <span>📍 {driver.lat.toFixed(4)}, {driver.lng.toFixed(4)}</span>
+        <span>Updated {Math.round(age / 1000)}s ago</span>
+      </div>
+    </div>
+  )
+}
+
 export default function OrderDetailPage() {
   const { id } = useParams() as { id: string }
   const router = useRouter()
@@ -62,6 +149,7 @@ export default function OrderDetailPage() {
   const [returnReason, setReturnReason] = useState('not_needed')
   const [returnDetail, setReturnDetail] = useState('')
   const [submittingReturn, setSubmittingReturn] = useState(false)
+  const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -73,6 +161,21 @@ export default function OrderDetailPage() {
     }).catch(() => router.push('/orders'))
       .finally(() => setLoading(false))
   }, [id, router])
+
+  // Poll GPS location when order is out for delivery
+  useEffect(() => {
+    if (!order || order.status !== 'out_for_delivery') return
+    const poll = () => {
+      axios.get(`/api/delivery/location?orderId=${id}`)
+        .then(r => {
+          if (r.data.data?.driverLocation) setDriverLocation(r.data.data.driverLocation)
+        })
+        .catch(() => {})
+    }
+    poll()
+    const t = setInterval(poll, 5000)
+    return () => clearInterval(t)
+  }, [id, order?.status])
 
   async function cancelOrder() {
     if (!confirm('Cancel this order?')) return
@@ -242,6 +345,21 @@ export default function OrderDetailPage() {
               )
             })}
           </div>
+
+          {/* Real-time GPS map — only shown when out for delivery */}
+          {order.status === 'out_for_delivery' && (
+            driverLocation ? (
+              <LiveMap
+                driver={driverLocation}
+                destCity={(order.shippingAddress as unknown as { city?: string })?.city || 'Your location'}
+              />
+            ) : (
+              <div className="mt-4 border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-3 text-sm text-gray-500">
+                <span className="w-2 h-2 rounded-full bg-gray-300 animate-pulse flex-shrink-0" />
+                Waiting for delivery agent GPS signal…
+              </div>
+            )
+          )}
         </div>
       )}
 

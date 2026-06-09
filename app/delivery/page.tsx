@@ -67,6 +67,45 @@ export default function DeliveryAgentPage() {
   const [recipientName,  setRecipientName]  = useState('')
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
+  // ── Real-time GPS broadcast ────────────────────────────────────────────────
+  const watchIdRef    = useRef<number | null>(null)
+  const lastPushRef   = useRef<number>(0)
+  const gpsOrderIdRef = useRef<string | null>(null)
+
+  function startGPSBroadcast(orderId: string) {
+    stopGPSBroadcast()
+    gpsOrderIdRef.current = orderId
+    if (!navigator.geolocation) return
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const now = Date.now()
+        if (now - lastPushRef.current < 4000) return  // throttle to ~once per 4s
+        lastPushRef.current = now
+        const { latitude: lat, longitude: lng, speed, heading } = pos.coords
+        setGpsCoords({ lat, lng })
+        axios.post('/api/delivery/location', {
+          orderId: gpsOrderIdRef.current,
+          lat, lng,
+          speed: speed ?? null,
+          heading: heading ?? null,
+        }).catch(() => {})
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 8000 }
+    )
+  }
+
+  function stopGPSBroadcast() {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation?.clearWatch(watchIdRef.current)
+      watchIdRef.current = null
+    }
+    gpsOrderIdRef.current = null
+  }
+
+  useEffect(() => () => stopGPSBroadcast(), [])
+
   // Auth guard — redirect to login if not signed in
   useEffect(() => {
     if (authLoading) return
@@ -94,7 +133,9 @@ export default function DeliveryAgentPage() {
   /* ── Open verification flow ── */
   function startVerify(order: CODOrder) {
     setActiveOrder(order)
-    setScanInput(order._id)   // pre-fill with order ID (agent just confirms)
+    setScanInput(order._id)
+    // Start broadcasting GPS so customer can see real-time location
+    startGPSBroadcast(order._id)
     setOtp('')
     setAttemptsLeft(5)
     setStep('scan')
@@ -158,6 +199,7 @@ export default function DeliveryAgentPage() {
   }
 
   function resetFlow() {
+    stopGPSBroadcast()
     setStep('orders')
     setActiveOrder(null)
     setScanInput('')

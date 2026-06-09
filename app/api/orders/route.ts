@@ -11,6 +11,7 @@ import { notifyOrderPlaced, notifySellerNewOrder, notifyLowStock } from '@/lib/n
 import { splitOrderBySeller } from '@/lib/splitOrder'
 import { assignProductSeller } from '@/lib/assignmentEngine'
 import User from '@/models/User'
+import { runAprioriMining } from '@/lib/apriori'
 
 export async function GET(req: NextRequest) {
   try {
@@ -151,6 +152,9 @@ export async function POST(req: NextRequest) {
       order._id.toString(),
       customer?.name || 'A customer'
     )
+
+    // Retrain Apriori rules in background — non-blocking, fire and forget
+    runAprioriMining({ minSupport: 0.005, minConfidence: 0.02, minLift: 1.0, paidOnly: false }).catch(() => {})
 
     return NextResponse.json({ success: true, data: order }, { status: 201 })
   } catch (err) {

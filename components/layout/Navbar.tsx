@@ -256,6 +256,7 @@ export default function Navbar() {
               { label: '⚡ Digital', href: '/digital' },
               { label: '🎁 Gift Cards', href: '/gift-cards' },
               { label: '🔴 Live', href: '/live' },
+              { label: '📦 Lockers', href: '/pickup-points' },
             ].map(({ label, href }) => (
               <Link key={href} href={href} className="text-sm whitespace-nowrap px-3 py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all link-underline">
                 {label}
