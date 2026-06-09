@@ -15,6 +15,15 @@ import SearchAutocomplete from './SearchAutocomplete'
 import MegaMenu from './MegaMenu'
 import NotificationBell from '@/components/ui/NotificationBell'
 
+function UserAvatar({ name }: { name: string }) {
+  const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+  return (
+    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-md flex-shrink-0">
+      {initials}
+    </div>
+  )
+}
+
 export default function Navbar() {
   const { user, logout } = useAuth()
   const { itemCount } = useCart()
@@ -51,12 +60,12 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 shadow-md">
+    <header className="sticky top-0 z-50 shadow-lg shadow-black/20">
 
       {/* ════════════════════════════════════════════
           DESKTOP NAVBAR
           ════════════════════════════════════════════ */}
-      <div className="bg-amazon-dark">
+      <div className="bg-gradient-to-r from-[#1E1B4B] via-[#1E1B4B] to-[#2D1B69]">
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
 
           {/* ── Row 1: Logo + Icons (all screens) ── */}
@@ -86,46 +95,50 @@ export default function Navbar() {
               <div className="relative hidden sm:block" ref={userMenuRef}>
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="text-white hover:ring-1 hover:ring-white rounded px-2 py-1 flex flex-col items-start"
+                  className="flex items-center gap-2 text-white hover:bg-white/10 rounded-xl px-2.5 py-1.5 transition-colors"
                 >
-                  <span className="text-xs text-gray-400 hidden md:block">
-                    {user ? `Hello, ${user.name.split(' ')[0]}` : 'Hello, sign in'}
-                  </span>
-                  <span className="text-xs font-bold flex items-center gap-0.5">
-                    <span className="hidden sm:inline">Account</span>
-                    <FiChevronDown className="text-xs hidden sm:inline" />
-                  </span>
+                  {user ? <UserAvatar name={user.name} /> : <FiUser className="text-lg" />}
+                  <div className="hidden md:flex flex-col items-start leading-none">
+                    <span className="text-[10px] text-gray-400">{user ? `Hello, ${user.name.split(' ')[0]}` : 'Hello, sign in'}</span>
+                    <span className="text-xs font-bold flex items-center gap-0.5 mt-0.5">Account <FiChevronDown className="text-[10px]" /></span>
+                  </div>
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50">
+                  <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-2xl shadow-black/10 border border-gray-100 py-2 z-50 animate-fade-blur-in">
                     {!user ? (
-                      <>
-                        <Link href="/login" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiUser /> Sign In</Link>
-                        <Link href="/register" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>Create Account</Link>
-                      </>
+                      <div className="p-2 space-y-1">
+                        <Link href="/login" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors font-semibold" onClick={() => setUserMenuOpen(false)}><FiUser className="text-violet-500" /> Sign In</Link>
+                        <Link href="/register" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}>Create Account</Link>
+                      </div>
                     ) : (
                       <>
-                        <div className="px-4 py-2 border-b border-gray-100">
-                          <p className="font-semibold text-sm">{user.name}</p>
-                          <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                        <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
+                          <UserAvatar name={user.name} />
+                          <div>
+                            <p className="font-bold text-sm text-gray-900">{user.name}</p>
+                            <p className="text-xs text-violet-500 font-semibold capitalize">{user.role}</p>
+                          </div>
                         </div>
-                        <Link href="/profile" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiSettings /> My Account</Link>
-                        <Link href="/orders" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiPackage /> My Orders</Link>
-                        <Link href="/wishlist" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiHeart /> Wishlist</Link>
-                        <Link href="/addresses" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiMapPin /> My Addresses</Link>
-                        <Link href="/support" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>💬 Help & Support</Link>
-                        {(user.role === 'seller' || user.role === 'admin') && (
-                          <Link href="/seller" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiPackage /> Seller Hub</Link>
-                        )}
-                        {user.role === 'seller' && (
-                          <Link href="/seller/earnings" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiDollarSign /> Earnings</Link>
-                        )}
-                        {user.role === 'admin' && (
-                          <Link href="/admin" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}><FiSettings /> Admin</Link>
-                        )}
-                        <hr className="my-1" />
-                        <button onClick={handleLogout} className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"><FiLogOut /> Sign Out</button>
+                        <div className="p-2 space-y-0.5">
+                          <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}><FiSettings className="text-gray-400" /> My Account</Link>
+                          <Link href="/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}><FiPackage className="text-gray-400" /> My Orders</Link>
+                          <Link href="/wishlist" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}><FiHeart className="text-gray-400" /> Wishlist</Link>
+                          <Link href="/addresses" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}><FiMapPin className="text-gray-400" /> My Addresses</Link>
+                          <Link href="/support" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}>💬 Help & Support</Link>
+                          {(user.role === 'seller' || user.role === 'admin') && (
+                            <Link href="/seller" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}><FiPackage className="text-gray-400" /> Seller Hub</Link>
+                          )}
+                          {user.role === 'seller' && (
+                            <Link href="/seller/earnings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}><FiDollarSign className="text-gray-400" /> Earnings</Link>
+                          )}
+                          {user.role === 'admin' && (
+                            <Link href="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}><FiSettings className="text-gray-400" /> Admin Panel</Link>
+                          )}
+                          <div className="pt-1 border-t border-gray-100 mt-1">
+                            <button onClick={handleLogout} className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors"><FiLogOut /> Sign Out</button>
+                          </div>
+                        </div>
                       </>
                     )}
                   </div>
@@ -137,28 +150,28 @@ export default function Navbar() {
 
               {/* Messages */}
               {user && (
-                <Link href="/messages" className="relative hidden md:flex items-center text-white hover:ring-1 hover:ring-white rounded p-2">
+                <Link href="/messages" className="relative hidden md:flex items-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-colors">
                   <FiMessageSquare className="text-xl" />
                   {unreadMessages > 0 && (
-                    <span className="absolute top-0.5 right-0.5 bg-indigo-500 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                    <span className="absolute top-1 right-1 bg-violet-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none shadow-md">
                       {unreadMessages > 9 ? '9+' : unreadMessages}
                     </span>
                   )}
                 </Link>
               )}
 
-              <Link href="/wishlist" className="hidden md:flex items-center text-white hover:ring-1 hover:ring-white rounded p-2"><FiHeart className="text-xl" /></Link>
+              <Link href="/wishlist" className="hidden md:flex items-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-colors"><FiHeart className="text-xl" /></Link>
 
               {/* Mobile: user icon */}
-              <Link href={user ? '/profile' : '/login'} className="sm:hidden flex items-center text-white p-2 rounded">
-                <FiUser className="text-xl" />
+              <Link href={user ? '/profile' : '/login'} className="sm:hidden flex items-center text-white/80 hover:text-white p-2 rounded-xl">
+                {user ? <UserAvatar name={user.name} /> : <FiUser className="text-xl" />}
               </Link>
 
               {/* Cart */}
-              <Link href="/cart" className="relative flex items-center text-white hover:ring-1 hover:ring-white rounded p-2">
-                <FiShoppingCart className="text-xl sm:text-2xl" />
+              <Link href="/cart" className="relative flex items-center text-white hover:bg-white/10 rounded-xl p-2 transition-colors group">
+                <FiShoppingCart className="text-xl sm:text-2xl group-hover:scale-110 transition-transform" />
                 {itemCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 bg-amazon-orange text-gray-900 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                  <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-br from-amber-400 to-orange-500 text-gray-900 text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none shadow-md">
                     {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
@@ -182,9 +195,9 @@ export default function Navbar() {
       {/* ════════════════════════════════════════════
           SECONDARY NAV — desktop only
           ════════════════════════════════════════════ */}
-      <div className="hidden sm:block bg-amazon-blue text-white">
+      <div className="hidden sm:block bg-[#312E81] border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center h-10 gap-4 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center h-10 gap-1 overflow-x-auto scrollbar-hide">
             <MegaMenu />
             {[
               { label: "Today's Deals 🔥", href: '/products?dealOfDay=true' },
@@ -193,7 +206,7 @@ export default function Navbar() {
               { label: '🆕 New Releases', href: '/products?sort=createdAt&order=desc' },
               { label: '📦 Free Delivery', href: '/products?freeShipping=true' },
             ].map(({ label, href }) => (
-              <Link key={href} href={href} className="text-sm hover:underline whitespace-nowrap hover:text-amazon-yellow transition-colors">
+              <Link key={href} href={href} className="text-sm whitespace-nowrap px-3 py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all link-underline">
                 {label}
               </Link>
             ))}
@@ -205,7 +218,7 @@ export default function Navbar() {
           MOBILE HAMBURGER MENU
           ════════════════════════════════════════════ */}
       {mobileOpen && (
-        <div className="sm:hidden bg-white border-b shadow-lg">
+        <div className="sm:hidden bg-white border-b shadow-2xl shadow-black/10 animate-slide-in-up">
           <div className="p-4 space-y-1">
             {!user ? (
               <>
@@ -218,9 +231,12 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <div className="px-3 py-2 mb-2 bg-brand-50 rounded-xl">
-                  <p className="font-bold text-gray-900">{user.name}</p>
-                  <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                <div className="px-3 py-3 mb-2 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-2xl flex items-center gap-3 border border-violet-100">
+                  <UserAvatar name={user.name} />
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm">{user.name}</p>
+                    <p className="text-xs text-violet-500 font-semibold capitalize">{user.role}</p>
+                  </div>
                 </div>
                 <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}><FiSettings className="text-gray-400" /> My Account</Link>
                 <Link href="/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}><FiPackage className="text-gray-400" /> My Orders</Link>
