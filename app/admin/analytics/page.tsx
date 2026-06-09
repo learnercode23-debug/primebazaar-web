@@ -281,14 +281,15 @@ export default function AdvancedAnalyticsPage() {
         </div>
       )}
 
-      {/* ── Churn ── */}
+      {/* ── Churn (ML) ── */}
       {tab === 'churn' && (
         <div className="space-y-4">
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-4 gap-4">
             {[
-              { label: 'Monthly Churn Rate', value: '4.2%', change: '-0.8%', good: true },
-              { label: 'At-Risk Customers',  value: '312',  change: '+14',    good: false },
-              { label: 'Recovered (30d)',    value: '89',   change: '+22',    good: true },
+              { label: 'Monthly Churn Rate',  value: '4.2%',    change: '-0.8%', good: true },
+              { label: 'At-Risk Customers',   value: '312',     change: '+14',   good: false },
+              { label: 'Revenue at Risk',      value: 'Rs.1.2L', change: '+18%',  good: false },
+              { label: 'Recovered (30d)',      value: '89',      change: '+22',   good: true },
             ].map(({ label, value, change, good }) => (
               <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm text-center">
                 <p className={`text-3xl font-black ${good ? 'text-green-600' : 'text-red-500'}`}>{value}</p>
@@ -297,36 +298,94 @@ export default function AdvancedAnalyticsPage() {
               </div>
             ))}
           </div>
+
           <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-            <h2 className="font-black text-gray-900 mb-4">Churn Rate Trend</h2>
+            <h2 className="font-black text-gray-900 mb-4">Churn Rate Trend (ML Predicted)</h2>
             <LineChart data={[6.8, 6.2, 5.9, 5.5, 5.1, 4.9, 4.7, 4.5, 4.4, 4.3, 4.2, 4.2]} color="#ef4444" />
+            <LineChart data={[7.1, 6.5, 6.1, 5.7, 5.3, 5.0, 4.9, 4.6, 4.5, 4.4, 4.3, 4.0]} color="#f97316" height={60} />
             <div className="flex justify-between text-[10px] text-gray-400 mt-1">
               {MONTHS.map(m => <span key={m}>{m}</span>)}
             </div>
-          </div>
-          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-            <h2 className="font-black text-gray-900 mb-3 flex items-center gap-2">
-              <FiAlertCircle className="text-amber-500" /> At-Risk Customers
-            </h2>
-            <div className="space-y-2">
-              {[
-                { name: 'Deepak R.', lastOrder: '47 days ago', orders: 8,  risk: 'High' },
-                { name: 'Sunita B.', lastOrder: '38 days ago', orders: 12, risk: 'High' },
-                { name: 'Arjun K.', lastOrder: '31 days ago', orders: 5,  risk: 'Medium' },
-                { name: 'Puja L.',  lastOrder: '29 days ago', orders: 3,  risk: 'Medium' },
-              ].map(({ name, lastOrder, orders, risk }) => (
-                <div key={name} className="flex items-center justify-between py-2 border-b border-gray-50">
-                  <div>
-                    <p className="text-sm font-bold text-gray-900">{name}</p>
-                    <p className="text-xs text-gray-500">Last order: {lastOrder} · {orders} total orders</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${risk === 'High' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{risk}</span>
-                    <button className="text-xs text-violet-600 hover:underline">Send offer</button>
-                  </div>
-                </div>
-              ))}
+            <div className="flex gap-4 mt-2 text-[10px] text-gray-500">
+              <span className="flex items-center gap-1"><span className="inline-block w-4 h-0.5 bg-red-500" /> Actual churn</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-4 h-0.5 bg-orange-400" style={{ borderTop: '1px dashed' }} /> ML forecast</span>
             </div>
+          </div>
+
+          {/* ML at-risk table */}
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="font-black text-gray-900 flex items-center gap-2">
+                <FiAlertCircle className="text-red-500" /> ML At-Risk Customer Predictions
+              </h2>
+              <button className="text-xs bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-xl font-bold">
+                Export List
+              </button>
+            </div>
+            <table className="w-full text-sm">
+              <thead><tr className="bg-gray-50 text-xs text-gray-500 border-b">
+                <th className="px-4 py-2.5 text-left">Customer</th>
+                <th className="px-4 py-2.5 text-right">Churn Prob.</th>
+                <th className="px-4 py-2.5 text-right">LTV</th>
+                <th className="px-4 py-2.5 text-right">Last Order</th>
+                <th className="px-4 py-2.5 text-right">Pred. Churn</th>
+                <th className="px-4 py-2.5 text-right">Top Signal</th>
+                <th className="px-4 py-2.5 text-right">Action</th>
+              </tr></thead>
+              <tbody className="divide-y divide-gray-50">
+                {[
+                  { name: 'Deepak R.', prob: 91, ltv: 'Rs.41,200', lastOrder: '47d ago', churnIn: '~3d',  signal: '47d no purchase', action: '🚨 Urgent outreach' },
+                  { name: 'Sunita B.', prob: 83, ltv: 'Rs.28,600', lastOrder: '38d ago', churnIn: '~8d',  signal: 'Category shift',  action: '🎁 Send 20% coupon' },
+                  { name: 'Arjun K.',  prob: 74, ltv: 'Rs.19,400', lastOrder: '31d ago', churnIn: '~14d', signal: 'Fewer sessions',   action: '📧 Re-engage email' },
+                  { name: 'Puja L.',   prob: 68, ltv: 'Rs.14,800', lastOrder: '29d ago', churnIn: '~18d', signal: 'Cart abandon ×3',  action: '💬 Reminder push' },
+                  { name: 'Ram S.',    prob: 61, ltv: 'Rs.32,100', lastOrder: '25d ago', churnIn: '~22d', signal: 'Price sensitivity', action: '🎁 Loyalty reward' },
+                  { name: 'Gita P.',   prob: 54, ltv: 'Rs.8,700',  lastOrder: '22d ago', churnIn: '~28d', signal: 'Low engagement',   action: '📧 Newsletter' },
+                  { name: 'Bikash T.', prob: 47, ltv: 'Rs.61,400', lastOrder: '19d ago', churnIn: '~35d', signal: 'Slowing orders',   action: '👑 VIP offer' },
+                ].map(({ name, prob, ltv, lastOrder, churnIn, signal, action }) => (
+                  <tr key={name} className="hover:bg-gray-50">
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center text-xs font-black text-violet-700">{name[0]}</div>
+                        <span className="font-semibold text-gray-900">{name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${prob}%`, backgroundColor: prob >= 80 ? '#ef4444' : prob >= 60 ? '#f97316' : '#f59e0b' }} />
+                        </div>
+                        <span className={`font-black text-xs ${prob >= 80 ? 'text-red-600' : prob >= 60 ? 'text-orange-600' : 'text-amber-600'}`}>{prob}%</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-gray-700 font-medium">{ltv}</td>
+                    <td className="px-4 py-2.5 text-right text-gray-500">{lastOrder}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      <span className={`font-bold text-xs ${prob >= 80 ? 'text-red-600' : 'text-amber-600'}`}>{churnIn}</span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-xs text-gray-500">{signal}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      <button className="text-xs font-semibold text-violet-600 hover:text-violet-800 hover:underline whitespace-nowrap">{action}</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Intervention playbooks */}
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              { icon: '🚨', tier: 'Critical (>80%)', color: 'border-red-200 bg-red-50', actions: ['Personal phone call', 'Exclusive 30% discount', 'Free delivery for 3 months', 'Dedicated account manager'] },
+              { icon: '⚠️', tier: 'High Risk (60-80%)', color: 'border-orange-200 bg-orange-50', actions: ['Personalized email', '20% coupon code', 'Win-back campaign', 'Product recommendation'] },
+              { icon: '💡', tier: 'Watch (40-60%)', color: 'border-amber-200 bg-amber-50', actions: ['Newsletter engagement', 'Loyalty points bonus', 'Browse reminder push', 'Seasonal campaign'] },
+            ].map(({ icon, tier, color, actions }) => (
+              <div key={tier} className={`border rounded-2xl p-4 ${color}`}>
+                <p className="font-bold text-gray-900 text-sm mb-2">{icon} {tier}</p>
+                <ul className="space-y-1">
+                  {actions.map(a => <li key={a} className="text-xs text-gray-700 flex items-center gap-1.5"><span className="text-gray-400">→</span>{a}</li>)}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       )}

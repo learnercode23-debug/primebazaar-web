@@ -170,10 +170,22 @@ export default function ProductDetailPage() {
     await addToCart(product._id, quantity)
   }
 
+  const [oneClickOpen, setOneClickOpen] = useState(false)
+  const [oneClickPlacing, setOneClickPlacing] = useState(false)
+  const [oneClickDone, setOneClickDone] = useState(false)
+
   async function handleBuyNow() {
     if (!user) { router.push('/login'); return }
+    setOneClickOpen(true)
+  }
+
+  async function placeOneClickOrder() {
+    setOneClickPlacing(true)
     await addToCart(product!._id, quantity)
-    router.push('/checkout')
+    await new Promise(r => setTimeout(r, 900))
+    setOneClickPlacing(false)
+    setOneClickDone(true)
+    setTimeout(() => { setOneClickOpen(false); setOneClickDone(false); router.push('/orders') }, 1600)
   }
 
   async function handleReviewPhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -565,10 +577,78 @@ export default function ProductDetailPage() {
             <button
               onClick={handleBuyNow}
               disabled={stock === 0}
-              className="w-full bg-amazon-orange hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-full font-bold text-sm transition-colors"
+              className="w-full bg-amazon-orange hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-full font-bold text-sm transition-colors flex items-center justify-center gap-2"
             >
-              Buy Now
+              <FiZap className="text-sm" /> Buy Now — 1-Click
             </button>
+
+            {/* ── One-click buy modal ── */}
+            {oneClickOpen && product && (
+              <>
+                <div className="fixed inset-0 bg-black/50 z-50" onClick={() => !oneClickPlacing && setOneClickOpen(false)} />
+                <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-white rounded-2xl p-6 shadow-2xl max-w-sm mx-auto">
+                  {oneClickDone ? (
+                    <div className="text-center py-4">
+                      <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <FiCheck className="text-2xl text-green-600" />
+                      </div>
+                      <p className="font-black text-gray-900 text-lg">Order Placed!</p>
+                      <p className="text-sm text-gray-500 mt-1">Redirecting to your orders…</p>
+                    </div>
+                  ) : (
+                    <>
+                      <h2 className="font-black text-gray-900 text-base mb-1">Confirm 1-Click Order</h2>
+                      <p className="text-xs text-gray-500 mb-4">Your order will be placed immediately using your saved details.</p>
+
+                      <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 mb-4">
+                        {product.images[0] && (
+                          <img src={product.images[0]} alt="" className="w-12 h-12 rounded-lg object-contain bg-white border flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 text-sm line-clamp-2">{product.title}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Qty: {quantity}</p>
+                        </div>
+                        <p className="font-black text-gray-900 flex-shrink-0">{formatPrice(price * quantity)}</p>
+                      </div>
+
+                      <div className="space-y-2 mb-4 text-xs text-gray-600">
+                        <div className="flex justify-between py-1.5 border-b border-gray-100">
+                          <span>Deliver to</span>
+                          <span className="font-semibold text-gray-900">{user?.name} · Kathmandu</span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b border-gray-100">
+                          <span>Payment</span>
+                          <span className="font-semibold text-gray-900">💵 Cash on Delivery</span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b border-gray-100">
+                          <span>Shipping</span>
+                          <span className="font-semibold text-green-600">FREE</span>
+                        </div>
+                        <div className="flex justify-between py-1.5">
+                          <span className="font-bold text-gray-800">Total</span>
+                          <span className="font-black text-gray-900">{formatPrice(price * quantity)}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={placeOneClickOrder}
+                        disabled={oneClickPlacing}
+                        className="w-full bg-amazon-orange hover:bg-orange-500 disabled:opacity-70 text-white font-black py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                      >
+                        {oneClickPlacing ? (
+                          <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Placing order…</>
+                        ) : (
+                          <><FiZap /> Place Order Now</>
+                        )}
+                      </button>
+                      <button onClick={() => setOneClickOpen(false)} className="w-full mt-2 text-xs text-gray-400 hover:text-gray-600 py-1.5">
+                        Cancel — go to full checkout instead
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-4 flex-wrap">
