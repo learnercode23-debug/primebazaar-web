@@ -79,6 +79,9 @@ export default function Footer() {
               ['Careers',             '/careers'],
               ['Press Releases',      '/press'],
               ['Investor Relations',  '/investor-relations'],
+              ['⭐ PP Rewards',        '/rewards'],
+              ['⚡ Plus Membership',   '/membership'],
+              ['🎁 Refer a Friend',    '/referral'],
             ].map(([label, href]) => (
               <li key={label}><Link href={href} className="hover:text-violet-400 transition-colors link-underline inline-block">{label}</Link></li>
             ))}

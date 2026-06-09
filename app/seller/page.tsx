@@ -87,6 +87,8 @@ export default function SellerDashboard() {
           { href: '/seller/products',  label: 'My Products',        desc: 'Add, edit, or remove your listings',         icon: FiPackage,     color: 'bg-purple-50 border-purple-200' },
           { href: '/seller/orders',    label: 'Orders',             desc: 'Accept, pack and ship customer orders',      icon: FiShoppingBag, color: 'bg-blue-50 border-blue-200' },
           { href: '/seller/earnings',  label: 'Earnings & Payouts', desc: 'Wallet balance, ledger, bank accounts',      icon: FiDollarSign,  color: 'bg-green-50 border-green-200' },
+          { href: '/seller/ads',       label: '⚡ Sponsored Ads',   desc: 'Boost products to reach more customers',     icon: FiTrendingUp,  color: 'bg-violet-50 border-violet-200' },
+          { href: '/seller/brand',     label: '🏪 Brand Store',     desc: 'Edit your A+ brand page and story',          icon: FiStar,        color: 'bg-indigo-50 border-indigo-200' },
           { href: '/seller/cod-orders',label: 'COD Orders',         desc: 'Track cash-on-delivery collections',         icon: FiCreditCard,  color: 'bg-amber-50 border-amber-200' },
           { href: '/seller/deliveries',label: 'Delivery Proofs',    desc: 'View and dispute delivery photo proofs',     icon: FiTruck,       color: 'bg-orange-50 border-orange-200' },
           { href: '/seller/reviews',   label: 'Customer Reviews',   desc: 'See what buyers say about your products',    icon: FiStar,        color: 'bg-yellow-50 border-yellow-200' },

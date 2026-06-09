@@ -7,7 +7,7 @@ import {
   FiShoppingCart, FiUser, FiMenu, FiX,
   FiHeart, FiPackage, FiLogOut, FiSettings,
   FiChevronDown, FiMapPin, FiDollarSign, FiMessageSquare,
-  FiSun, FiMoon,
+  FiSun, FiMoon, FiStar, FiZap,
 } from 'react-icons/fi'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useLang } from '@/contexts/LanguageContext'
@@ -166,6 +166,19 @@ export default function Navbar() {
               )}
 
               <Link href="/wishlist" className="hidden md:flex items-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-colors"><FiHeart className="text-xl" /></Link>
+
+              {/* Rewards points badge */}
+              {user && (
+                <Link href="/rewards" className="hidden lg:flex items-center gap-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl px-2.5 py-1.5 transition-colors text-xs font-bold">
+                  <FiStar className="text-amber-400 text-sm" />
+                  <span className="text-amber-300">620 pts</span>
+                </Link>
+              )}
+
+              {/* Plus badge */}
+              <Link href="/membership" className="hidden lg:flex items-center gap-1 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-full px-2.5 py-1 text-[10px] font-black transition-all shadow-md">
+                <FiZap className="text-[10px] text-amber-300" /> Plus
+              </Link>
 
               {/* Mobile: user icon */}
               <Link href={user ? '/profile' : '/login'} className="sm:hidden flex items-center text-white/80 hover:text-white p-2 rounded-xl">

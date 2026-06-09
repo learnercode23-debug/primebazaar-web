@@ -303,6 +303,9 @@ export default function ProductDetailPage() {
             <Link href={`/products?brand=${encodeURIComponent(product.brand)}`} className="text-sm text-amazon-teal hover:underline font-medium">
               {product.brand}
             </Link>
+            <Link href={`/brand/${encodeURIComponent(product.brand)}`} className="text-xs text-violet-500 hover:underline">
+              Visit brand store →
+            </Link>
             {product.isFeatured && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium">Featured</span>}
             {product.isApproved && (
               <span className="flex items-center gap-1 bg-green-50 border border-green-200 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
@@ -328,6 +331,11 @@ export default function ProductDetailPage() {
               <span className="text-xs text-gray-500">{product.salesCount.toLocaleString()}+ sold</span>
             )}
           </div>
+
+          {/* Earn points label */}
+          <Link href="/rewards" className="inline-flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 font-semibold hover:bg-amber-100 transition-colors mb-2">
+            ⭐ Earn {Math.ceil(price / 20)} PP Points on this purchase
+          </Link>
 
           <hr className="my-3" />
 
