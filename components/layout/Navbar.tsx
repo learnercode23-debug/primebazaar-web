@@ -249,6 +249,7 @@ export default function Navbar() {
               { label: '♻️ Renewed', href: '/renewed' },
               { label: '⚡ Digital', href: '/digital' },
               { label: '🎁 Gift Cards', href: '/gift-cards' },
+              { label: '🔴 Live', href: '/live' },
             ].map(({ label, href }) => (
               <Link key={href} href={href} className="text-sm whitespace-nowrap px-3 py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all link-underline">
                 {label}
@@ -304,6 +305,7 @@ export default function Navbar() {
               ['👗 Fashion', '/products?category=Fashion'],
               ['🏠 Home & Garden', '/products?category=Home+%26+Garden'],
               ['📚 Books', '/products?category=Books'],
+              ['🔴 Live Shopping', '/live'],
             ].map(([label, href]) => (
               <Link key={href} href={href} className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg" onClick={() => setMobileOpen(false)}>
                 {label}

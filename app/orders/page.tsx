@@ -157,6 +157,11 @@ export default function OrdersPage() {
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full capitalize ${STATUS_COLORS[order.status] || 'bg-gray-100 text-gray-700'}`}>
                     {order.status.replace(/_/g, ' ')}
                   </span>
+                  {['shipped', 'out_for_delivery'].includes(order.status) && (
+                    <Link href={`/track/${order._id}`} className="flex items-center gap-1 text-xs font-semibold text-green-700 hover:text-green-900 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-full transition-colors">
+                      📍 Track
+                    </Link>
+                  )}
                   <Link href={`/orders/${order._id}`} className="flex items-center gap-1 text-xs font-semibold text-violet-600 hover:text-violet-800 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-full transition-colors">
                     Details <FiChevronRight />
                   </Link>

@@ -124,6 +124,7 @@ export default function Footer() {
               ['♻️ Renewed',         '/renewed'],
               ['⚡ Digital',         '/digital'],
               ['🎁 Gift Cards',      '/gift-cards'],
+              ['🔴 Live Shopping',   '/live'],
             ].map(([label, href]) => (
               <li key={label}><Link href={href} className="hover:text-violet-400 transition-colors link-underline inline-block">{label}</Link></li>
             ))}
