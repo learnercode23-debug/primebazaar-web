@@ -360,3 +360,105 @@ html { scroll-behavior: smooth; }
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   DARK MODE
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #0d0b1e !important;
+  color: #e8e4ff;
+}
+
+/* Page backgrounds */
+.dark .bg-gray-50,
+.dark .bg-\[\#F5F3FF\],
+.dark [style*="background-color: #F5F3FF"] {
+  background-color: #110f24 !important;
+}
+
+/* Cards and surfaces */
+.dark .bg-white {
+  background-color: #1a1730 !important;
+  color: #e8e4ff;
+}
+
+.dark .bg-gray-100 {
+  background-color: #231f3e !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: #2a2647 !important;
+}
+
+/* Text */
+.dark .text-gray-900 { color: #f0eeff !important; }
+.dark .text-gray-800 { color: #ddd8ff !important; }
+.dark .text-gray-700 { color: #c4bcf5 !important; }
+.dark .text-gray-600 { color: #a89df0 !important; }
+.dark .text-gray-500 { color: #8b7de8 !important; }
+.dark .text-gray-400 { color: #7060d4 !important; }
+
+/* Borders */
+.dark .border-gray-100 { border-color: #2d2850 !important; }
+.dark .border-gray-200 { border-color: #2d2850 !important; }
+.dark .border-gray-300 { border-color: #3d3768 !important; }
+
+/* Inputs */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #231f3e !important;
+  color: #e8e4ff !important;
+  border-color: #3d3768 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #6b5fc0 !important;
+}
+
+/* Dropdowns / menus */
+.dark .bg-white.rounded-2xl,
+.dark .bg-white.rounded-xl,
+.dark .bg-white.shadow {
+  background-color: #1e1b38 !important;
+  border-color: #2d2850 !important;
+}
+
+/* Hover states on white bg */
+.dark .hover\:bg-gray-50:hover { background-color: #231f3e !important; }
+.dark .hover\:bg-gray-100:hover { background-color: #2a2647 !important; }
+.dark .hover\:bg-violet-50:hover { background-color: #261e50 !important; }
+
+/* Dividers */
+.dark .divide-gray-100 > * + * { border-color: #2d2850 !important; }
+.dark .divide-gray-200 > * + * { border-color: #2d2850 !important; }
+
+/* Shadows */
+.dark .shadow-lg { box-shadow: 0 10px 25px -5px rgba(0,0,0,0.6), 0 4px 10px -6px rgba(0,0,0,0.4) !important; }
+.dark .shadow-xl { box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7) !important; }
+
+/* Gradient border cards */
+.dark .gradient-border { background: #1a1730 !important; }
+
+/* Skeleton dark */
+.dark .skeleton {
+  background: linear-gradient(90deg, #231f3e 25%, #2d2850 50%, #231f3e 75%) !important;
+  background-size: 200% 100% !important;
+}
+
+/* Glass card dark */
+.dark .glass-card {
+  background: rgba(26, 23, 48, 0.85) !important;
+  border-color: rgba(109, 80, 220, 0.25) !important;
+}
+
+/* Table rows */
+.dark .bg-gray-50\/60 { background-color: rgba(35, 31, 62, 0.6) !important; }
+
+/* Moon/Sun icon transition */
+.theme-icon { transition: transform 0.4s ease, opacity 0.3s ease; }

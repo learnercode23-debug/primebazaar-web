@@ -13,6 +13,7 @@ import CountdownTimer from '@/components/ui/CountdownTimer'
 import ReviewCard from '@/components/product/ReviewCard'
 import ImageGallery from '@/components/product/ImageGallery'
 import ProductVariants from '@/components/product/ProductVariants'
+import SizeGuide from '@/components/product/SizeGuide'
 import ProductQASection from '@/components/product/ProductQASection'
 import Recommendations from '@/components/product/Recommendations'
 import RecentlyViewed from '@/components/product/RecentlyViewed'
@@ -294,14 +295,25 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* Variants */}
+          {/* Variants + size guide */}
           {product.hasVariants && product.variants && product.variants.length > 0 && (
             <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Select Option</span>
+                <SizeGuide category={typeof product.category === 'string' ? product.category : (product.category as { name?: string })?.name} />
+              </div>
               <ProductVariants
                 variants={product.variants}
                 selected={selectedVariant}
                 onSelect={setSelectedVariant}
               />
+            </div>
+          )}
+
+          {/* Size guide standalone (no variants) */}
+          {(!product.hasVariants || !product.variants?.length) && (
+            <div className="mb-3 flex justify-end">
+              <SizeGuide category={typeof product.category === 'string' ? product.category : (product.category as { name?: string })?.name} />
             </div>
           )}
 

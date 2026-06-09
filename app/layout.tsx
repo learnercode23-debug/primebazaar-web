@@ -9,6 +9,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
 import { WishlistProvider } from '@/contexts/WishlistContext'
 import { CompareProvider } from '@/contexts/CompareContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import CompareBar from '@/components/ui/CompareBar'
 import RealtimeSync from '@/components/RealtimeSync'
 import './globals.css'
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         }} />
       </head>
       <body className={`${inter.className} flex flex-col min-h-screen`}>
+        <ThemeProvider>
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
@@ -83,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>
+        </ThemeProvider>
         {process.env.NEXT_PUBLIC_GA_ID && (
           <>
             <Script src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`} strategy="afterInteractive" />
