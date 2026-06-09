@@ -100,6 +100,7 @@ export interface Review {
   comment: string
   verified: boolean
   helpful: number
+  photos?: string[]
   createdAt: string
 }
 

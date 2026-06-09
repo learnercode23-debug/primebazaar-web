@@ -67,6 +67,8 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const [selectedVariant, setSelectedVariant] = useState<IVariant | null>(null)
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' })
+  const [reviewPhotos, setReviewPhotos] = useState<string[]>([])
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [submittingReview, setSubmittingReview] = useState(false)
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'reviews' | 'qa'>('description')
@@ -144,15 +146,35 @@ export default function ProductDetailPage() {
     router.push('/checkout')
   }
 
+  async function handleReviewPhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingPhoto(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (ev) => {
+        const base64 = ev.target?.result as string
+        const res = await axios.post('/api/upload', { image: base64, folder: 'primebazaar/reviews' })
+        setReviewPhotos((p) => [...p, res.data.data.url])
+        setUploadingPhoto(false)
+      }
+      reader.readAsDataURL(file)
+    } catch {
+      toast.error('Photo upload failed')
+      setUploadingPhoto(false)
+    }
+  }
+
   async function submitReview(e: React.FormEvent) {
     e.preventDefault()
     if (!user) { toast.error('Please login to leave a review'); return }
     setSubmittingReview(true)
     try {
-      const res = await axios.post('/api/reviews', { productId: id, ...reviewForm })
+      const res = await axios.post('/api/reviews', { productId: id, ...reviewForm, photos: reviewPhotos })
       setReviews((p) => [res.data.data, ...p])
       setShowReviewForm(false)
       setReviewForm({ rating: 5, title: '', comment: '' })
+      setReviewPhotos([])
       toast.success('Review submitted!')
     } catch (err: unknown) {
       toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed')
@@ -517,7 +539,22 @@ export default function ProductDetailPage() {
 
         <div className="py-6">
           {activeTab === 'description' && (
-            <p className="text-gray-700 leading-relaxed whitespace-pre-line max-w-3xl">{product.description}</p>
+            <div className="max-w-3xl space-y-6">
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line">{product.description}</p>
+              {product.videoUrl && (
+                <div>
+                  <h3 className="font-bold text-gray-900 mb-3">Product Video</h3>
+                  <div className="relative rounded-2xl overflow-hidden bg-black aspect-video max-w-xl shadow-lg">
+                    <video
+                      src={product.videoUrl}
+                      controls
+                      className="w-full h-full"
+                      poster={product.images?.[0]}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {activeTab === 'specs' && (
@@ -584,11 +621,33 @@ export default function ProductDetailPage() {
                       rows={4} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange resize-none"
                       placeholder="What did you like or dislike? What did you use this product for?" required />
                   </div>
+                  {/* Photo upload */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Add Photos <span className="text-gray-400 font-normal">(optional)</span></label>
+                    <div className="flex gap-2 flex-wrap items-center">
+                      {reviewPhotos.map((url, i) => (
+                        <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200 group">
+                          <img src={url} alt="" className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => setReviewPhotos(p => p.filter((_, idx) => idx !== i))}
+                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                            <FiX />
+                          </button>
+                        </div>
+                      ))}
+                      {reviewPhotos.length < 4 && (
+                        <label className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 hover:border-violet-400 flex items-center justify-center cursor-pointer transition-colors text-gray-400 hover:text-violet-500">
+                          {uploadingPhoto ? <span className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" /> : <span className="text-2xl leading-none">+</span>}
+                          <input type="file" accept="image/*" className="hidden" onChange={handleReviewPhotoUpload} disabled={uploadingPhoto} />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="flex gap-2">
-                    <button type="submit" disabled={submittingReview} className="bg-amazon-yellow hover:bg-yellow-400 text-gray-900 font-medium px-4 py-2 rounded-full text-sm disabled:opacity-70">
+                    <button type="submit" disabled={submittingReview || uploadingPhoto} className="bg-amazon-yellow hover:bg-yellow-400 text-gray-900 font-medium px-4 py-2 rounded-full text-sm disabled:opacity-70">
                       {submittingReview ? 'Submitting...' : 'Submit Review'}
                     </button>
-                    <button type="button" onClick={() => setShowReviewForm(false)} className="border border-gray-300 text-gray-700 px-4 py-2 rounded-full text-sm hover:bg-gray-50">
+                    <button type="button" onClick={() => { setShowReviewForm(false); setReviewPhotos([]) }} className="border border-gray-300 text-gray-700 px-4 py-2 rounded-full text-sm hover:bg-gray-50">
                       Cancel
                     </button>
                   </div>

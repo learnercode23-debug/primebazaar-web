@@ -9,6 +9,7 @@ import StarRating from '@/components/ui/StarRating'
 import CountdownTimer from '@/components/ui/CountdownTimer'
 import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
+import { useCompare } from '@/contexts/CompareContext'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 
@@ -20,8 +21,10 @@ interface ProductCardProps {
 export default function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
   const { addToCart, isInCart } = useCart()
   const { toggleWishlist, isWishlisted } = useWishlist()
+  const { addToCompare, removeFromCompare, isInCompare } = useCompare()
   const inCart = isInCart(product._id)
   const wishlisted = isWishlisted(product._id)
+  const inCompare = isInCompare(product._id)
   const price = product.discountPrice || product.price
   const hasDiscount = product.discountPrice && product.discountPrice < product.price
   const savings = hasDiscount ? Math.round(product.price - product.discountPrice!) : 0
@@ -213,6 +216,19 @@ export default function ProductCard({ product, variant = 'grid' }: ProductCardPr
           >
             <FiShoppingCart className="text-xs sm:text-sm flex-shrink-0" />
             <span>{inCart ? '✓ Added to Cart' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+          </button>
+
+          {/* Compare button */}
+          <button
+            onClick={() => inCompare ? removeFromCompare(product._id) : addToCompare(product)}
+            className={cn(
+              'w-full text-[10px] sm:text-xs py-1.5 rounded-full border transition-all press-effect font-semibold',
+              inCompare
+                ? 'border-violet-400 bg-violet-50 text-violet-700'
+                : 'border-gray-200 text-gray-400 hover:border-violet-300 hover:text-violet-600'
+            )}
+          >
+            {inCompare ? '✓ In Compare' : '+ Compare'}
           </button>
         </div>
       </div>

@@ -8,6 +8,8 @@ import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
 import { WishlistProvider } from '@/contexts/WishlistContext'
+import { CompareProvider } from '@/contexts/CompareContext'
+import CompareBar from '@/components/ui/CompareBar'
 import RealtimeSync from '@/components/RealtimeSync'
 import './globals.css'
 
@@ -57,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
+              <CompareProvider>
               <RealtimeSync />
               <Navbar />
               <main className="flex-1 pb-14 lg:pb-0">
@@ -66,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Footer />
               </div>
               <MobileBottomNav />
+              <CompareBar />
               <Toaster
                 position="top-right"
                 toastOptions={{
@@ -75,6 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   error: { style: { background: '#B12704' } },
                 }}
               />
+            </CompareProvider>
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>
