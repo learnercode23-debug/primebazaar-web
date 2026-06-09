@@ -389,7 +389,17 @@ export default function ProductDetailPage() {
               <FiMessageCircle /> Chat with Seller
             </button>
             <button
-              onClick={() => setShareOpen((o) => !o)}
+              onClick={async () => {
+                const url = `https://primepasal.com/products/${id}`
+                // Use native share sheet on mobile (Android/iOS)
+                if (typeof navigator !== 'undefined' && navigator.share) {
+                  try {
+                    await navigator.share({ title: product?.title || 'Check this out', text: product?.title || '', url })
+                  } catch { /* user dismissed */ }
+                } else {
+                  setShareOpen((o) => !o)
+                }
+              }}
               className={cn(
                 'flex items-center gap-1 text-sm transition-colors',
                 shareOpen ? 'text-violet-600' : 'text-gray-500 hover:text-gray-900'
