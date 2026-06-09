@@ -165,7 +165,7 @@ export default function Navbar() {
                 </Link>
               )}
 
-              <Link href="/wishlist" className="hidden md:flex items-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-colors"><FiHeart className="text-xl" /></Link>
+              <Link href="/wishlist" aria-label="Wishlist" className="hidden md:flex items-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-colors"><FiHeart className="text-xl" /></Link>
 
               {/* Rewards points badge */}
               {user && (
@@ -208,7 +208,7 @@ export default function Navbar() {
               </button>
 
               {/* Cart */}
-              <Link href="/cart" className="relative flex items-center text-white hover:bg-white/10 rounded-xl p-2 transition-colors group">
+              <Link href="/cart" aria-label="Cart" className="relative flex items-center text-white hover:bg-white/10 rounded-xl p-2 transition-colors group">
                 <FiShoppingCart className="text-xl sm:text-2xl group-hover:scale-110 transition-transform" />
                 {itemCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-br from-amber-400 to-orange-500 text-gray-900 text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none shadow-md">

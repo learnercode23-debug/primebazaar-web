@@ -2,8 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Careers — Primepasal',
-  description: 'Join the Primepasal team. Explore open positions and help us build Nepal\'s best e-commerce platform.',
+  title: 'Careers — PrimePasal',
+  description: 'Join the PrimePasal team. Explore open positions and help us build Nepal\'s best e-commerce platform.',
 }
 
 const OPENINGS = [
@@ -70,7 +70,7 @@ export default function CareersPage() {
       </div>
 
       <div className="mt-8 text-center">
-        <Link href="/" className="text-sm text-violet-600 hover:underline">← Back to Primepasal</Link>
+        <Link href="/" className="text-sm text-violet-600 hover:underline">← Back to PrimePasal</Link>
       </div>
     </div>
   )

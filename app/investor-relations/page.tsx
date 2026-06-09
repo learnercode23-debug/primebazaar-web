@@ -2,8 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Investor Relations — Primepasal',
-  description: 'Investor information, financials, and governance details for Primepasal.',
+  title: 'Investor Relations — PrimePasal',
+  description: 'Investor information, financials, and governance details for PrimePasal.',
 }
 
 const METRICS = [
@@ -20,7 +20,7 @@ export default function InvestorRelationsPage() {
         <span className="inline-block bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full mb-4">Investor Relations</span>
         <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">Building Nepal&apos;s Commerce Infrastructure</h1>
         <p className="text-gray-600 max-w-xl mx-auto">
-          Primepasal is on a mission to digitise commerce across Nepal. We connect local sellers with buyers nationwide through technology.
+          PrimePasal is on a mission to digitise commerce across Nepal. We connect local sellers with buyers nationwide through technology.
         </p>
       </div>
 
@@ -55,7 +55,7 @@ export default function InvestorRelationsPage() {
       </div>
 
       <div className="mt-8 text-center">
-        <Link href="/" className="text-sm text-violet-600 hover:underline">← Back to Primepasal</Link>
+        <Link href="/" className="text-sm text-violet-600 hover:underline">← Back to PrimePasal</Link>
       </div>
     </div>
   )

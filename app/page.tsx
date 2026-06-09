@@ -10,17 +10,17 @@ import FadeIn from '@/components/ui/FadeIn'
 import { FiTruck, FiShield, FiRefreshCw, FiHeadphones } from 'react-icons/fi'
 
 const MARQUEE_ITEMS = [
-  '🚀 Free shipping on orders above Rs. 500',
+  '🚀 Free shipping on orders above Rs. 999',
   '🔥 Flash Sale — Up to 50% off today',
   '📦 Same-day dispatch on select items',
   '⭐ Rated 4.8★ by 10,000+ customers',
-  '🎁 New users: 15% off with code NEWUSER',
+  '🎁 New users get 15% off their first order',
   '🔒 100% secure checkout guaranteed',
   '🏪 1,000+ verified sellers on PrimePasal',
 ]
 
 const TRUST_BADGES = [
-  { icon: FiTruck,      title: 'Free Shipping',  desc: 'Orders over Rs.500',  color: 'text-violet-600 bg-violet-50', href: '/products?sort=createdAt&order=desc' },
+  { icon: FiTruck,      title: 'Free Shipping',  desc: 'Orders over Rs.999',  color: 'text-violet-600 bg-violet-50', href: '/products?sort=createdAt&order=desc' },
   { icon: FiShield,     title: 'Secure Payment', desc: 'SSL encrypted',        color: 'text-indigo-600 bg-indigo-50', href: '/about#payment' },
   { icon: FiRefreshCw,  title: 'Easy Returns',   desc: '30-day return',        color: 'text-purple-600 bg-purple-50', href: '/support#returns' },
   { icon: FiHeadphones, title: '24/7 Support',   desc: "Always here",          color: 'text-fuchsia-600 bg-fuchsia-50', href: '/support' },

@@ -19,8 +19,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Primepasal — Shop Everything',
-  description: 'Primepasal — Your one-stop shop for electronics, fashion, home goods, and more. Best deals every day.',
+  title: 'PrimePasal — Shop Everything',
+  description: 'PrimePasal — Your one-stop shop for electronics, fashion, home goods, and more. Best deals every day.',
   verification: {
     google: 'KC4bI1RQ7DfW4PZ1gYNztEmBdP1GdsglFWGkVnk9lYQ',
   },
@@ -33,12 +33,12 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Primepasal',
+    title: 'PrimePasal',
   },
   other: {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
-    'application-name': 'Primepasal',
+    'application-name': 'PrimePasal',
     'msapplication-TileColor': '#1E1B4B',
     'theme-color': '#1E1B4B',
   },

@@ -107,7 +107,7 @@ export default function CartPage() {
   }
 
   const couponDiscount = appliedCoupon?.discount || 0
-  const shippingCost = subtotal > 500 ? 0 : 99
+  const shippingCost = subtotal > 999 ? 0 : 99
   const total = subtotal + shippingCost - couponDiscount
 
   const cartProductIds = items
@@ -138,7 +138,7 @@ export default function CartPage() {
           <div className="w-20 h-20 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <FiShoppingCart className="text-3xl text-violet-600" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Your Primepasal Cart is empty</h1>
+          <h1 className="text-2xl font-bold mb-2">Your PrimePasal Cart is empty</h1>
           <p className="text-gray-500 mb-6">Looks like you haven&apos;t added anything yet.</p>
           <Link
             href="/products"
@@ -243,13 +243,13 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span>Shipping</span>
-                <span className={subtotal > 500 ? 'text-green-600 font-medium' : ''}>
-                  {subtotal > 500 ? 'FREE' : formatPrice(shippingCost)}
+                <span className={subtotal > 999 ? 'text-green-600 font-medium' : ''}>
+                  {subtotal > 999 ? 'FREE' : formatPrice(shippingCost)}
                 </span>
               </div>
               {subtotal < 500 && (
                 <p className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                  Add <strong>{formatPrice(500 - subtotal)}</strong> more for free shipping
+                  Add <strong>{formatPrice(999 - subtotal)}</strong> more for free shipping
                 </p>
               )}
             </div>

@@ -120,16 +120,16 @@ export default function HeroBanner() {
         </div>
       </div>
 
-      <button onClick={() => setCurrent((p) => (p - 1 + SLIDES.length) % SLIDES.length)} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/25 text-white rounded-full p-1.5 sm:p-2.5 border border-white/10">
+      <button onClick={() => setCurrent((p) => (p - 1 + SLIDES.length) % SLIDES.length)} aria-label="Previous slide" className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/25 text-white rounded-full p-1.5 sm:p-2.5 border border-white/10">
         <FiChevronLeft className="text-base sm:text-xl" />
       </button>
-      <button onClick={() => setCurrent((p) => (p + 1) % SLIDES.length)} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/25 text-white rounded-full p-1.5 sm:p-2.5 border border-white/10">
+      <button onClick={() => setCurrent((p) => (p + 1) % SLIDES.length)} aria-label="Next slide" className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/25 text-white rounded-full p-1.5 sm:p-2.5 border border-white/10">
         <FiChevronRight className="text-base sm:text-xl" />
       </button>
 
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-        {SLIDES.map((_, i) => (
-          <button key={i} onClick={() => setCurrent(i)} className={`rounded-full transition-all ${i === current ? 'w-5 h-1.5 bg-amber-400' : 'w-1.5 h-1.5 bg-white/40'}`} />
+        {SLIDES.map((slide, i) => (
+          <button key={i} onClick={() => setCurrent(i)} aria-label={`Go to slide ${i + 1}: ${slide.title}`} className={`rounded-full transition-all ${i === current ? 'w-5 h-1.5 bg-amber-400' : 'w-1.5 h-1.5 bg-white/40'}`} />
         ))}
       </div>
     </div>

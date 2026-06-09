@@ -17,7 +17,7 @@ function now() {
 
 const GREET: Message = {
   role: 'bot',
-  text: 'Hi! 👋 I\'m your Primepasal assistant. Ask me anything — orders, returns, products, or type **"agent"** to reach support.',
+  text: 'Hi! 👋 I\'m your PrimePasal assistant. Ask me anything — orders, returns, products, or type **"agent"** to reach support.',
   time: now(),
 }
 
@@ -82,7 +82,7 @@ export default function LiveChatWidget() {
           <div className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-t-3xl px-4 py-3 flex items-center gap-3 flex-shrink-0">
             <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm">🤖</div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm">Primepasal Support</p>
+              <p className="font-bold text-sm">PrimePasal Support</p>
               <p className="text-[11px] text-violet-200 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full" /> Online · Instant replies
               </p>

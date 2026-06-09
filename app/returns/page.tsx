@@ -2,8 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Returns & Refunds — Primepasal',
-  description: 'Primepasal\'s 7-day return policy. Learn how to return items, get refunds, and resolve order issues.',
+  title: 'Returns & Refunds — PrimePasal',
+  description: 'PrimePasal\'s 7-day return policy. Learn how to return items, get refunds, and resolve order issues.',
 }
 
 const STEPS = [
@@ -94,7 +94,7 @@ export default function ReturnsPage() {
         <div className="space-y-3">
           {[
             { method: 'Original payment method (card / wallet)', time: '3–7 business days after item received' },
-            { method: 'Primepasal credit (store balance)',        time: 'Instant once return is approved' },
+            { method: 'PrimePasal credit (store balance)',        time: 'Instant once return is approved' },
             { method: 'Bank transfer (NEFT / Fonepay)',           time: '5–10 business days' },
           ].map(({ method, time }) => (
             <div key={method} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-b border-gray-100 pb-3 last:border-0 last:pb-0">
@@ -116,7 +116,7 @@ export default function ReturnsPage() {
       </div>
 
       <div className="mt-8 text-center">
-        <Link href="/" className="text-sm text-violet-600 hover:underline">← Back to Primepasal</Link>
+        <Link href="/" className="text-sm text-violet-600 hover:underline">← Back to PrimePasal</Link>
       </div>
     </div>
   )

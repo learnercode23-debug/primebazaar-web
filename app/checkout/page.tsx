@@ -91,7 +91,7 @@ export default function CheckoutPage() {
   const [guestName, setGuestName] = useState('')
   const [isGuest, setIsGuest] = useState(false)
 
-  const shippingCost = subtotal > 500 ? 0 : 99
+  const shippingCost = subtotal > 999 ? 0 : 99
   const discount = couponData?.discount || 0
   const activeCodFee = paymentMethod === 'cod' ? codFee : 0
   const total = subtotal + shippingCost - discount + activeCodFee
@@ -598,8 +598,8 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between">
                 <span className="flex items-center gap-1"><FiTruck className="text-xs" /> Shipping</span>
-                <span className={subtotal > 500 ? 'text-amazon-green font-medium' : ''}>
-                  {subtotal > 500 ? 'FREE' : formatPrice(shippingCost)}
+                <span className={subtotal > 999 ? 'text-amazon-green font-medium' : ''}>
+                  {subtotal > 999 ? 'FREE' : formatPrice(shippingCost)}
                 </span>
               </div>
               {activeCodFee > 0 && (
@@ -644,7 +644,7 @@ export default function CheckoutPage() {
                 </button>
               </div>
               {couponData && <p className="text-xs text-amazon-green mt-1">✓ Coupon applied!</p>}
-              <p className="text-xs text-gray-400 mt-1">Try: SAVE10, FLAT20, NEWUSER</p>
+              <p className="text-xs text-gray-400 mt-1">Have a discount code? Enter it above.</p>
             </div>
 
             {/* Payment badge */}

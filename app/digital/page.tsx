@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import FadeIn from '@/components/ui/FadeIn'
 
 export const metadata: Metadata = {
-  title: 'Digital Downloads — Primepasal',
+  title: 'Digital Downloads — PrimePasal',
   description: 'Ebooks, software, music, courses, and digital content. Instant delivery after purchase.',
 }
 
@@ -66,7 +66,7 @@ export default function DigitalPage() {
         {/* Perks */}
         <FadeIn>
           <div className="bg-gradient-to-r from-purple-50 to-fuchsia-50 border border-purple-100 rounded-2xl p-6">
-            <h2 className="font-black text-gray-900 text-lg mb-5 text-center">Why buy digital on Primepasal</h2>
+            <h2 className="font-black text-gray-900 text-lg mb-5 text-center">Why buy digital on PrimePasal</h2>
             <div className="grid sm:grid-cols-4 gap-5">
               {PERKS.map(({ icon, title, desc }) => (
                 <div key={title} className="text-center">

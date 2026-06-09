@@ -4,7 +4,7 @@ import FeaturedProducts from '@/components/home/FeaturedProducts'
 import FadeIn from '@/components/ui/FadeIn'
 
 export const metadata: Metadata = {
-  title: 'Primepasal Fresh — Groceries & Fresh Produce',
+  title: 'PrimePasal Fresh — Groceries & Fresh Produce',
   description: 'Order fresh fruits, vegetables, dairy, and pantry essentials. Same-day delivery in Kathmandu.',
 }
 
@@ -28,7 +28,7 @@ export default function FreshPage() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-3xl">🥬</span>
-              <span className="font-black text-2xl">Primepasal Fresh</span>
+              <span className="font-black text-2xl">PrimePasal Fresh</span>
             </div>
             <p className="text-green-100 text-base max-w-md">
               Fresh groceries delivered to your door. Daily fresh produce, dairy, and pantry essentials.
@@ -36,7 +36,7 @@ export default function FreshPage() {
             <div className="flex gap-4 mt-4 text-sm">
               <span className="bg-white/20 px-3 py-1 rounded-full">🚚 Same-day delivery</span>
               <span className="bg-white/20 px-3 py-1 rounded-full">✓ Quality guaranteed</span>
-              <span className="bg-white/20 px-3 py-1 rounded-full">🆓 Free on Rs.500+</span>
+              <span className="bg-white/20 px-3 py-1 rounded-full">🆓 Free on Rs.999+</span>
             </div>
           </div>
           <div className="text-7xl hidden sm:block">🛒</div>

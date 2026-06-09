@@ -75,7 +75,7 @@ export default function Footer() {
           <h3 className="font-bold text-sm mb-4 text-white/90 uppercase tracking-widest text-xs">Company</h3>
           <ul className="space-y-2.5 text-sm text-gray-400">
             {[
-              ['About Primepasal',    '/about'],
+              ['About PrimePasal',    '/about'],
               ['Careers',             '/careers'],
               ['Press Releases',      '/press'],
               ['Investor Relations',  '/investor-relations'],
@@ -91,7 +91,7 @@ export default function Footer() {
           <h3 className="font-bold text-xs mb-4 text-white/90 uppercase tracking-widest">Sell With Us</h3>
           <ul className="space-y-2.5 text-sm text-gray-400">
             {[
-              ['Sell on Primepasal',       '/register?role=seller'],
+              ['Sell on PrimePasal',       '/register?role=seller'],
               ['Become an Affiliate',      '/register?role=seller'],
               ['Advertise Your Products',  '/register?role=seller'],
               ['Seller Dashboard',         '/seller'],
@@ -106,7 +106,7 @@ export default function Footer() {
             {[
               ['Your Account',          '/profile'],
               ['Your Orders',           '/orders'],
-              ['Shipping Policies',     '/support'],
+              ['Shipping Policies',     '/shipping-policies'],
               ['Returns & Replacements','/returns'],
               ['Help Center',           '/support'],
             ].map(([label, href]) => (
@@ -120,7 +120,7 @@ export default function Footer() {
             {[
               ['Electronics',      '/products?category=Electronics'],
               ['Fashion',          '/products?category=Fashion'],
-              ['🥬 Primepasal Fresh', '/fresh'],
+              ['🥬 PrimePasal Fresh', '/fresh'],
               ['♻️ Renewed',         '/renewed'],
               ['⚡ Digital',         '/digital'],
               ['🎁 Gift Cards',      '/gift-cards'],
@@ -142,7 +142,7 @@ export default function Footer() {
               <span className="font-black text-orange-400 text-xl">Pasal</span>
             </div>
             <span className="text-gray-600 text-xs hidden sm:block">|</span>
-            <p className="text-xs text-gray-500 hidden sm:block">© {new Date().getFullYear()} Primepasal. All rights reserved.</p>
+            <p className="text-xs text-gray-500 hidden sm:block">© {new Date().getFullYear()} PrimePasal. All rights reserved.</p>
           </div>
 
           <div className="flex gap-2">
@@ -174,7 +174,7 @@ export default function Footer() {
           </div>
 
         </div>
-        <p className="text-center text-xs text-gray-600 pb-4 sm:hidden">© {new Date().getFullYear()} Primepasal. All rights reserved.</p>
+        <p className="text-center text-xs text-gray-600 pb-4 sm:hidden">© {new Date().getFullYear()} PrimePasal. All rights reserved.</p>
       </div>
     </footer>
   )
