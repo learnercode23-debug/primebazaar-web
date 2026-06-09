@@ -2,16 +2,46 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import axios from 'axios'
 import { Review } from '@/types'
 import { formatDate } from '@/lib/utils'
 import StarRating from '@/components/ui/StarRating'
-import { FiThumbsUp, FiCheckCircle, FiX } from 'react-icons/fi'
+import { FiThumbsUp, FiThumbsDown, FiCheckCircle, FiX } from 'react-icons/fi'
+import { useAuth } from '@/contexts/AuthContext'
+import { cn } from '@/lib/utils'
 
-export default function ReviewCard({ review }: { review: Review }) {
-  const user = review.user as { name: string; avatar?: string }
+interface Props {
+  review: Review
+  productId: string
+}
+
+export default function ReviewCard({ review, productId }: Props) {
+  const { user } = useAuth()
+  const reviewUser = review.user as { name: string; avatar?: string }
   const [lightbox, setLightbox] = useState<string | null>(null)
+  const [helpful, setHelpful] = useState<number>(review.helpful || 0)
+  const [voted, setVoted] = useState<'helpful' | 'unhelpful' | null>(null)
+  const [voting, setVoting] = useState(false)
 
-  const initials = user.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?'
+  const initials = reviewUser.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?'
+
+  async function vote(type: 'helpful' | 'unhelpful') {
+    if (!user || voting) return
+    if (voted === type) return
+    setVoting(true)
+    try {
+      const res = await axios.post(`/api/reviews/${productId}/helpful`, {
+        reviewId: review._id,
+        vote: type,
+      })
+      setHelpful(res.data.data.helpful)
+      setVoted(type)
+    } catch {
+      // silent
+    } finally {
+      setVoting(false)
+    }
+  }
 
   return (
     <>
@@ -22,7 +52,7 @@ export default function ReviewCard({ review }: { review: Review }) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-sm text-gray-900">{user.name}</span>
+              <span className="font-semibold text-sm text-gray-900">{reviewUser.name}</span>
               {review.verified && (
                 <span className="flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">
                   <FiCheckCircle className="text-[10px]" /> Verified Purchase
@@ -57,10 +87,34 @@ export default function ReviewCard({ review }: { review: Review }) {
             </div>
           )}
 
-          <div className="flex items-center gap-1 mt-3 text-xs text-gray-400">
-            <button className="flex items-center gap-1 hover:text-gray-700 transition-colors bg-gray-50 hover:bg-gray-100 px-2.5 py-1 rounded-full">
-              <FiThumbsUp className="text-xs" /> Helpful ({review.helpful || 0})
+          {/* Helpful votes */}
+          <div className="flex items-center gap-2 mt-3">
+            <span className="text-xs text-gray-400">Helpful?</span>
+            <button
+              onClick={() => vote('helpful')}
+              disabled={voting || !user}
+              className={cn(
+                'flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-all press-effect',
+                voted === 'helpful'
+                  ? 'bg-violet-100 border-violet-300 text-violet-700 font-bold'
+                  : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-violet-300 hover:text-violet-600'
+              )}
+            >
+              <FiThumbsUp className="text-xs" /> Yes {helpful > 0 && `(${helpful})`}
             </button>
+            <button
+              onClick={() => vote('unhelpful')}
+              disabled={voting || !user}
+              className={cn(
+                'flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-all press-effect',
+                voted === 'unhelpful'
+                  ? 'bg-red-50 border-red-200 text-red-600 font-bold'
+                  : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-500'
+              )}
+            >
+              <FiThumbsDown className="text-xs" /> No
+            </button>
+            {!user && <span className="text-[10px] text-gray-400">(sign in to vote)</span>}
           </div>
         </div>
       </div>

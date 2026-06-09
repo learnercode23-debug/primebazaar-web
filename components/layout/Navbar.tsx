@@ -215,6 +215,7 @@ export default function Navbar() {
           <div className="flex items-center h-10 gap-1 overflow-x-auto scrollbar-hide">
             <MegaMenu />
             {[
+              { label: '🏷️ All Deals', href: '/deals' },
               { label: "Today's Deals 🔥", href: '/products?dealOfDay=true' },
               { label: '⚡ Lightning Deals', href: '/products?lightning=true' },
               { label: '🏆 Best Sellers', href: '/products?sort=salesCount&order=desc' },

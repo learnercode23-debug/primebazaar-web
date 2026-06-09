@@ -11,6 +11,7 @@ import { WishlistProvider } from '@/contexts/WishlistContext'
 import { CompareProvider } from '@/contexts/CompareContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import CompareBar from '@/components/ui/CompareBar'
+import LiveChatWidget from '@/components/ui/LiveChatWidget'
 import RealtimeSync from '@/components/RealtimeSync'
 import './globals.css'
 
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
               <MobileBottomNav />
               <CompareBar />
+              <LiveChatWidget />
               <Toaster
                 position="top-right"
                 toastOptions={{

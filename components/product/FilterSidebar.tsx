@@ -16,7 +16,8 @@ function fmt(n: number) {
 export default function FilterSidebar() {
   const router = useRouter()
   const params = useSearchParams()
-  const [openSections, setOpenSections] = useState({ category: true, price: true, rating: true, brand: false })
+  const [openSections, setOpenSections] = useState({ category: true, price: true, rating: true, brand: false, sort: false })
+  const [brandInput, setBrandInput] = useState(params.get('brand') || '')
   const [minVal, setMinVal] = useState(Number(params.get('minPrice') || PRICE_MIN))
   const [maxVal, setMaxVal] = useState(Number(params.get('maxPrice') || PRICE_MAX))
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -53,7 +54,7 @@ export default function FilterSidebar() {
 
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current) }, [])
 
-  const hasFilters = params.get('category') || params.get('minPrice') || params.get('maxPrice') || params.get('minRating')
+  const hasFilters = params.get('category') || params.get('minPrice') || params.get('maxPrice') || params.get('minRating') || params.get('brand')
   const minPct = (minVal / PRICE_MAX) * 100
   const maxPct = (maxVal / PRICE_MAX) * 100
 
@@ -194,7 +195,34 @@ export default function FilterSidebar() {
           </div>
         </Section>
 
-        <Section title="Sort By" sectionKey="brand">
+        <Section title="Brand" sectionKey="brand">
+          <div className="space-y-2">
+            <input
+              value={brandInput}
+              onChange={(e) => setBrandInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') updateFilter('brand', brandInput.trim() || null)
+              }}
+              placeholder="Search brand…"
+              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
+            />
+            {brandInput && (
+              <button
+                onClick={() => updateFilter('brand', brandInput.trim())}
+                className="w-full py-1.5 text-xs font-bold bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+              >
+                Filter by &quot;{brandInput}&quot;
+              </button>
+            )}
+            {params.get('brand') && (
+              <button onClick={() => { updateFilter('brand', null); setBrandInput('') }} className="text-xs text-red-500 hover:underline">
+                ✕ Clear brand filter
+              </button>
+            )}
+          </div>
+        </Section>
+
+        <Section title="Sort By" sectionKey="sort">
           <div className="space-y-1">
             {[
               ['Best Match',          'createdAt', 'desc'],

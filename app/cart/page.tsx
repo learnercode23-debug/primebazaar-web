@@ -12,7 +12,7 @@ import { useWishlist } from '@/contexts/WishlistContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatPrice } from '@/lib/utils'
 import { Product } from '@/types'
-import { FiTrash2, FiHeart, FiShoppingCart, FiMinus, FiPlus, FiArrowRight } from 'react-icons/fi'
+import { FiTrash2, FiHeart, FiShoppingCart, FiMinus, FiPlus, FiArrowRight, FiTag, FiX } from 'react-icons/fi'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ProductCard from '@/components/product/ProductCard'
 import { ProductCardSkeleton } from '@/components/ui/Skeleton'
@@ -86,8 +86,29 @@ export default function CartPage() {
   const { toggleWishlist } = useWishlist()
   const router = useRouter()
 
+  const [couponCode, setCouponCode] = useState('')
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; discountType: string; discountValue: number } | null>(null)
+
+  async function applyCoupon() {
+    if (!couponCode.trim()) return
+    setCouponLoading(true)
+    try {
+      const res = await axios.post('/api/coupons/validate', { code: couponCode.trim(), subtotal })
+      setAppliedCoupon(res.data.data)
+      toast.success(`Coupon applied! You save ${formatPrice(res.data.data.discount)}`)
+      setCouponCode('')
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Invalid coupon'
+      toast.error(msg)
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const couponDiscount = appliedCoupon?.discount || 0
   const shippingCost = subtotal > 500 ? 0 : 99
-  const total = subtotal + shippingCost
+  const total = subtotal + shippingCost - couponDiscount
 
   const cartProductIds = items
     .map((i) => { const p = i.product as Product; return p?._id || null })
@@ -232,7 +253,46 @@ export default function CartPage() {
                 </p>
               )}
             </div>
+            {/* Coupon code */}
+            <div className="mb-4">
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <FiTag className="text-emerald-600" />
+                    <span className="font-bold text-emerald-700">{appliedCoupon.code}</span>
+                    <span className="text-emerald-600">−{formatPrice(appliedCoupon.discount)}</span>
+                  </div>
+                  <button onClick={() => setAppliedCoupon(null)} className="text-gray-400 hover:text-red-500 transition-colors">
+                    <FiX />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === 'Enter' && applyCoupon()}
+                    placeholder="Coupon code"
+                    className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  />
+                  <button
+                    onClick={applyCoupon}
+                    disabled={couponLoading || !couponCode.trim()}
+                    className="px-4 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors"
+                  >
+                    {couponLoading ? '…' : 'Apply'}
+                  </button>
+                </div>
+              )}
+            </div>
+
             <hr className="mb-4" />
+            {appliedCoupon && (
+              <div className="flex justify-between text-sm text-emerald-600 font-semibold mb-2">
+                <span>Coupon Discount</span>
+                <span>−{formatPrice(couponDiscount)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-xl mb-5">
               <span>Total</span>
               <span>{formatPrice(total)}</span>

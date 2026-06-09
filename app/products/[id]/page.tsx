@@ -80,6 +80,14 @@ export default function ProductDetailPage() {
   const [stockAlertEmail, setStockAlertEmail]   = useState('')
   const [stockAlertLoading, setStockAlertLoading] = useState(false)
   const [stockAlertDone, setStockAlertDone]     = useState(false)
+  const [subscribeMode, setSubscribeMode]       = useState<'once' | 'subscribe'>('once')
+  const [subscribeFreq, setSubscribeFreq]       = useState('monthly')
+  const [priceAlertEmail, setPriceAlertEmail]   = useState('')
+  const [priceAlertTarget, setPriceAlertTarget] = useState('')
+  const [priceAlertDone, setPriceAlertDone]     = useState(false)
+  const [priceAlertLoading, setPriceAlertLoading] = useState(false)
+  const [reviewSort, setReviewSort]             = useState<'recent' | 'helpful' | 'highest' | 'lowest'>('recent')
+  const [sellerRating, setSellerRating]         = useState<{ avgRating: number; totalOrders: number } | null>(null)
 
   async function subscribeStockAlert(e: React.FormEvent) {
     e.preventDefault()
@@ -92,6 +100,20 @@ export default function ProductDetailPage() {
       toast.error('Failed. Please try again.')
     } finally {
       setStockAlertLoading(false)
+    }
+  }
+
+  async function submitPriceAlert(e: React.FormEvent) {
+    e.preventDefault()
+    setPriceAlertLoading(true)
+    try {
+      await axios.post(`/api/products/${id}/price-alert`, { email: priceAlertEmail, targetPrice: Number(priceAlertTarget) })
+      setPriceAlertDone(true)
+      toast.success("We'll notify you when the price drops!")
+    } catch {
+      toast.error('Failed. Please try again.')
+    } finally {
+      setPriceAlertLoading(false)
     }
   }
 
@@ -130,6 +152,10 @@ export default function ProductDetailPage() {
       setReviews(r.data.data || [])
       if (prod.hasVariants && prod.variants?.length) {
         setSelectedVariant(prod.variants[0])
+      }
+      const sid = typeof prod.seller === 'string' ? prod.seller : (prod.seller as { _id?: string })?._id
+      if (sid) {
+        axios.get(`/api/seller/performance/${sid}`).then(res => setSellerRating(res.data.data)).catch(() => {})
       }
     }).catch(() => toast.error('Product not found'))
       .finally(() => setLoading(false))
@@ -368,6 +394,81 @@ export default function ProductDetailPage() {
             </ul>
           )}
 
+          {/* Subscribe & Save */}
+          {stock > 0 && (
+            <div className="mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-3 space-y-2">
+              <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Purchase Option</p>
+              <label className={`flex items-start gap-3 cursor-pointer p-2 rounded-xl transition-colors ${subscribeMode === 'once' ? 'bg-white border border-amber-300 shadow-sm' : 'hover:bg-amber-100/50'}`}>
+                <input type="radio" checked={subscribeMode === 'once'} onChange={() => setSubscribeMode('once')} className="mt-0.5 accent-violet-600" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">One-time purchase</p>
+                  <p className="text-xs text-gray-500">{formatPrice(price)}</p>
+                </div>
+              </label>
+              <label className={`flex items-start gap-3 cursor-pointer p-2 rounded-xl transition-colors ${subscribeMode === 'subscribe' ? 'bg-white border border-amber-300 shadow-sm' : 'hover:bg-amber-100/50'}`}>
+                <input type="radio" checked={subscribeMode === 'subscribe'} onChange={() => setSubscribeMode('subscribe')} className="mt-0.5 accent-violet-600" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-gray-900">Subscribe & Save</p>
+                    <span className="text-[10px] bg-green-600 text-white font-bold px-1.5 py-0.5 rounded-full">5% OFF</span>
+                  </div>
+                  <p className="text-xs text-green-700 font-semibold">{formatPrice(Math.round(price * 0.95))} / delivery</p>
+                  {subscribeMode === 'subscribe' && (
+                    <select
+                      value={subscribeFreq}
+                      onChange={(e) => setSubscribeFreq(e.target.value)}
+                      className="mt-1.5 text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-violet-300"
+                    >
+                      <option value="weekly">Every week</option>
+                      <option value="biweekly">Every 2 weeks</option>
+                      <option value="monthly">Every month</option>
+                      <option value="bimonthly">Every 2 months</option>
+                    </select>
+                  )}
+                </div>
+              </label>
+            </div>
+          )}
+
+          {/* Price drop alert */}
+          {stock > 0 && (
+            <div className="mb-4">
+              {!priceAlertDone ? (
+                <details className="group">
+                  <summary className="text-xs text-violet-600 hover:text-violet-800 font-semibold cursor-pointer flex items-center gap-1 list-none">
+                    🔔 Get a price drop alert
+                  </summary>
+                  <form onSubmit={submitPriceAlert} className="mt-2 flex flex-col gap-2">
+                    <input
+                      type="email"
+                      value={priceAlertEmail}
+                      onChange={(e) => setPriceAlertEmail(e.target.value)}
+                      placeholder="Your email"
+                      required
+                      className="border border-gray-300 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-violet-300"
+                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={priceAlertTarget}
+                        onChange={(e) => setPriceAlertTarget(e.target.value)}
+                        placeholder={`Target price (current: ${formatPrice(price)})`}
+                        required
+                        min={1}
+                        className="flex-1 border border-gray-300 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-violet-300"
+                      />
+                      <button type="submit" disabled={priceAlertLoading} className="px-3 py-1.5 bg-violet-600 text-white text-xs font-bold rounded-xl hover:bg-violet-700 disabled:opacity-50 transition-colors">
+                        {priceAlertLoading ? '…' : 'Alert me'}
+                      </button>
+                    </div>
+                  </form>
+                </details>
+              ) : (
+                <p className="text-xs text-green-600 flex items-center gap-1"><FiCheck /> Price alert set!</p>
+              )}
+            </div>
+          )}
+
           {/* Quantity */}
           {stock > 0 && (
             <div className="flex items-center gap-3 mb-4">
@@ -422,6 +523,13 @@ export default function ProductDetailPage() {
             >
               <FiMessageCircle /> Chat with Seller
             </button>
+            {sellerRating && sellerRating.avgRating > 0 && (
+              <span className="flex items-center gap-1 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1">
+                <span className="text-amber-400">★</span>
+                <span className="font-bold text-gray-700">{sellerRating.avgRating.toFixed(1)}</span>
+                <span>seller · {sellerRating.totalOrders.toLocaleString()} orders</span>
+              </span>
+            )}
             <button
               onClick={() => setShareOpen(true)}
               className="flex items-center gap-1 text-sm text-gray-500 hover:text-violet-600 transition-colors"
@@ -670,7 +778,27 @@ export default function ProductDetailPage() {
                 <p className="text-gray-500 text-sm">No reviews yet. Be the first!</p>
               ) : (
                 <div>
-                  {reviews.map((r) => <ReviewCard key={r._id} review={r} />)}
+                  {/* Sort bar */}
+                  <div className="flex items-center gap-2 mb-4 flex-wrap">
+                    <span className="text-xs text-gray-500 font-semibold">Sort by:</span>
+                    {(['recent', 'helpful', 'highest', 'lowest'] as const).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setReviewSort(s)}
+                        className={`text-xs px-3 py-1 rounded-full border transition-all ${reviewSort === s ? 'bg-violet-600 text-white border-violet-600' : 'border-gray-200 text-gray-500 hover:border-violet-300'}`}
+                      >
+                        {s === 'recent' ? 'Most Recent' : s === 'helpful' ? 'Most Helpful' : s === 'highest' ? '★ High to Low' : '★ Low to High'}
+                      </button>
+                    ))}
+                  </div>
+                  {[...reviews]
+                    .sort((a, b) => {
+                      if (reviewSort === 'helpful') return (b.helpful || 0) - (a.helpful || 0)
+                      if (reviewSort === 'highest') return b.rating - a.rating
+                      if (reviewSort === 'lowest') return a.rating - b.rating
+                      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                    })
+                    .map((r) => <ReviewCard key={r._id} review={r} productId={id} />)}
                 </div>
               )}
             </div>
