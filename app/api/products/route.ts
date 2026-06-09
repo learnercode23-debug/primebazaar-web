@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
     const order = searchParams.get('order') || 'desc'
     const featured = searchParams.get('featured')
     const dealOfDay = searchParams.get('dealOfDay')
+    const lightning = searchParams.get('lightning')
 
     const query: Record<string, unknown> = { isApproved: true }
 
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
     if (brand) query.brand = { $regex: brand, $options: 'i' }
     if (featured === 'true') query.isFeatured = true
     if (dealOfDay === 'true') query.isDealOfDay = true
+    if (lightning === 'true') query.isLightningDeal = true
 
     if (minPrice || maxPrice) {
       query.price = {}

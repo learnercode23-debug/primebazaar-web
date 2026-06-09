@@ -28,6 +28,8 @@ export default function FeaturedProducts({
       .finally(() => setLoading(false))
   }, [query, limit])
 
+  if (!loading && products.length === 0) return null
+
   return (
     <section>
       {title && (

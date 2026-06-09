@@ -104,8 +104,14 @@ export default function Navbar() {
                 >
                   {user ? <UserAvatar name={user.name} /> : <FiUser className="text-lg" />}
                   <div className="hidden md:flex flex-col items-start leading-none">
-                    <span className="text-[10px] text-gray-400">{user ? `Hello, ${user.name.split(' ')[0]}` : 'Hello, sign in'}</span>
-                    <span className="text-xs font-bold flex items-center gap-0.5 mt-0.5">Account <FiChevronDown className="text-[10px]" /></span>
+                    {user ? (
+                      <>
+                        <span className="text-[10px] text-gray-400">Hello, {user.name.split(' ')[0]}</span>
+                        <span className="text-xs font-bold flex items-center gap-0.5 mt-0.5">Account <FiChevronDown className="text-[10px]" /></span>
+                      </>
+                    ) : (
+                      <span className="text-xs font-bold flex items-center gap-0.5">Sign In <FiChevronDown className="text-[10px]" /></span>
+                    )}
                   </div>
                 </button>
 

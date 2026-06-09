@@ -120,9 +120,12 @@ export default function CartPage() {
         <div className="text-center">
           <FiShoppingCart className="text-6xl text-gray-300 mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
-          <p className="text-gray-500 mb-6">Sign in to view your saved items.</p>
+          <p className="text-gray-500 mb-6">Sign in to view your cart.</p>
           <Link href="/login" className="bg-violet-600 hover:bg-violet-700 text-white font-bold px-8 py-3 rounded-full transition-colors">
             Sign In
+          </Link>
+          <Link href="/products" className="block mt-3 text-violet-600 hover:underline text-sm font-medium">
+            Continue Shopping
           </Link>
         </div>
       </div>
@@ -247,7 +250,7 @@ export default function CartPage() {
                   {subtotal > 999 ? 'FREE' : formatPrice(shippingCost)}
                 </span>
               </div>
-              {subtotal < 500 && (
+              {subtotal < 999 && (
                 <p className="text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                   Add <strong>{formatPrice(999 - subtotal)}</strong> more for free shipping
                 </p>

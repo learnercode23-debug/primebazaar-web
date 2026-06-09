@@ -175,7 +175,7 @@ function LoginPageInner() {
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 flex flex-col items-center justify-center py-12 px-4">
 
       <Link href="/" className="mb-8 flex items-center gap-1 group">
-        <span className="text-3xl font-black text-gray-900 tracking-tight group-hover:text-violet-700 transition-colors">primepasal</span>
+        <span className="text-3xl font-black text-gray-900 tracking-tight group-hover:text-violet-700 transition-colors">PrimePasal</span>
         <span className="text-violet-600 text-4xl font-black leading-none">.</span>
       </Link>
 
@@ -239,18 +239,18 @@ function LoginPageInner() {
             </form>
 
             <p className="text-xs text-gray-400 text-center mt-4 leading-5">
-              By continuing, you agree to Primepasal&apos;s{' '}
+              By continuing, you agree to PrimePasal&apos;s{' '}
               <Link href="/terms" className="underline hover:text-violet-600">Terms</Link> and{' '}
               <Link href="/privacy" className="underline hover:text-violet-600">Privacy Notice</Link>.
             </p>
 
             <div className="relative my-5">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-              <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">New to Primepasal?</span></div>
+              <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">New to PrimePasal?</span></div>
             </div>
 
             <Link href="/register" className="block w-full text-center border-2 border-violet-200 text-violet-700 font-semibold py-3 rounded-xl hover:bg-violet-50 transition-all text-sm">
-              Create your Primepasal account
+              Create your PrimePasal account
             </Link>
 
           </div>
@@ -271,7 +271,7 @@ function LoginPageInner() {
             </p>
             <Link href={`/register?email=${encodeURIComponent(input)}`}
               className="block w-full text-center bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200 mb-3">
-              Create your Primepasal account
+              Create your PrimePasal account
             </Link>
             <button onClick={() => { setInput(''); setStep('email') }}
               className="block w-full text-center text-violet-600 hover:text-violet-800 text-sm font-medium py-2 transition-colors">
