@@ -98,6 +98,15 @@ export default function AdminDashboard() {
       {/* Quick actions — grouped by domain */}
       {[
         {
+          group: 'Analytics & Intelligence',
+          cards: [
+            { href: '/admin/analytics',  label: '📊 Advanced Analytics', desc: 'Cohort, LTV, churn, traffic & conversion funnel', icon: FiTrendingUp,  color: 'bg-violet-50 border-violet-200' },
+            { href: '/admin/customers',  label: '👥 Customer Segments',  desc: 'RFM segmentation — champions, at-risk, lost',     icon: FiUsers,       color: 'bg-blue-50 border-blue-200' },
+            { href: '/admin/fraud',      label: '🛡️ Fraud Detection',    desc: 'AI-flagged suspicious orders and risk scoring',   icon: FiShield,      color: 'bg-red-50 border-red-200' },
+            { href: '/admin/promos',     label: '📅 Promo Calendar',     desc: 'Schedule and manage promotional campaigns',       icon: FiCpu,         color: 'bg-amber-50 border-amber-200' },
+          ],
+        },
+        {
           group: 'Catalog',
           cards: [
             { href: '/admin/products',   label: 'Products',          desc: 'Approve, edit, or remove listings',          icon: FiPackage,     color: 'bg-purple-50 border-purple-200' },

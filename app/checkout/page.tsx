@@ -414,6 +414,28 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {/* Pickup point option */}
+              <div className="mt-4 border border-gray-200 rounded-xl p-4">
+                <p className="text-sm font-bold text-gray-900 mb-3">📍 Or collect from a pickup point</p>
+                <div className="space-y-2">
+                  {[
+                    { id: 'pp1', name: 'PrimePasal Hub — Thamel',       area: 'Kathmandu', hours: '9AM–8PM daily',  distance: '1.2 km' },
+                    { id: 'pp2', name: 'PrimePasal Point — Patan',      area: 'Lalitpur',  hours: '10AM–7PM daily', distance: '3.4 km' },
+                    { id: 'pp3', name: 'PrimePasal Locker — Balaju',    area: 'Kathmandu', hours: '24/7',            distance: '4.8 km' },
+                  ].map(pt => (
+                    <label key={pt.id} className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:border-violet-300 cursor-pointer transition-colors has-[:checked]:border-violet-500 has-[:checked]:bg-violet-50">
+                      <input type="radio" name="pickup" value={pt.id} className="mt-0.5 accent-violet-600" />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-gray-900">{pt.name}</p>
+                        <p className="text-xs text-gray-500">{pt.area} · {pt.hours} · {pt.distance} away</p>
+                      </div>
+                      <span className="text-xs text-green-600 font-bold">FREE</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Ready for pickup within 2 hours of dispatch. Bring your order ID.</p>
+              </div>
+
               <button
                 onClick={() => setStep('payment')}
                 disabled={!address.name || !address.street || !address.city || !address.phone}

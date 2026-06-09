@@ -677,7 +677,29 @@ export default function ProductDetailPage() {
             <div className="space-y-2 text-xs text-gray-600">
               <div className="flex items-start gap-2"><FiShield className="flex-shrink-0 mt-0.5" /> Secure transaction</div>
               <div className="flex items-start gap-2"><FiRefreshCw className="flex-shrink-0 mt-0.5" /> 30-day return policy</div>
-              <div className="flex items-start gap-2"><FiTruck className="flex-shrink-0 mt-0.5" /> Ships from Primepasal warehouse</div>
+              <div className="flex items-start gap-2"><FiTruck className="flex-shrink-0 mt-0.5" /> Ships from PrimePasal warehouse</div>
+            </div>
+
+            {/* Other sellers */}
+            <div className="pt-2 border-t border-gray-100">
+              <p className="text-xs font-bold text-gray-700 mb-2">Other sellers on PrimePasal</p>
+              <div className="space-y-1.5">
+                {[
+                  { name: 'TechZone Store', price: Math.round(price * 1.03), rating: 4.6, condition: 'New' },
+                  { name: 'ShopNepal',      price: Math.round(price * 1.06), rating: 4.3, condition: 'New' },
+                ].map(s => (
+                  <div key={s.name} className="flex items-center justify-between text-xs border border-gray-100 rounded-lg px-2.5 py-2 hover:border-violet-200 transition-colors">
+                    <div>
+                      <p className="font-semibold text-gray-800">{s.name}</p>
+                      <p className="text-gray-400">⭐ {s.rating} · {s.condition}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-black text-gray-900">{formatPrice(s.price)}</p>
+                      <button className="text-violet-600 hover:underline">Buy</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {product.tags && product.tags.length > 0 && (

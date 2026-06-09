@@ -11,7 +11,7 @@ const BENEFITS = [
   { icon: FiShield,     title: 'Extended Returns',         desc: '30-day returns vs standard 7 days',        free: false, plus: true },
   { icon: FiHeadphones, title: 'Priority Support',         desc: 'Skip the queue — dedicated Plus helpline', free: false, plus: true },
   { icon: FiGift,       title: 'Monthly Surprise Box',    desc: 'Curated product sample every month',        free: false, plus: true },
-  { icon: FiCheck,      title: 'Basic Free Shipping',     desc: 'Free on orders above Rs.500',               free: true,  plus: true },
+  { icon: FiCheck,      title: 'Basic Free Shipping',     desc: 'Free on orders above Rs.999',               free: true,  plus: true },
   { icon: FiCheck,      title: 'Loyalty Points',          desc: 'Earn 1 pt per Rs.20 spent',                free: true,  plus: true },
   { icon: FiCheck,      title: 'Wishlist & Compare',      desc: 'Save and compare products',                free: true,  plus: true },
 ]
