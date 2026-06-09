@@ -244,8 +244,41 @@ export default function ProductDetailPage() {
   const deliveryDate = new Date()
   deliveryDate.setDate(deliveryDate.getDate() + (product.estimatedDeliveryDays || 5))
 
+  const schemaOrg = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: product.description,
+    image: images,
+    sku: product._id,
+    brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
+    offers: {
+      '@type': 'Offer',
+      url: `https://www.primepasal.com/products/${id}`,
+      priceCurrency: 'NPR',
+      price: price,
+      availability: (product.stock ?? 0) > 0
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      seller: { '@type': 'Organization', name: 'Primepasal' },
+    },
+    aggregateRating: product.rating
+      ? {
+          '@type': 'AggregateRating',
+          ratingValue: product.rating,
+          reviewCount: reviews.length || 1,
+          bestRating: 5,
+          worstRating: 1,
+        }
+      : undefined,
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrg) }}
+      />
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: category?.name || 'Products', href: `/products?category=${encodeURIComponent(category?.name || '')}` },

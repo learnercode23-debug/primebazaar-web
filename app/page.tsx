@@ -62,7 +62,27 @@ export default function HomePage() {
 
         <FadeIn><CategorySection /></FadeIn>
         <FadeIn><DealOfTheDay /></FadeIn>
-        <FadeIn><FeaturedProducts title="Featured Products" query="featured=true" limit={8} /></FadeIn>
+
+        {/* Lightning Deals */}
+        <FadeIn>
+          <div className="rounded-2xl overflow-hidden border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
+            <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-amber-500 to-orange-500">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⚡</span>
+                <h2 className="font-black text-white text-base sm:text-lg">Lightning Deals</h2>
+                <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full font-semibold">Limited time</span>
+              </div>
+              <Link href="/deals" className="text-xs sm:text-sm text-white/90 hover:text-white font-semibold hover:underline">
+                See all deals →
+              </Link>
+            </div>
+            <div className="p-4">
+              <FeaturedProducts title="" query="sort=discountPercent&order=desc" limit={4} />
+            </div>
+          </div>
+        </FadeIn>
+
+        <FadeIn><FeaturedProducts title="Featured Products" query="sort=rating&order=desc" limit={8} /></FadeIn>
         <FadeIn><FeaturedProducts title="New Arrivals" query="sort=createdAt&order=desc" limit={8} /></FadeIn>
 
         <RecentlyViewed />

@@ -75,10 +75,10 @@ export default function Footer() {
           <h3 className="font-bold text-sm mb-4 text-white/90 uppercase tracking-widest text-xs">Company</h3>
           <ul className="space-y-2.5 text-sm text-gray-400">
             {[
-              ['About Primepasal', '/about'],
-              ['Careers',          '/about'],
-              ['Press Releases',   '/about'],
-              ['Investor Relations','/about'],
+              ['About Primepasal',    '/about'],
+              ['Careers',             '/careers'],
+              ['Press Releases',      '/press'],
+              ['Investor Relations',  '/investor-relations'],
             ].map(([label, href]) => (
               <li key={label}><Link href={href} className="hover:text-violet-400 transition-colors link-underline inline-block">{label}</Link></li>
             ))}
@@ -104,7 +104,7 @@ export default function Footer() {
               ['Your Account',          '/profile'],
               ['Your Orders',           '/orders'],
               ['Shipping Policies',     '/support'],
-              ['Returns & Replacements','/support'],
+              ['Returns & Replacements','/returns'],
               ['Help Center',           '/support'],
             ].map(([label, href]) => (
               <li key={label}><Link href={href} className="hover:text-violet-400 transition-colors link-underline inline-block">{label}</Link></li>
@@ -143,9 +143,9 @@ export default function Footer() {
           <div className="flex gap-2">
             {[
               { href: 'https://www.facebook.com/profile.php?id=61590464048675', icon: FiFacebook, label: 'Facebook' },
-              { href: '#', icon: FiTwitter,   label: 'Twitter' },
-              { href: '#', icon: FiInstagram, label: 'Instagram' },
-              { href: '#', icon: FiYoutube,   label: 'YouTube' },
+              { href: 'https://twitter.com/primepasal',   icon: FiTwitter,   label: 'Twitter' },
+              { href: 'https://instagram.com/primepasal', icon: FiInstagram, label: 'Instagram' },
+              { href: 'https://youtube.com/@primepasal',  icon: FiYoutube,   label: 'YouTube' },
             ].map(({ href, icon: Icon, label }) => (
               <a key={label} href={href} target="_blank" rel="noopener noreferrer"
                 className="w-9 h-9 rounded-xl bg-white/5 hover:bg-violet-600 flex items-center justify-center text-gray-400 hover:text-white transition-all press-effect"
