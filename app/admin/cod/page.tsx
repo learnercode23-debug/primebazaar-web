@@ -396,7 +396,7 @@ export default function AdminCODPage() {
                               </button>
                             )}
                             {!order.codCollected && order.status === 'out_for_delivery' && (
-                              <button onClick={()=>{setCollectTarget(order);setCollectAmount(String(order.totalAmount + (order.codFee||0)))}}
+                              <button onClick={()=>{setCollectTarget(order);setCollectAmount(String(order.totalAmount))}}
                                 className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-1 rounded-lg hover:bg-green-100 whitespace-nowrap flex items-center gap-1">
                                 <FiDollarSign className="text-xs"/>Collect Cash
                               </button>
@@ -581,7 +581,10 @@ export default function AdminCODPage() {
             <div className="bg-orange-50 rounded-xl p-3 mb-4">
               <p className="text-sm font-medium">#{collectTarget.orderNumber}</p>
               <p className="text-xs text-gray-500">Customer: {collectTarget.user?.name}</p>
-              <p className="text-xs text-gray-500">Expected: Rs.{(collectTarget.totalAmount + (collectTarget.codFee||0)).toLocaleString()}</p>
+              <p className="text-xs text-gray-500">
+                Expected: Rs.{collectTarget.totalAmount.toLocaleString()}
+                {(collectTarget.codFee||0) > 0 && <span className="text-gray-400"> (already incl. Rs.{collectTarget.codFee} COD fee)</span>}
+              </p>
             </div>
             <div className="space-y-3">
               <div>
