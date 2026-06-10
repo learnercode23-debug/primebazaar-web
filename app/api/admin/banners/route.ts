@@ -6,6 +6,11 @@ import Banner from '@/models/Banner'
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await getAuthUser(req)
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
+    }
+
     await connectDB()
     const { searchParams } = new URL(req.url)
     const position = searchParams.get('position')
