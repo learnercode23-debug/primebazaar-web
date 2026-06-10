@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
     if (!title?.trim() || !message?.trim()) return NextResponse.json({ error: 'Title and message required' }, { status: 400 })
     const query = targetRole && targetRole !== 'all' ? { role: targetRole } : {}
     const users = await User.find(query).select('_id').lean()
+    if (users.length === 0) return NextResponse.json({ data: { sent: 0 } })
     const docs = users.map(u => ({
       user: new mongoose.Types.ObjectId(u._id as string),
       type: 'promotion' as const,
