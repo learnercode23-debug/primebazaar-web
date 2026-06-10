@@ -65,7 +65,7 @@ export default function LiveChatWidget() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 w-14 h-14 bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-full shadow-2xl shadow-violet-400/40 flex items-center justify-center hover:scale-110 transition-transform press-effect"
+          className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 w-14 h-14 bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-full shadow-2xl shadow-violet-400/40 flex items-center justify-center hover:scale-110 transition-transform press-effect print:hidden"
           aria-label="Open chat"
         >
           <FiMessageCircle className="text-2xl" />
@@ -80,7 +80,7 @@ export default function LiveChatWidget() {
       {/* Chat window */}
       {open && (
         <div className={cn(
-          'fixed z-50 right-4 lg:right-6 bottom-20 lg:bottom-6 w-[calc(100vw-2rem)] sm:w-96 bg-white rounded-3xl shadow-2xl shadow-black/20 border border-gray-200 flex flex-col transition-all',
+          'fixed z-50 right-4 lg:right-6 bottom-20 lg:bottom-6 w-[calc(100vw-2rem)] sm:w-96 bg-white rounded-3xl shadow-2xl shadow-black/20 border border-gray-200 flex flex-col transition-all print:hidden',
           minimised ? 'h-14' : 'h-[480px]'
         )}>
           {/* Header */}
