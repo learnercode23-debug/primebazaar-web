@@ -131,14 +131,19 @@ export default function AdminCODPage() {
   useEffect(() => { if (user?.role === 'admin') { fetchOrders(); fetchSettings() } }, [fetchOrders, fetchSettings, user])
   useEffect(() => { if (tab === 'remittance' && user?.role === 'admin') fetchRemittance() }, [tab, fetchRemittance, user])
 
-  /* Load all users for agent dropdown */
+  /* Load users for agent dropdown — delivery-role agents first, all users as fallback */
   async function openAssignModal(order: CODOrder) {
     setAssignTarget(order)
     setSelectedAgent('')
     if (agentList.length === 0) {
       try {
-        const res = await axios.get('/api/admin/users?limit=100')
-        setAgentList(res.data.data || [])
+        const agents = await axios.get('/api/admin/users?role=delivery&limit=100')
+        if ((agents.data.data || []).length > 0) {
+          setAgentList(agents.data.data)
+        } else {
+          const res = await axios.get('/api/admin/users?limit=100')
+          setAgentList(res.data.data || [])
+        }
       } catch { toast.error('Failed to load users') }
     }
   }

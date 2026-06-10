@@ -37,6 +37,7 @@ function LoginPageInner() {
     if (user) {
       if (user.role === 'admin') router.replace('/admin')
       else if (user.role === 'seller') router.replace('/seller')
+      else if (user.role === 'delivery') router.replace('/delivery')
       else router.replace('/')
     }
   }, [user, router])

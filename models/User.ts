@@ -19,7 +19,7 @@ export interface IUser extends Document {
   email: string
   password?: string
   googleId?: string
-  role: 'customer' | 'seller' | 'admin'
+  role: 'customer' | 'seller' | 'admin' | 'delivery'
   avatar?: string
   phone?: string
   savedAddresses: ISavedAddress[]
@@ -70,7 +70,7 @@ const UserSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, minlength: 8 },
     googleId: { type: String, sparse: true, unique: true },
-    role: { type: String, enum: ['customer', 'seller', 'admin'], default: 'customer' },
+    role: { type: String, enum: ['customer', 'seller', 'admin', 'delivery'], default: 'customer' },
     avatar: { type: String },
     phone: { type: String },
     savedAddresses: [SavedAddressSchema],

@@ -14,7 +14,7 @@ import {
   FiUsers, FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiShield, FiCpu,
   FiLayers, FiImage, FiClock, FiRotateCcw, FiPercent, FiMapPin, FiUnlock,
   FiSmartphone, FiBriefcase, FiTag, FiStar, FiMessageSquare, FiHeadphones, FiRefreshCw,
-  FiAlertTriangle, FiBell, FiZap, FiActivity, FiAward,
+  FiAlertTriangle, FiBell, FiZap, FiActivity, FiAward, FiTruck,
 } from 'react-icons/fi'
 import RevenueChart from '@/components/ui/RevenueChart'
 
@@ -128,6 +128,7 @@ export default function AdminDashboard() {
             { href: '/admin/tracking',    label: 'Tracking & SLA',    desc: 'SLA timers, auto-reassign, performance scores',  icon: FiClock,       color: 'bg-rose-50 border-rose-200' },
             { href: '/admin/assignments', label: 'Assignments',       desc: 'View, filter & reassign orders to sellers',      icon: FiRefreshCw,   color: 'bg-indigo-50 border-indigo-200' },
             { href: '/admin/returns',     label: 'Returns & Refunds', desc: 'Process return and refund requests',             icon: FiRotateCcw,   color: 'bg-orange-50 border-orange-200' },
+            { href: '/delivery',          label: 'Delivery Agent App',desc: 'Courier console — routes, live GPS, COD collect', icon: FiTruck,       color: 'bg-cyan-50 border-cyan-200' },
           ],
         },
         {

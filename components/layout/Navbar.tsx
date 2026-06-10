@@ -143,6 +143,9 @@ export default function Navbar() {
                           {user.role === 'seller' && (
                             <Link href="/seller/earnings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}><FiDollarSign className="text-gray-400" /> Earnings</Link>
                           )}
+                          {(user.role === 'delivery' || user.role === 'admin') && (
+                            <Link href="/delivery" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}>🛵 Delivery Dashboard</Link>
+                          )}
                           {user.role === 'admin' && (
                             <Link href="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors" onClick={() => setUserMenuOpen(false)}><FiSettings className="text-gray-400" /> Admin Panel</Link>
                           )}
@@ -296,6 +299,9 @@ export default function Navbar() {
                 <Link href="/support" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}>💬 Help &amp; Support</Link>
                 {(user.role === 'seller' || user.role === 'admin') && (
                   <Link href="/seller" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}><FiPackage className="text-gray-400" /> Seller Hub</Link>
+                )}
+                {(user.role === 'delivery' || user.role === 'admin') && (
+                  <Link href="/delivery" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}>🛵 Delivery Dashboard</Link>
                 )}
                 {user.role === 'admin' && (
                   <Link href="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50" onClick={() => setMobileOpen(false)}><FiSettings className="text-gray-400" /> Admin</Link>

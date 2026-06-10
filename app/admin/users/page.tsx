@@ -44,7 +44,7 @@ export default function AdminUsersPage() {
   async function changeRole(id: string, role: string) {
     try {
       await axios.put(`/api/admin/users/${id}`, { role })
-      setUsers((p) => p.map((u) => u._id === id ? { ...u, role: role as 'customer' | 'seller' | 'admin' } : u))
+      setUsers((p) => p.map((u) => u._id === id ? { ...u, role: role as 'customer' | 'seller' | 'admin' | 'delivery' } : u))
       toast.success('Role updated')
     } catch {
       toast.error('Failed to update role')
@@ -58,7 +58,7 @@ export default function AdminUsersPage() {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">User Management</h1>
 
       <div className="flex gap-2 mb-6">
-        {[['all', 'All'], ['customer', 'Customers'], ['seller', 'Sellers'], ['admin', 'Admins']].map(([val, label]) => (
+        {[['all', 'All'], ['customer', 'Customers'], ['seller', 'Sellers'], ['delivery', 'Delivery Agents'], ['admin', 'Admins']].map(([val, label]) => (
           <button key={val} onClick={() => setRoleFilter(val)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               roleFilter === val ? 'bg-amazon-dark text-white' : 'border border-gray-300 text-gray-700 hover:border-gray-400'
@@ -102,6 +102,7 @@ export default function AdminUsersPage() {
                     >
                       <option value="customer">Customer</option>
                       <option value="seller">Seller</option>
+                      <option value="delivery">Delivery Agent</option>
                       <option value="admin">Admin</option>
                     </select>
                   </td>
