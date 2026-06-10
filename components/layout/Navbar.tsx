@@ -259,7 +259,6 @@ export default function Navbar() {
               { label: '⚡ Digital',         ariaLabel: 'Digital products',        href: '/digital' },
               { label: '🎁 Gift Cards',      ariaLabel: 'Gift Cards',              href: '/gift-cards' },
               { label: '🔴 Live',            ariaLabel: 'Live Shopping',           href: '/live' },
-              { label: '📦 Lockers',         ariaLabel: 'Locker pickup network',   href: '/pickup-points' },
             ].map(({ label, ariaLabel, href }) => (
               <Link key={href} href={href} aria-label={ariaLabel} className="text-sm whitespace-nowrap px-3 py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all link-underline">
                 {label}

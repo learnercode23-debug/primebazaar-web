@@ -113,7 +113,6 @@ export default function Footer() {
             {[
               ['Your Account',          '/profile'],
               ['Your Orders',           '/orders'],
-              ['📦 Locker Network',      '/pickup-points'],
               ['Shipping Policies',     '/shipping-policies'],
               ['Returns & Replacements','/returns'],
               ['Help Center',           '/support'],
