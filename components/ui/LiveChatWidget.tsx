@@ -44,7 +44,7 @@ export default function LiveChatWidget() {
     setLoading(true)
     try {
       const res = await axios.post('/api/support/chat', { message: text })
-      const botMsg: Message = { role: 'bot', text: res.data.reply || res.data.message || 'Sorry, I couldn\'t process that.', time: now() }
+      const botMsg: Message = { role: 'bot', text: res.data.botReply || 'Sorry, I couldn\'t process that.', time: now() }
       setMessages(p => [...p, botMsg])
       if (!open) setUnread(c => c + 1)
     } catch {
@@ -133,7 +133,20 @@ export default function LiveChatWidget() {
                 {['Track order', 'Return item', 'Payment issue', 'Talk to agent'].map(q => (
                   <button
                     key={q}
-                    onClick={() => { setInput(q); setTimeout(() => send(), 50) }}
+                    onClick={async () => {
+                      if (loading) return
+                      const userMsg: Message = { role: 'user', text: q, time: now() }
+                      setMessages(p => [...p, userMsg])
+                      setLoading(true)
+                      try {
+                        const res = await axios.post('/api/support/chat', { message: q })
+                        setMessages(p => [...p, { role: 'bot', text: res.data.botReply || 'Sorry, I couldn\'t process that.', time: now() }])
+                      } catch {
+                        setMessages(p => [...p, { role: 'bot', text: 'Something went wrong. Please try again.', time: now() }])
+                      } finally {
+                        setLoading(false)
+                      }
+                    }}
                     className="flex-shrink-0 text-xs px-3 py-1.5 rounded-full bg-violet-50 border border-violet-200 text-violet-700 hover:bg-violet-100 transition-colors"
                   >
                     {q}
