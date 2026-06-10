@@ -246,19 +246,19 @@ export default function Navbar() {
           <div className="flex items-center h-10 gap-1 overflow-x-auto scrollbar-hide">
             <MegaMenu />
             {[
-              { label: '🏷️ All Deals', href: '/deals' },
-              { label: "Today's Deals 🔥", href: '/products?dealOfDay=true' },
-              { label: '⚡ Lightning Deals', href: '/products?lightning=true' },
-              { label: '🏆 Best Sellers', href: '/products?sort=salesCount&order=desc' },
-              { label: '🆕 New Releases', href: '/products?sort=createdAt&order=desc' },
-              { label: '🥬 Fresh', href: '/fresh' },
-              { label: '♻️ Renewed', href: '/renewed' },
-              { label: '⚡ Digital', href: '/digital' },
-              { label: '🎁 Gift Cards', href: '/gift-cards' },
-              { label: '🔴 Live', href: '/live' },
-              { label: '📦 Lockers', href: '/pickup-points' },
-            ].map(({ label, href }) => (
-              <Link key={href} href={href} className="text-sm whitespace-nowrap px-3 py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all link-underline">
+              { label: '🏷️ All Deals',      ariaLabel: 'All Deals',               href: '/deals' },
+              { label: "Today's Deals 🔥",  ariaLabel: "Today's Deals",           href: '/products?dealOfDay=true' },
+              { label: '⚡ Lightning Deals', ariaLabel: 'Lightning Deals',         href: '/products?lightning=true' },
+              { label: '🏆 Best Sellers',    ariaLabel: 'Best Sellers',            href: '/products?sort=salesCount&order=desc' },
+              { label: '🆕 New Releases',    ariaLabel: 'New Releases',            href: '/products?sort=createdAt&order=desc' },
+              { label: '🥬 Fresh',           ariaLabel: 'PrimePasal Fresh grocery',href: '/fresh' },
+              { label: '♻️ Renewed',         ariaLabel: 'Renewed — refurbished',   href: '/renewed' },
+              { label: '⚡ Digital',         ariaLabel: 'Digital products',        href: '/digital' },
+              { label: '🎁 Gift Cards',      ariaLabel: 'Gift Cards',              href: '/gift-cards' },
+              { label: '🔴 Live',            ariaLabel: 'Live Shopping',           href: '/live' },
+              { label: '📦 Lockers',         ariaLabel: 'Locker pickup network',   href: '/pickup-points' },
+            ].map(({ label, ariaLabel, href }) => (
+              <Link key={href} href={href} aria-label={ariaLabel} className="text-sm whitespace-nowrap px-3 py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all link-underline">
                 {label}
               </Link>
             ))}

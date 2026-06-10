@@ -38,7 +38,7 @@ export default function FeaturedProducts({
             <span className="block w-1 h-6 rounded-full bg-gradient-to-b from-violet-600 to-purple-400" />
             <h2 className="text-base sm:text-xl font-black text-gray-900">{title}</h2>
           </div>
-          <Link href="/products" className="text-xs sm:text-sm text-violet-600 font-semibold hover:underline">
+          <Link href="/products" className="text-xs sm:text-sm text-violet-600 font-semibold hover:underline" aria-label={`View all ${title}`}>
             View all →
           </Link>
         </div>

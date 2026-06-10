@@ -23,7 +23,7 @@ const MARQUEE_ITEMS = [
 const TRUST_BADGES = [
   { icon: FiTruck,      title: 'Free Shipping',  desc: 'Orders over Rs.999',  color: 'text-violet-600 bg-violet-50', href: '/products?sort=createdAt&order=desc' },
   { icon: FiShield,     title: 'Secure Payment', desc: 'SSL encrypted',        color: 'text-indigo-600 bg-indigo-50', href: '/about#payment' },
-  { icon: FiRefreshCw,  title: 'Easy Returns',   desc: '30-day return',        color: 'text-purple-600 bg-purple-50', href: '/support#returns' },
+  { icon: FiRefreshCw,  title: 'Easy Returns',   desc: '7-day return policy',  color: 'text-purple-600 bg-purple-50', href: '/support#returns' },
   { icon: FiHeadphones, title: '24/7 Support',   desc: "Always here",          color: 'text-fuchsia-600 bg-fuchsia-50', href: '/support' },
 ]
 
@@ -73,7 +73,7 @@ export default function HomePage() {
                 <h2 className="font-black text-white text-base sm:text-lg">Lightning Deals</h2>
                 <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full font-semibold">Limited time</span>
               </div>
-              <Link href="/deals" className="text-xs sm:text-sm text-white/90 hover:text-white font-semibold hover:underline">
+              <Link href="/deals" className="text-xs sm:text-sm text-white/90 hover:text-white font-semibold hover:underline" aria-label="See all Lightning Deals">
                 See all deals →
               </Link>
             </div>
