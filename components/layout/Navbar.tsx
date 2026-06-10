@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import {
   FiShoppingCart, FiUser, FiMenu, FiX,
   FiHeart, FiPackage, FiLogOut, FiSettings,
@@ -34,9 +34,11 @@ export default function Navbar() {
   const { lang, setLang } = useLang()
   const router = useRouter()
 
+  const pathname = usePathname()
   const [mobileOpen, setMobileOpen]       = useState(false)
   const [userMenuOpen, setUserMenuOpen]   = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
+  const [rewardPoints, setRewardPoints]   = useState<number | null>(null)
 
   // Poll unread message count every 30s
   useEffect(() => {
@@ -45,6 +47,12 @@ export default function Navbar() {
     fetch()
     const t = setInterval(fetch, 30000)
     return () => clearInterval(t)
+  }, [user])
+
+  // Real rewards balance for the points badge
+  useEffect(() => {
+    if (!user) { setRewardPoints(null); return }
+    axios.get('/api/rewards').then(r => setRewardPoints(r.data?.data?.balance ?? 0)).catch(() => setRewardPoints(null))
   }, [user])
 
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -65,23 +73,26 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 shadow-lg shadow-black/20">
+    <header className="sticky top-0 z-50 shadow-xl shadow-indigo-950/30">
+
+      {/* Brand accent line */}
+      <div className="h-0.5 bg-gradient-to-r from-violet-500 via-orange-400 to-violet-500" />
 
       {/* ════════════════════════════════════════════
           DESKTOP NAVBAR
           ════════════════════════════════════════════ */}
-      <div className="bg-gradient-to-r from-[#1E1B4B] via-[#1E1B4B] to-[#2D1B69]">
+      <div className="bg-gradient-to-r from-[#1E1B4B] via-[#251D5E] to-[#2D1B69]">
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
 
           {/* ── Row 1: Logo + Icons (all screens) ── */}
           <div className="flex items-center h-12 sm:h-16 gap-2 sm:gap-3">
 
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 flex items-center gap-1.5">
-              <img src="/brand/bag.png" alt="" className="h-9 sm:h-11 w-auto drop-shadow-md" />
+            <Link href="/" className="flex-shrink-0 flex items-center gap-1.5 group">
+              <img src="/brand/bag.png" alt="" className="h-9 sm:h-11 w-auto drop-shadow-md group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200" />
               <span className="flex items-baseline leading-none">
                 <span className="font-black text-white text-xl sm:text-2xl tracking-tight">Prime</span>
-                <span className="font-black text-orange-400 text-xl sm:text-2xl tracking-tight">Pasal</span>
+                <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-400 text-xl sm:text-2xl tracking-tight">Pasal</span>
               </span>
             </Link>
 
@@ -176,16 +187,16 @@ export default function Navbar() {
 
               <Link href="/wishlist" aria-label="Wishlist" className="hidden md:flex items-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-colors"><FiHeart className="text-xl" /></Link>
 
-              {/* Rewards points badge */}
-              {user && (
-                <Link href="/rewards" className="hidden lg:flex items-center gap-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl px-2.5 py-1.5 transition-colors text-xs font-bold">
+              {/* Rewards points badge — real balance */}
+              {user && rewardPoints !== null && (
+                <Link href="/rewards" title="Your reward points" className="hidden lg:flex items-center gap-1.5 text-white/80 hover:text-white bg-white/5 hover:bg-white/15 border border-white/10 rounded-full px-3 py-1.5 transition-all text-xs font-bold hover:scale-105">
                   <FiStar className="text-amber-400 text-sm" />
-                  <span className="text-amber-300">620 pts</span>
+                  <span className="text-amber-300">{rewardPoints.toLocaleString()} pts</span>
                 </Link>
               )}
 
               {/* Plus badge */}
-              <Link href="/membership" className="hidden lg:flex items-center gap-1 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-full px-2.5 py-1 text-[10px] font-black transition-all shadow-md">
+              <Link href="/membership" className="hidden lg:flex items-center gap-1 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-400 hover:to-indigo-500 text-white rounded-full px-3 py-1.5 text-[10px] font-black transition-all shadow-lg shadow-violet-900/50 ring-1 ring-white/20 hover:scale-105">
                 <FiZap className="text-[10px] text-amber-300" /> Plus
               </Link>
 
@@ -227,7 +238,7 @@ export default function Navbar() {
               </Link>
 
               {/* Hamburger — mobile only */}
-              <button onClick={() => setMobileOpen(!mobileOpen)} className="flex sm:hidden text-white p-2 rounded hover:ring-1 hover:ring-white" aria-label="Menu">
+              <button onClick={() => setMobileOpen(!mobileOpen)} className="flex sm:hidden text-white p-2 rounded-xl hover:bg-white/10 transition-colors" aria-label="Menu">
                 {mobileOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
               </button>
             </div>
@@ -244,7 +255,7 @@ export default function Navbar() {
       {/* ════════════════════════════════════════════
           SECONDARY NAV — desktop only
           ════════════════════════════════════════════ */}
-      <div className="hidden sm:block bg-[#312E81] border-t border-white/5">
+      <div className="hidden sm:block bg-gradient-to-r from-[#312E81] via-[#332C8A] to-[#312E81] border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center h-10 gap-1 overflow-x-auto scrollbar-hide">
             <MegaMenu />
@@ -259,11 +270,19 @@ export default function Navbar() {
               { label: '⚡ Digital',         ariaLabel: 'Digital products',        href: '/digital' },
               { label: '🎁 Gift Cards',      ariaLabel: 'Gift Cards',              href: '/gift-cards' },
               { label: '🔴 Live',            ariaLabel: 'Live Shopping',           href: '/live' },
-            ].map(({ label, ariaLabel, href }) => (
-              <Link key={href} href={href} aria-label={ariaLabel} className="text-sm whitespace-nowrap px-3 py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all link-underline">
-                {label}
-              </Link>
-            ))}
+            ].map(({ label, ariaLabel, href }) => {
+              const isActive = !href.includes('?') && pathname === href
+              return (
+                <Link key={href} href={href} aria-label={ariaLabel}
+                  className={`text-sm whitespace-nowrap px-3 py-1.5 rounded-full transition-all ${
+                    isActive
+                      ? 'bg-white/15 text-white font-bold shadow-inner ring-1 ring-white/20'
+                      : 'text-white/80 hover:text-white hover:bg-white/10 hover:-translate-y-px'
+                  }`}>
+                  {label}
+                </Link>
+              )
+            })}
           </div>
         </div>
       </div>
