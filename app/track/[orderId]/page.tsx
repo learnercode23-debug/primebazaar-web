@@ -49,6 +49,27 @@ function fmtDate(d?: string) {
   return new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
+interface DriverLoc { lat: number; lng: number; speed: number | null; heading: number | null; at: string }
+
+// Real map showing the courier's actual GPS position (OpenStreetMap, no API key needed).
+function LiveGpsMap({ loc }: { loc: DriverLoc }) {
+  const d = 0.006 // ~600m window around the courier
+  const bbox = `${loc.lng - d},${loc.lat - d},${loc.lng + d},${loc.lat + d}`
+  const src = `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${loc.lat},${loc.lng}`
+  const ago = Math.max(0, Math.round((Date.now() - new Date(loc.at).getTime()) / 1000))
+  return (
+    <div className="rounded-2xl overflow-hidden border border-gray-100">
+      <iframe title="Live delivery location" src={src} className="w-full block" style={{ height: 220, border: 0 }} loading="lazy" />
+      <div className="flex items-center justify-between px-3 py-2 bg-white text-xs">
+        <span className="flex items-center gap-1.5 text-green-600 font-bold"><span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> Live GPS</span>
+        <span className="text-gray-400">
+          {loc.speed != null ? `${Math.round(loc.speed)} km/h · ` : ''}updated {ago < 60 ? `${ago}s` : `${Math.round(ago / 60)}m`} ago
+        </span>
+      </div>
+    </div>
+  )
+}
+
 function DeliveryMap({ progress }: { progress: number }) {
   const truckX = 40 + (progress / 100) * 220
   const truckY = 90 - Math.sin((progress / 100) * Math.PI) * 30
@@ -75,6 +96,7 @@ export default function TrackOrderPage() {
   const [order, setOrder] = useState<TrackedOrder | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [driverLoc, setDriverLoc] = useState<DriverLoc | null>(null)
 
   useEffect(() => {
     if (!orderId) return
@@ -83,6 +105,19 @@ export default function TrackOrderPage() {
       .catch(err => setError(err?.response?.status === 404 ? 'Order not found' : 'Unable to load this order'))
       .finally(() => setLoading(false))
   }, [orderId])
+
+  // Poll the courier's real GPS location while the order is in transit
+  useEffect(() => {
+    if (!orderId || !order) return
+    if (!['shipped', 'out_for_delivery'].includes(order.status)) return
+    let active = true
+    const poll = () => axios.get(`/api/delivery/location?orderId=${orderId}`)
+      .then(r => { if (active) setDriverLoc(r.data?.data?.driverLocation || null) })
+      .catch(() => {})
+    poll()
+    const id = setInterval(poll, 10000)
+    return () => { active = false; clearInterval(id) }
+  }, [orderId, order])
 
   if (loading) return <LoadingSpinner fullPage />
 
@@ -167,7 +202,9 @@ export default function TrackOrderPage() {
       {/* Map + progress — only while in transit */}
       {!isNegative && (
         <>
-          <div className="mb-4"><DeliveryMap progress={progress} /></div>
+          <div className="mb-4">
+            {driverLoc ? <LiveGpsMap loc={driverLoc} /> : <DeliveryMap progress={progress} />}
+          </div>
           <div className="mb-5">
             <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
               <span>Warehouse</span>
@@ -177,6 +214,9 @@ export default function TrackOrderPage() {
             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
+            {!driverLoc && order.status === 'out_for_delivery' && (
+              <p className="text-[11px] text-gray-400 mt-1.5 text-center">Live GPS appears here once your courier shares their location.</p>
+            )}
           </div>
         </>
       )}
