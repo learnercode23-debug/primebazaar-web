@@ -106,6 +106,18 @@ export default function TrackOrderPage() {
       .finally(() => setLoading(false))
   }, [orderId])
 
+  // Keep the status timeline fresh while the order is in transit
+  useEffect(() => {
+    if (!orderId || !order) return
+    if (order.status === 'delivered' || NEGATIVE.includes(order.status)) return
+    const id = setInterval(() => {
+      axios.get(`/api/orders/${orderId}`)
+        .then(r => setOrder(r.data.data))
+        .catch(() => {})
+    }, 30000)
+    return () => clearInterval(id)
+  }, [orderId, order])
+
   // Poll the courier's real GPS location while the order is in transit
   useEffect(() => {
     if (!orderId || !order) return

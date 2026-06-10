@@ -71,11 +71,16 @@ export default function DeliveryAgentPage() {
   const watchIdRef    = useRef<number | null>(null)
   const lastPushRef   = useRef<number>(0)
   const gpsOrderIdRef = useRef<string | null>(null)
+  const [liveOrderId, setLiveOrderId] = useState<string | null>(null)
 
   function startGPSBroadcast(orderId: string) {
     stopGPSBroadcast()
     gpsOrderIdRef.current = orderId
-    if (!navigator.geolocation) return
+    if (!navigator.geolocation) {
+      toast.error('GPS not available on this device')
+      return
+    }
+    setLiveOrderId(orderId)
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
@@ -102,6 +107,19 @@ export default function DeliveryAgentPage() {
       watchIdRef.current = null
     }
     gpsOrderIdRef.current = null
+    setLiveOrderId(null)
+  }
+
+  // Agent begins the delivery ride: marks the order out_for_delivery and goes live
+  async function startRoute(order: CODOrder) {
+    try {
+      await axios.put('/api/delivery/orders', { orderId: order._id, action: 'start_route' })
+      startGPSBroadcast(order._id)
+      toast.success('🛵 Route started — customer can now track you live')
+      fetchOrders()
+    } catch (e: unknown) {
+      toast.error((e as {response?:{data?:{error?:string}}})?.response?.data?.error || 'Could not start route')
+    }
   }
 
   useEffect(() => () => stopGPSBroadcast(), [])
@@ -168,6 +186,8 @@ export default function DeliveryAgentPage() {
         orderNumber:  activeOrder.orderNumber,
         cashCollected: res.data.order?.cashCollected || activeOrder.totalAmount,
       })
+      // Delivery done — stop sharing live location for this order
+      stopGPSBroadcast()
       // Get GPS before showing photo step
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -199,7 +219,6 @@ export default function DeliveryAgentPage() {
   }
 
   function resetFlow() {
-    stopGPSBroadcast()
     setStep('orders')
     setActiveOrder(null)
     setScanInput('')
@@ -256,9 +275,12 @@ export default function DeliveryAgentPage() {
     const reason = prompt(`Reason for ${action}:`) || ''
     try {
       await axios.put('/api/delivery/orders', { orderId: order._id, action, failureReason: reason })
+      if (liveOrderId === order._id) stopGPSBroadcast()
       toast.success(`Marked as ${action}`)
       fetchOrders()
-    } catch { toast.error('Action failed') }
+    } catch (e: unknown) {
+      toast.error((e as {response?:{data?:{error?:string}}})?.response?.data?.error || 'Action failed')
+    }
   }
 
   // Show nothing while auth loads or redirecting
@@ -275,6 +297,11 @@ export default function DeliveryAgentPage() {
           <p className="text-xs text-gray-400">{agentName} · {orders.length} pending</p>
         </div>
         <div className="flex items-center gap-2">
+          {liveOrderId && (
+            <span className="flex items-center gap-1.5 bg-green-900 border border-green-700 text-green-300 text-xs font-bold px-2.5 py-1 rounded-full">
+              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"/> LIVE
+            </span>
+          )}
           {totalToCollect > 0 && (
             <div className="bg-green-900 border border-green-700 rounded-xl px-3 py-1 text-center">
               <p className="text-[10px] text-green-400">To Collect</p>
@@ -299,7 +326,7 @@ export default function DeliveryAgentPage() {
               <FiCheck className="text-5xl mx-auto mb-3 text-green-500"/>
               <p className="text-lg font-medium text-gray-300">All done!</p>
               <p className="text-sm mt-1">No pending COD orders assigned to you.</p>
-              <p className="text-xs text-gray-600 mt-2">Ask admin to assign orders, or click Seed Demo Data in /admin/cod</p>
+              <p className="text-xs text-gray-600 mt-2">Orders appear here once an admin assigns them to you</p>
               <button onClick={fetchOrders} className="mt-4 text-sm text-orange-400 underline">Refresh</button>
             </div>
           ) : orders.map(order => (
@@ -335,18 +362,36 @@ export default function DeliveryAgentPage() {
               )}
 
               {!order.codCollected ? (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => startVerify(order)}
-                    disabled={order.deliveryCodeLocked}
-                    className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5"
-                  >
-                    <FiCamera className="text-base"/> Verify &amp; Collect Cash
-                  </button>
-                  <button onClick={() => markFailed(order, 'failed')}
-                    className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl" title="Mark failed">
-                    <FiX/>
-                  </button>
+                <div className="space-y-2">
+                  {/* Live GPS sharing — customer sees this on their tracking map */}
+                  {liveOrderId === order._id ? (
+                    <div className="flex items-center justify-between bg-green-900/40 border border-green-700 rounded-xl px-3 py-2">
+                      <span className="flex items-center gap-2 text-xs font-bold text-green-400">
+                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"/> LIVE — customer sees your location
+                      </span>
+                      <button onClick={stopGPSBroadcast} className="text-xs text-gray-400 underline hover:text-gray-200">Stop</button>
+                    </div>
+                  ) : order.status !== 'delivery_failed' && (
+                    <button
+                      onClick={() => startRoute(order)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5"
+                    >
+                      🛵 {order.status === 'shipped' ? 'Start Route — share live GPS' : 'Share Live Location'}
+                    </button>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => startVerify(order)}
+                      disabled={order.deliveryCodeLocked}
+                      className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-1.5"
+                    >
+                      <FiCamera className="text-base"/> Verify &amp; Collect Cash
+                    </button>
+                    <button onClick={() => markFailed(order, 'failed')}
+                      className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl" title="Mark failed">
+                      <FiX/>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 bg-green-900/40 border border-green-700 rounded-xl px-3 py-2 text-sm text-green-400">
@@ -368,8 +413,7 @@ export default function DeliveryAgentPage() {
               <p className="text-sm font-semibold text-white">Scan Order QR Code</p>
             </div>
             <p className="text-sm text-gray-400 mb-4">
-              In the real app, your camera would scan the QR automatically.
-              The Order ID is pre-filled below — just tap Confirm.
+              Check the Order ID below matches the package label, then tap Confirm.
             </p>
             <div className="bg-gray-700 rounded-xl p-3 mb-4 text-sm">
               <p className="font-semibold text-white">#{activeOrder.orderNumber}</p>
