@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import { Toaster } from 'react-hot-toast'
@@ -19,6 +19,10 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  // Canonical host is www — apex redirects there. Relative canonical './'
+  // resolves to each route's own path against metadataBase.
+  metadataBase: new URL('https://www.primepasal.com'),
+  alternates: { canonical: './' },
   title: 'PrimePasal — Shop Everything',
   description: 'PrimePasal — Your one-stop shop for electronics, fashion, home goods, and more. Best deals every day.',
   verification: {
@@ -28,7 +32,7 @@ export const metadata: Metadata = {
   icons: {
     icon:      [{ url: '/icon.svg', type: 'image/svg+xml' }],
     shortcut:  '/icon.svg',
-    apple:     '/icon.svg',
+    apple:     '/icons/icon-192.png',
   },
   appleWebApp: {
     capable: true,
@@ -37,23 +41,20 @@ export const metadata: Metadata = {
   },
   other: {
     'mobile-web-app-capable': 'yes',
-    'apple-mobile-web-app-capable': 'yes',
     'application-name': 'PrimePasal',
     'msapplication-TileColor': '#1E1B4B',
-    'theme-color': '#1E1B4B',
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#1E1B4B',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-        <meta name="theme-color" content="#1E1B4B" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="mobile-web-app-capable" content="yes" />
+        {/* Manifest, icons, theme-color, and PWA metas all come from the metadata/viewport exports above — do not duplicate here */}
         <script dangerouslySetInnerHTML={{
           __html: `if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'))}`,
         }} />

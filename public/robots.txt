@@ -13,4 +13,4 @@ Disallow: /profile/
 Disallow: /orders/
 Disallow: /addresses/
 
-Sitemap: https://primepasal.com/sitemap.xml
+Sitemap: https://www.primepasal.com/sitemap.xml

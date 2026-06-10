@@ -1,5 +1,5 @@
-export const dynamic = 'force-dynamic'
-
+// Static shell — every section below is a client component that fetches its own
+// data from /api, so the server HTML never changes and can be CDN-cached.
 import Link from 'next/link'
 import HeroBanner from '@/components/home/HeroBanner'
 import CategorySection from '@/components/home/CategorySection'
