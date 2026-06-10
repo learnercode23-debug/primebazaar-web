@@ -173,7 +173,6 @@ export default function ProductDetailPage() {
 
   const [oneClickOpen, setOneClickOpen] = useState(false)
   const [oneClickPlacing, setOneClickPlacing] = useState(false)
-  const [oneClickDone, setOneClickDone] = useState(false)
 
   async function handleBuyNow() {
     if (!user) { router.push('/login'); return }
@@ -182,11 +181,13 @@ export default function ProductDetailPage() {
 
   async function placeOneClickOrder() {
     setOneClickPlacing(true)
-    await addToCart(product!._id, quantity)
-    await new Promise(r => setTimeout(r, 900))
-    setOneClickPlacing(false)
-    setOneClickDone(true)
-    setTimeout(() => { setOneClickOpen(false); setOneClickDone(false); router.push('/orders') }, 1600)
+    try {
+      await addToCart(product!._id, quantity)
+      router.push('/checkout')
+    } catch {
+      setOneClickPlacing(false)
+      toast.error('Could not start checkout. Please try again.')
+    }
   }
 
   async function handleReviewPhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -588,18 +589,10 @@ export default function ProductDetailPage() {
               <>
                 <div className="fixed inset-0 bg-black/50 z-50" onClick={() => !oneClickPlacing && setOneClickOpen(false)} />
                 <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-white rounded-2xl p-6 shadow-2xl max-w-sm mx-auto">
-                  {oneClickDone ? (
-                    <div className="text-center py-4">
-                      <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <FiCheck className="text-2xl text-green-600" />
-                      </div>
-                      <p className="font-black text-gray-900 text-lg">Order Placed!</p>
-                      <p className="text-sm text-gray-500 mt-1">Redirecting to your orders…</p>
-                    </div>
-                  ) : (
+                  {(
                     <>
-                      <h2 className="font-black text-gray-900 text-base mb-1">Confirm 1-Click Order</h2>
-                      <p className="text-xs text-gray-500 mb-4">Your order will be placed immediately using your saved details.</p>
+                      <h2 className="font-black text-gray-900 text-base mb-1">Express Checkout</h2>
+                      <p className="text-xs text-gray-500 mb-4">We&apos;ll add this item and take you straight to checkout to confirm address &amp; payment.</p>
 
                       <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 mb-4">
                         {product.images[0] && (
@@ -614,20 +607,12 @@ export default function ProductDetailPage() {
 
                       <div className="space-y-2 mb-4 text-xs text-gray-600">
                         <div className="flex justify-between py-1.5 border-b border-gray-100">
-                          <span>Deliver to</span>
-                          <span className="font-semibold text-gray-900">{user?.name} · Kathmandu</span>
-                        </div>
-                        <div className="flex justify-between py-1.5 border-b border-gray-100">
-                          <span>Payment</span>
-                          <span className="font-semibold text-gray-900">💵 Cash on Delivery</span>
-                        </div>
-                        <div className="flex justify-between py-1.5 border-b border-gray-100">
-                          <span>Shipping</span>
-                          <span className="font-semibold text-green-600">FREE</span>
+                          <span>Item subtotal</span>
+                          <span className="font-semibold text-gray-900">{formatPrice(price * quantity)}</span>
                         </div>
                         <div className="flex justify-between py-1.5">
-                          <span className="font-bold text-gray-800">Total</span>
-                          <span className="font-black text-gray-900">{formatPrice(price * quantity)}</span>
+                          <span className="text-gray-400">Address, payment &amp; shipping</span>
+                          <span className="font-semibold text-gray-500">Chosen at checkout</span>
                         </div>
                       </div>
 
@@ -637,13 +622,13 @@ export default function ProductDetailPage() {
                         className="w-full bg-amazon-orange hover:bg-orange-500 disabled:opacity-70 text-white font-black py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
                       >
                         {oneClickPlacing ? (
-                          <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Placing order…</>
+                          <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Loading…</>
                         ) : (
-                          <><FiZap /> Place Order Now</>
+                          <><FiZap /> Continue to Checkout</>
                         )}
                       </button>
                       <button onClick={() => setOneClickOpen(false)} className="w-full mt-2 text-xs text-gray-400 hover:text-gray-600 py-1.5">
-                        Cancel — go to full checkout instead
+                        Cancel
                       </button>
                     </>
                   )}

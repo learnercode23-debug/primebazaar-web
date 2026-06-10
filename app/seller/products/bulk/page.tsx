@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { FiArrowLeft, FiUpload, FiDownload, FiCheck, FiX, FiAlertCircle } from 'react-icons/fi'
 import toast from 'react-hot-toast'
+import axios from 'axios'
 
 interface Row {
   title: string; category: string; price: string; stock: string; description: string
@@ -41,15 +42,19 @@ export default function BulkUploadPage() {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
   const [rows, setRows] = useState<Row[]>([])
+  const [file, setFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [done, setDone] = useState(false)
+  const [result, setResult] = useState<{ created: number; errors: string[] } | null>(null)
 
   useEffect(() => {
     if (!loading && (!user || (user.role !== 'seller' && user.role !== 'admin'))) router.push('/')
   }, [user, loading, router])
 
   function handleFile(file: File) {
+    setFile(file)
+    setResult(null)
     const reader = new FileReader()
     reader.onload = e => {
       const text = e.target?.result as string
@@ -73,13 +78,25 @@ export default function BulkUploadPage() {
   }
 
   async function uploadAll() {
+    if (!file) { toast.error('Please choose a CSV file first'); return }
     const valid = rows.filter(r => r.valid)
     if (!valid.length) { toast.error('No valid rows to import'); return }
     setUploading(true)
-    await new Promise(r => setTimeout(r, 1200))
-    setUploading(false)
-    setDone(true)
-    toast.success(`${valid.length} products imported successfully!`)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await axios.post('/api/seller/products/bulk', fd)
+      const created: number = res.data?.data?.created ?? 0
+      const errors: string[] = res.data?.data?.errors ?? []
+      setResult({ created, errors })
+      setDone(true)
+      if (created > 0) toast.success(`${created} product${created === 1 ? '' : 's'} imported — pending admin approval`)
+      if (created === 0) toast.error('No products were imported — check the errors below')
+    } catch {
+      toast.error('Import failed. Please try again.')
+    } finally {
+      setUploading(false)
+    }
   }
 
   function downloadTemplate() {
@@ -195,8 +212,16 @@ export default function BulkUploadPage() {
           )}
 
           {done ? (
-            <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-green-700 font-bold text-sm">
-              <FiCheck /> {validCount} products imported! They are pending admin approval.
+            <div className={`rounded-xl px-4 py-3 text-sm border ${result && result.created > 0 ? 'bg-green-50 border-green-200 text-green-700' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
+              <p className="flex items-center gap-2 font-bold">
+                <FiCheck /> {result?.created ?? 0} product{(result?.created ?? 0) === 1 ? '' : 's'} imported{result && result.created > 0 ? ' — pending admin approval' : ''}.
+              </p>
+              {result && result.errors.length > 0 && (
+                <ul className="mt-2 list-disc list-inside text-xs space-y-0.5">
+                  {result.errors.slice(0, 8).map((e, i) => <li key={i}>{e}</li>)}
+                  {result.errors.length > 8 && <li>…and {result.errors.length - 8} more</li>}
+                </ul>
+              )}
             </div>
           ) : (
             <button onClick={uploadAll} disabled={uploading || validCount === 0}
