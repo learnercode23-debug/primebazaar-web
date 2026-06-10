@@ -5,7 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { FiShoppingCart, FiHeart, FiShare2, FiUsers, FiEye, FiZap } from 'react-icons/fi'
 import { useCart } from '@/contexts/CartContext'
-import toast from 'react-hot-toast'
 
 const FEATURED_PRODUCTS = [
   { id: '1', title: 'Sony WH-1000XM5 Noise Cancelling Headphones', price: 32999, originalPrice: 41999, image: 'https://m.media-amazon.com/images/I/71o8Q5XJS5L._SX522_.jpg', stock: 7 },
@@ -40,7 +39,7 @@ const MSGS = [
 ]
 
 export default function LivePage() {
-  const { addItem } = useCart()
+  const { addToCart } = useCart()
   const [featured, setFeatured] = useState(0)
   const [viewers, setViewers] = useState(1847)
   const [likes, setLikes] = useState(342)
@@ -83,14 +82,7 @@ export default function LivePage() {
   }, [])
 
   function handleAddToCart() {
-    addItem({
-      _id: product.id,
-      title: product.title,
-      price: product.price,
-      images: [product.image],
-      stock: product.stock,
-    } as any)
-    toast.success('Added to cart from Live!')
+    addToCart(product.id)
   }
 
   const mm = String(Math.floor(dealTime / 60)).padStart(2, '0')

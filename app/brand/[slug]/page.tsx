@@ -28,7 +28,7 @@ export default async function BrandPage({ params }: BrandPageProps) {
   const topProducts = await Product.find({ brand: { $regex: `^${brand}$`, $options: 'i' }, isApproved: true })
     .sort({ rating: -1 })
     .limit(4)
-    .lean() as Array<{ _id: string; images: string[]; title: string; discountPrice?: number; price: number; rating?: number }>
+    .lean() as unknown as Array<{ _id: string; images: string[]; title: string; discountPrice?: number; price: number; rating?: number }>
 
   const avgRating = topProducts.length
     ? (topProducts.reduce((s, p) => s + (p.rating || 0), 0) / topProducts.length).toFixed(1)

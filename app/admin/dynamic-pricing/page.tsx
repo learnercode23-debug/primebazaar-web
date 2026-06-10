@@ -58,7 +58,7 @@ export default function DynamicPricingPage() {
   }
 
   function applyPrice(productId: string) {
-    setApplied(s => new Set([...s, productId]))
+    setApplied(s => { const next = new Set(s); next.add(productId); return next })
     toast.success('Price update queued for seller approval')
   }
 

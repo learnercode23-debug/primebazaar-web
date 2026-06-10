@@ -120,7 +120,7 @@ function CohortHeatmap() {
   )
 }
 
-type Tab = 'overview' | 'cohort' | 'ltv' | 'churn' | 'traffic' | 'conversions' | 'abandoned'
+type Tab = 'overview' | 'cohort' | 'ltv' | 'churn' | 'traffic' | 'conversions' | 'abandoned' | 'forecast'
 
 export default function AdvancedAnalyticsPage() {
   const [tab, setTab] = useState<Tab>('overview')
