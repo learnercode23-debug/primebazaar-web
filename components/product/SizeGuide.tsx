@@ -37,7 +37,7 @@ const isFootwear = (cat?: string) =>
   !!cat && /shoe|footwear|sneaker|boot|sandal|slipper/i.test(cat)
 
 const isSizeRelevant = (cat?: string) =>
-  !!cat && /fashion|cloth|apparel|wear|garment|shirt|tshirt|t-shirt|dress|pant|jean|jacket|top|bottom|kurta|saree|suit|knitwear|sportswear|lingerie|underwear|sock|shoe|footwear|sneaker|boot|sandal|slipper/i.test(cat)
+  !!cat && /\b(fashion|cloth|apparel|knitwear|sportswear|lingerie|underwear|footwear|garment|wear|shirt|tshirt|t-shirt|dress|pant|jean|jacket|top|bottom|kurta|saree|suit|sock|shoe|sneaker|boot|sandal|slipper)/i.test(cat)
 
 export default function SizeGuide({ category }: SizeGuideProps) {
   const [open, setOpen] = useState(false)
