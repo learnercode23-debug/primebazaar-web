@@ -70,23 +70,47 @@ function LiveGpsMap({ loc }: { loc: DriverLoc }) {
   )
 }
 
-function DeliveryMap({ progress }: { progress: number }) {
-  const truckX = 40 + (progress / 100) * 220
-  const truckY = 90 - Math.sin((progress / 100) * Math.PI) * 30
+// Known coordinates for major Nepali cities — offline fallback when geocoding fails
+const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
+  kathmandu:  { lat: 27.7172, lng: 85.3240 },
+  lalitpur:   { lat: 27.6588, lng: 85.3247 },
+  patan:      { lat: 27.6588, lng: 85.3247 },
+  bhaktapur:  { lat: 27.6710, lng: 85.4298 },
+  pokhara:    { lat: 28.2096, lng: 83.9856 },
+  biratnagar: { lat: 26.4525, lng: 87.2718 },
+  birgunj:    { lat: 27.0104, lng: 84.8770 },
+  butwal:     { lat: 27.7006, lng: 83.4484 },
+  dharan:     { lat: 26.8126, lng: 87.2835 },
+  bharatpur:  { lat: 27.6833, lng: 84.4333 },
+  nepalgunj:  { lat: 28.0500, lng: 81.6167 },
+  hetauda:    { lat: 27.4287, lng: 85.0322 },
+  itahari:    { lat: 26.6646, lng: 87.2718 },
+  janakpur:   { lat: 26.7288, lng: 85.9266 },
+  dhangadhi:  { lat: 28.6833, lng: 80.6000 },
+}
+
+function cityFallback(city?: string) {
+  if (city) {
+    const key = city.trim().toLowerCase()
+    for (const name of Object.keys(CITY_COORDS)) {
+      if (key.includes(name)) return CITY_COORDS[name]
+    }
+  }
+  return CITY_COORDS.kathmandu
+}
+
+// Real map of the delivery destination — shown until the courier goes live
+function DestinationMap({ lat, lng, city }: { lat: number; lng: number; city?: string }) {
+  const d = 0.012 // ~1.2km window around the destination
+  const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`
+  const src = `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${lat},${lng}`
   return (
-    <div className="relative bg-gradient-to-br from-emerald-50 via-blue-50 to-violet-50 rounded-2xl overflow-hidden border border-gray-100" style={{ height: 200 }}>
-      <svg viewBox="0 0 300 180" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-        {[40, 80, 120, 160, 200, 240].map(x => <line key={x} x1={x} y1="0" x2={x} y2="180" stroke="#e5e7eb" strokeWidth="0.5" />)}
-        {[[20,100,30,60],[60,90,25,70],[100,110,20,50],[180,95,28,65],[220,105,22,55],[260,88,30,72]].map(([x,y,w,h],i) => (
-          <rect key={i} x={x} y={y} width={w} height={h} rx="2" fill={i % 2 === 0 ? '#ddd6fe' : '#bfdbfe'} opacity="0.6" />
-        ))}
-        <path d="M 40 130 Q 80 120 110 100 Q 150 75 190 90 Q 220 100 260 80" fill="none" stroke="#e5e7eb" strokeWidth="6" strokeLinecap="round" />
-        <path d="M 40 130 Q 80 120 110 100 Q 150 75 190 90 Q 220 100 260 80" fill="none" stroke="#7c3aed" strokeWidth="4" strokeLinecap="round" clipPath="url(#progressClip)" />
-        <defs><clipPath id="progressClip"><rect x="0" y="0" width={40 + (progress / 100) * 220} height="180" /></clipPath></defs>
-        <circle cx="40" cy="130" r="8" fill="#7c3aed" /><text x="40" y="148" textAnchor="middle" fill="#6b7280" fontSize="7">Warehouse</text>
-        <circle cx="260" cy="80" r="10" fill="#ef4444" /><text x="260" y="97" textAnchor="middle" fill="#6b7280" fontSize="7">Your home</text>
-        <g transform={`translate(${truckX - 12}, ${truckY - 12})`}><circle cx="12" cy="12" r="14" fill="#7c3aed" /><text x="12" y="16" textAnchor="middle" fontSize="14">🛵</text></g>
-      </svg>
+    <div className="rounded-2xl overflow-hidden border border-gray-100">
+      <iframe title="Delivery destination map" src={src} className="w-full block" style={{ height: 220, border: 0 }} loading="lazy" />
+      <div className="flex items-center justify-between px-3 py-2 bg-white text-xs">
+        <span className="flex items-center gap-1.5 text-violet-700 font-bold">📍 Delivery destination{city ? ` · ${city}` : ''}</span>
+        <span className="text-gray-400">Courier GPS appears when they go live</span>
+      </div>
     </div>
   )
 }
@@ -97,6 +121,46 @@ export default function TrackOrderPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [driverLoc, setDriverLoc] = useState<DriverLoc | null>(null)
+  const [destCoords, setDestCoords] = useState<{ lat: number; lng: number } | null>(null)
+
+  const destStreet = order?.shippingAddress?.street
+  const destCity = order?.shippingAddress?.city
+
+  // Geocode the delivery address (OpenStreetMap Nominatim, no API key) so the
+  // map shows the real destination even before the courier shares live GPS.
+  useEffect(() => {
+    if (!order) return
+    const cacheKey = `geo:${destStreet || ''},${destCity || ''}`
+    try {
+      const cached = sessionStorage.getItem(cacheKey)
+      if (cached) { setDestCoords(JSON.parse(cached)); return }
+    } catch { /* sessionStorage unavailable */ }
+
+    let active = true
+    async function geocode() {
+      const queries = [
+        [destStreet, destCity, 'Nepal'].filter(Boolean).join(', '),
+        [destCity, 'Nepal'].filter(Boolean).join(', '),
+      ].filter((q, i, a) => q !== 'Nepal' && a.indexOf(q) === i)
+
+      for (const q of queries) {
+        try {
+          const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=np&q=${encodeURIComponent(q)}`)
+          const j = await r.json()
+          if (j?.[0]?.lat && active) {
+            const c = { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) }
+            try { sessionStorage.setItem(cacheKey, JSON.stringify(c)) } catch { /* ignore */ }
+            setDestCoords(c)
+            return
+          }
+        } catch { /* try next query */ }
+      }
+      if (active) setDestCoords(cityFallback(destCity))
+    }
+    geocode()
+    return () => { active = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [destStreet, destCity, !!order])
 
   useEffect(() => {
     if (!orderId) return
@@ -215,7 +279,15 @@ export default function TrackOrderPage() {
       {!isNegative && (
         <>
           <div className="mb-4">
-            {driverLoc ? <LiveGpsMap loc={driverLoc} /> : <DeliveryMap progress={progress} />}
+            {driverLoc ? (
+              <LiveGpsMap loc={driverLoc} />
+            ) : destCoords ? (
+              <DestinationMap lat={destCoords.lat} lng={destCoords.lng} city={order.shippingAddress?.city} />
+            ) : (
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 flex items-center justify-center text-xs text-gray-400" style={{ height: 220 }}>
+                Loading map…
+              </div>
+            )}
           </div>
           <div className="mb-5">
             <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
@@ -226,9 +298,6 @@ export default function TrackOrderPage() {
             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
-            {!driverLoc && order.status === 'out_for_delivery' && (
-              <p className="text-[11px] text-gray-400 mt-1.5 text-center">Live GPS appears here once your courier shares their location.</p>
-            )}
           </div>
         </>
       )}
