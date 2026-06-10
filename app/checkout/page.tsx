@@ -16,7 +16,7 @@ import { FiCheck, FiTag, FiTruck, FiCreditCard, FiMapPin, FiChevronDown, FiNavig
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 type Step = 'guest' | 'address' | 'payment' | 'review'
-type PaymentMethod = 'cod' | 'bnpl'
+type PaymentMethod = 'cod'
 
 interface SavedAddress {
   _id: string
@@ -41,18 +41,6 @@ const PAYMENT_METHODS: { id: PaymentMethod; label: string; description: string; 
       <div className="flex items-center gap-1">
         <span className="text-2xl">💵</span>
         <span className="text-orange-700 font-bold text-sm">COD</span>
-      </div>
-    ),
-  },
-  {
-    id: 'bnpl',
-    label: 'Pay in 3 Installments',
-    description: 'Split your total into 3 equal monthly payments — no interest',
-    color: 'border-violet-400 bg-violet-50',
-    logo: (
-      <div className="flex items-center gap-1">
-        <span className="text-2xl">💳</span>
-        <span className="text-violet-700 font-bold text-sm">BNPL</span>
       </div>
     ),
   },
@@ -483,22 +471,6 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* BNPL info */}
-              {paymentMethod === 'bnpl' && (
-                <div className="mt-4 bg-violet-50 border border-violet-200 rounded-lg p-3">
-                  <p className="text-sm font-bold text-violet-800 mb-2">💳 Pay in 3 installments</p>
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs mb-2">
-                    {[1, 2, 3].map(n => (
-                      <div key={n} className="bg-white rounded-lg py-2 border border-violet-100">
-                        <p className="font-bold text-violet-700">Rs.{Math.ceil(total / 3).toLocaleString()}</p>
-                        <p className="text-gray-500">Month {n}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-violet-600">0% interest · No processing fees · First payment today</p>
                 </div>
               )}
 
