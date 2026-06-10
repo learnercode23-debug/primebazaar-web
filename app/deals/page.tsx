@@ -27,7 +27,7 @@ export default function DealsPage() {
   useEffect(() => {
     setLoading(true)
     axios.get('/api/products?sort=discountPercent&order=desc&limit=40')
-      .then((r) => setProducts((r.data.data?.products || []).filter((p: Product) => p.discountPrice && p.discountPrice < p.price)))
+      .then((r) => setProducts((r.data.data || []).filter((p: Product) => p.discountPrice && p.discountPrice < p.price)))
       .catch(() => setProducts([]))
       .finally(() => setLoading(false))
   }, [])

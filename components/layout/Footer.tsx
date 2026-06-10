@@ -7,10 +7,14 @@ import { useState } from 'react'
 export default function Footer() {
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
+  const [emailError, setEmailError] = useState('')
 
   function handleSubscribe(e: React.FormEvent) {
     e.preventDefault()
-    if (!email) return
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    if (!email) { setEmailError('Email is required'); return }
+    if (!valid) { setEmailError('Enter a valid email address'); return }
+    setEmailError('')
     setSubscribed(true)
     setEmail('')
     setTimeout(() => setSubscribed(false), 4000)
@@ -54,10 +58,13 @@ export default function Footer() {
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={e => { setEmail(e.target.value); if (emailError) setEmailError('') }}
                 placeholder="Enter your email"
-                className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-violet-500 focus:bg-white/8 transition-colors"
+                required
+                aria-describedby={emailError ? 'newsletter-error' : undefined}
+                className={`w-full bg-white/5 border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-violet-500 focus:bg-white/8 transition-colors ${emailError ? 'border-red-400' : 'border-white/10'}`}
               />
+              {emailError && <p id="newsletter-error" className="absolute -bottom-5 left-0 text-xs text-red-400">{emailError}</p>}
             </div>
             <button
               type="submit"
@@ -175,7 +182,6 @@ export default function Footer() {
           </div>
 
         </div>
-        <p className="text-center text-xs text-gray-600 pb-4 sm:hidden">© {new Date().getFullYear()} PrimePasal. All rights reserved.</p>
       </div>
     </footer>
   )

@@ -16,6 +16,17 @@ import {
 interface Article { _id: string; title: string; category: string; views: number }
 interface ChatMsg  { role: 'user' | 'bot'; text: string }
 
+const FALLBACK_ARTICLES: Article[] = [
+  { _id: 'faq-1', title: 'How do I track my order?',                    category: 'orders',   views: 0 },
+  { _id: 'faq-2', title: 'How do I cancel or modify my order?',          category: 'orders',   views: 0 },
+  { _id: 'faq-3', title: 'What is the return and refund policy?',        category: 'returns',  views: 0 },
+  { _id: 'faq-4', title: 'How long does delivery take?',                 category: 'shipping', views: 0 },
+  { _id: 'faq-5', title: 'What payment methods are accepted?',           category: 'payments', views: 0 },
+  { _id: 'faq-6', title: 'How do I change my password or email?',        category: 'account',  views: 0 },
+  { _id: 'faq-7', title: 'Why was my payment declined?',                 category: 'payments', views: 0 },
+  { _id: 'faq-8', title: 'How do I use a coupon or promo code?',         category: 'general',  views: 0 },
+]
+
 const CATEGORIES = [
   { key: 'orders',   label: 'Orders',   icon: FiPackage,     color: 'bg-blue-50 text-blue-600 border-blue-200' },
   { key: 'payments', label: 'Payments', icon: FiCreditCard,  color: 'bg-green-50 text-green-600 border-green-200' },
@@ -59,7 +70,8 @@ export default function SupportPage() {
         if (searchQ) p.set('q', searchQ)
         if (activeCategory) p.set('category', activeCategory)
         const res = await axios.get(`/api/support/articles?${p}&limit=8`)
-        setArticles(res.data.data || [])
+        const data = res.data.data || []
+        setArticles(data.length > 0 ? data : (searchQ || activeCategory ? [] : FALLBACK_ARTICLES))
       } catch { setArticles([]) }
       finally  { setSearching(false) }
     }
@@ -195,14 +207,25 @@ export default function SupportPage() {
         ) : (
           <div className="space-y-2">
             {articles.map(article => (
-              <Link key={article._id} href={`/support/articles/${article._id}`}
-                className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-3 hover:shadow-md hover:border-indigo-300 transition-all group">
-                <div>
-                  <p className="text-sm font-medium text-gray-900 group-hover:text-indigo-700">{article.title}</p>
-                  <p className="text-xs text-gray-400 capitalize">{article.category} · {article.views} views</p>
+              article._id.startsWith('faq-') ? (
+                <div key={article._id}
+                  className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{article.title}</p>
+                    <p className="text-xs text-gray-400 capitalize">{article.category}</p>
+                  </div>
+                  <button onClick={() => setShowTicket(true)} className="text-xs text-indigo-600 hover:underline whitespace-nowrap ml-2">Get help →</button>
                 </div>
-                <FiChevronRight className="text-gray-400 group-hover:text-indigo-600 flex-shrink-0"/>
-              </Link>
+              ) : (
+                <Link key={article._id} href={`/support/articles/${article._id}`}
+                  className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-3 hover:shadow-md hover:border-indigo-300 transition-all group">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 group-hover:text-indigo-700">{article.title}</p>
+                    <p className="text-xs text-gray-400 capitalize">{article.category} · {article.views} views</p>
+                  </div>
+                  <FiChevronRight className="text-gray-400 group-hover:text-indigo-600 flex-shrink-0"/>
+                </Link>
+              )
             ))}
           </div>
         )}
