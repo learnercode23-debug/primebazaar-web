@@ -46,6 +46,8 @@ export interface IUser extends Document {
     newArrivals: boolean
   }
   expoPushToken?: string   // Expo push token — set by the mobile app after login
+  referralCode?: string
+  referredBy?: mongoose.Types.ObjectId
   createdAt: Date
   comparePassword(password: string): Promise<boolean>
 }
@@ -90,6 +92,8 @@ const UserSchema = new Schema<IUser>(
     emailVerificationToken: { type: String },
     emailVerificationExpiry: { type: Date },
     expoPushToken: { type: String },
+    referralCode: { type: String, unique: true, sparse: true },
+    referredBy: { type: Schema.Types.ObjectId, ref: 'User' },
     notificationPrefs: {
       orderUpdates: { type: Boolean, default: true },
       promotions: { type: Boolean, default: true },

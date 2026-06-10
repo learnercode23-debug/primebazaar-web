@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import { sendVerificationEmail, sendWelcomeEmail } from '@/lib/email'
+import { uniqueReferralCode } from '@/lib/referral'
 import crypto from 'crypto'
 
 export async function POST(req: NextRequest) {
   try {
     await connectDB()
-    const { name, email, password, role } = await req.json()
+    const { name, email, password, role, referralCode } = await req.json()
 
     if (!name || !email || !password) {
       return NextResponse.json({ success: false, error: 'All fields are required' }, { status: 400 })
@@ -17,6 +18,13 @@ export async function POST(req: NextRequest) {
     const existing = await User.findOne({ email })
     if (existing) {
       return NextResponse.json({ success: false, error: 'Email already in use' }, { status: 409 })
+    }
+
+    // Resolve referrer (if a valid code was supplied)
+    let referredBy: unknown = undefined
+    if (referralCode?.trim()) {
+      const referrer = await User.findOne({ referralCode: referralCode.trim() }).select('_id').lean()
+      if (referrer) referredBy = (referrer as { _id: unknown })._id
     }
 
     const verificationToken = crypto.randomBytes(32).toString('hex')
@@ -30,6 +38,8 @@ export async function POST(req: NextRequest) {
       emailVerified: false,
       emailVerificationToken: verificationToken,
       emailVerificationExpiry: verificationExpiry,
+      referralCode: await uniqueReferralCode(name),
+      referredBy,
     })
 
     // Send both emails (awaited so Vercel doesn't kill them before they finish)

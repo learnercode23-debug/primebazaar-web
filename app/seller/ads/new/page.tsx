@@ -38,10 +38,21 @@ export default function NewCampaignPage() {
     e.preventDefault()
     if (!selectedProduct) { toast.error('Select a product to boost'); return }
     setPlacing(true)
-    await new Promise(r => setTimeout(r, 900))
-    setPlacing(false)
-    toast.success('Campaign created! Your product will start appearing as Sponsored.')
-    router.push('/seller/ads')
+    try {
+      await axios.post('/api/seller/ads', {
+        productId: selectedProduct,
+        type: 'auto',
+        budget,
+        bid: 5,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + duration * 86400000).toISOString(),
+      })
+      toast.success('Campaign created! Your product will start appearing as Sponsored.')
+      router.push('/seller/ads')
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to create campaign')
+      setPlacing(false)
+    }
   }
 
   const dailyBudget = Math.round(budget / duration)

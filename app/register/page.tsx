@@ -27,7 +27,7 @@ function RegisterForm() {
     if (form.password.length < 8) { toast.error('Password must be at least 8 characters'); return }
     setLoading(true)
     try {
-      await register(form.name, form.email, form.password, form.role)
+      await register(form.name, form.email, form.password, form.role, params.get('ref') || undefined)
       setSubmitted(true)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Registration failed'

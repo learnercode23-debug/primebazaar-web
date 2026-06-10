@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (name: string, email: string, password: string, role?: string) => Promise<void>
+  register: (name: string, email: string, password: string, role?: string, referralCode?: string) => Promise<void>
   logout: () => Promise<void>
   updateUser: (data: Partial<User>) => void
 }
@@ -39,8 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(res.data.data)
   }
 
-  async function register(name: string, email: string, password: string, role = 'customer') {
-    await axios.post('/api/auth/register', { name, email, password, role })
+  async function register(name: string, email: string, password: string, role = 'customer', referralCode?: string) {
+    await axios.post('/api/auth/register', { name, email, password, role, referralCode })
     // No auto-login — user must verify email first
   }
 

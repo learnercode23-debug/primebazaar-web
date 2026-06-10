@@ -4,9 +4,10 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import axios from 'axios'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { FiStar, FiGift, FiShoppingBag, FiShare2, FiAward, FiChevronRight } from 'react-icons/fi'
+import { FiStar, FiGift, FiShoppingBag, FiShare2, FiAward } from 'react-icons/fi'
 
 const TIERS = [
   { name: 'Silver',   min: 0,    max: 999,  color: 'from-gray-400 to-gray-500',    perks: ['1 point per Rs.20 spent', 'Birthday bonus 100 pts'] },
@@ -24,22 +25,22 @@ const HOW_TO_EARN = [
   { icon: '📧', action: 'Subscribe to newsletter',pts: '25 pts' },
 ]
 
-const MOCK_HISTORY = [
-  { date: '2026-06-08', desc: 'Purchase — Order #PP8821',        pts: +120, type: 'earn' },
-  { date: '2026-06-05', desc: 'Review — Sony Headphones',        pts: +50,  type: 'earn' },
-  { date: '2026-06-02', desc: 'Redeemed at checkout',            pts: -200, type: 'redeem' },
-  { date: '2026-05-28', desc: 'Referral — Ramesh K. joined',     pts: +200, type: 'earn' },
-  { date: '2026-05-20', desc: 'Purchase — Order #PP7640',        pts: +80,  type: 'earn' },
-]
+interface HistoryItem { date: string; desc: string; pts: number; type: 'earn' | 'redeem' }
 
 export default function RewardsPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const [balance] = useState(620)
+  const [balance, setBalance] = useState(0)
+  const [history, setHistory] = useState<HistoryItem[]>([])
   const [redeemAmt, setRedeemAmt] = useState(0)
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login')
+    if (loading) return
+    if (!user) { router.push('/login'); return }
+    axios.get('/api/rewards').then(r => {
+      setBalance(r.data.data.balance || 0)
+      setHistory(r.data.data.history || [])
+    }).catch(() => {})
   }, [user, loading, router])
 
   if (loading || !user) return null
@@ -162,19 +163,23 @@ export default function RewardsPage() {
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-black text-gray-900">Points History</h2>
         </div>
-        <div className="divide-y divide-gray-50">
-          {MOCK_HISTORY.map((item, i) => (
-            <div key={i} className="flex items-center justify-between px-5 py-3">
-              <div>
-                <p className="text-sm font-medium text-gray-900">{item.desc}</p>
-                <p className="text-xs text-gray-400">{item.date}</p>
+        {history.length === 0 ? (
+          <p className="text-center text-gray-500 text-sm py-10">No points activity yet — make a purchase or write a review to start earning.</p>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {history.map((item, i) => (
+              <div key={i} className="flex items-center justify-between px-5 py-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{item.desc}</p>
+                  <p className="text-xs text-gray-400">{new Date(item.date).toLocaleDateString()}</p>
+                </div>
+                <span className={`font-black text-sm ${item.type === 'earn' ? 'text-green-600' : 'text-red-500'}`}>
+                  {item.type === 'earn' ? '+' : ''}{item.pts} pts
+                </span>
               </div>
-              <span className={`font-black text-sm ${item.type === 'earn' ? 'text-green-600' : 'text-red-500'}`}>
-                {item.type === 'earn' ? '+' : ''}{item.pts} pts
-              </span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

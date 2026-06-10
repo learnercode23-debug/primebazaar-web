@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import axios from 'axios'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { FiSave, FiExternalLink, FiImage, FiType, FiAlignLeft } from 'react-icons/fi'
@@ -28,9 +29,24 @@ export default function SellerBrandPage() {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    if (!loading && (!user || (user.role !== 'seller' && user.role !== 'admin'))) {
-      router.push('/')
-    }
+    if (loading) return
+    if (!user || (user.role !== 'seller' && user.role !== 'admin')) { router.push('/'); return }
+    axios.get('/api/seller/brand').then(r => {
+      const b = r.data?.data
+      if (b) {
+        const feats = Array.isArray(b.features) ? b.features : []
+        setForm({
+          brandName: b.brandName || '',
+          tagline: b.tagline || '',
+          story: b.story || '',
+          logoUrl: b.logoUrl || '',
+          bannerUrl: b.bannerUrl || '',
+          websiteUrl: b.websiteUrl || '',
+          contactEmail: b.contactEmail || '',
+          features: [feats[0] || '', feats[1] || '', feats[2] || ''],
+        })
+      }
+    }).catch(() => {})
   }, [user, loading, router])
 
   function setFeature(i: number, val: string) {
@@ -40,12 +56,16 @@ export default function SellerBrandPage() {
   async function save(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
-    // In production this POSTs to /api/seller/brand
-    await new Promise(r => setTimeout(r, 800))
-    setSaving(false)
-    setSaved(true)
-    toast.success('Brand page saved!')
-    setTimeout(() => setSaved(false), 3000)
+    try {
+      await axios.put('/api/seller/brand', form)
+      setSaved(true)
+      toast.success('Brand page saved!')
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading || !user) return null

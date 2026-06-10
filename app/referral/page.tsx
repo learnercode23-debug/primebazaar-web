@@ -3,30 +3,35 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
+import axios from 'axios'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { FiCopy, FiCheck, FiShare2, FiGift, FiUsers, FiDollarSign } from 'react-icons/fi'
 
-const MOCK_REFERRALS = [
-  { name: 'Ramesh K.',   date: '2026-06-01', status: 'Completed', earned: 200 },
-  { name: 'Sita M.',     date: '2026-05-18', status: 'Completed', earned: 200 },
-  { name: 'Arjun T.',    date: '2026-05-10', status: 'Pending',   earned: 0 },
-]
+interface Referral { name: string; date: string; status: string; earned: number }
 
 export default function ReferralPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [copied, setCopied] = useState(false)
+  const [code, setCode] = useState('')
+  const [referrals, setReferrals] = useState<Referral[]>([])
+  const [totalEarned, setTotalEarned] = useState(0)
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login')
+    if (loading) return
+    if (!user) { router.push('/login'); return }
+    axios.get('/api/referral').then(r => {
+      const d = r.data.data
+      setCode(d.code || '')
+      setReferrals(d.referrals || [])
+      setTotalEarned(d.totalEarned || 0)
+    }).catch(() => {})
   }, [user, loading, router])
 
   if (loading || !user) return null
 
-  const code = 'PP-' + user.name.split(' ')[0].toUpperCase().slice(0, 4) + Math.abs(user._id.charCodeAt(0) * 37 % 9999)
-  const link = `https://www.primepasal.com/register?ref=${code}`
-  const totalEarned = MOCK_REFERRALS.filter(r => r.status === 'Completed').reduce((s, r) => s + r.earned, 0)
+  const link = code ? `https://www.primepasal.com/register?ref=${code}` : 'https://www.primepasal.com/register'
 
   function copy() {
     navigator.clipboard.writeText(link)
@@ -82,8 +87,8 @@ export default function ReferralPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { icon: FiUsers,     label: 'Friends referred',  value: MOCK_REFERRALS.length },
-          { icon: FiCheck,     label: 'Completed',         value: MOCK_REFERRALS.filter(r => r.status === 'Completed').length },
+          { icon: FiUsers,     label: 'Friends referred',  value: referrals.length },
+          { icon: FiCheck,     label: 'Completed',         value: referrals.filter(r => r.status === 'Completed').length },
           { icon: FiDollarSign,label: 'Points earned',     value: `${totalEarned} pts` },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="bg-white border border-gray-100 rounded-2xl p-4 text-center shadow-sm">
@@ -117,15 +122,15 @@ export default function ReferralPage() {
         <div className="px-5 py-4 border-b border-gray-100">
           <h2 className="font-black text-gray-900">Your referrals</h2>
         </div>
-        {MOCK_REFERRALS.length === 0 ? (
+        {referrals.length === 0 ? (
           <p className="text-center text-gray-500 text-sm py-10">No referrals yet — share your code to get started!</p>
         ) : (
           <div className="divide-y divide-gray-50">
-            {MOCK_REFERRALS.map((r, i) => (
+            {referrals.map((r, i) => (
               <div key={i} className="flex items-center justify-between px-5 py-3">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{r.name}</p>
-                  <p className="text-xs text-gray-400">{r.date}</p>
+                  <p className="text-xs text-gray-400">{new Date(r.date).toLocaleDateString()}</p>
                 </div>
                 <div className="text-right">
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${r.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
