@@ -12,6 +12,7 @@ import { splitOrderBySeller } from '@/lib/splitOrder'
 import { assignProductSeller } from '@/lib/assignmentEngine'
 import User from '@/models/User'
 import { runAprioriMining } from '@/lib/apriori'
+import { stripe } from '@/lib/stripe'
 
 export async function GET(req: NextRequest) {
   try {
@@ -110,13 +111,30 @@ export async function POST(req: NextRequest) {
 
     const totalAmount = Math.max(0, subtotal + shippingCost - discount)
 
+    // Never trust a client-supplied payment id. Verify the intent with Stripe:
+    // it must have succeeded, be for this exact amount, and belong to this user.
+    let paymentStatus: 'paid' | 'pending' = 'pending'
+    if (stripePaymentIntentId) {
+      try {
+        const intent = await stripe.paymentIntents.retrieve(stripePaymentIntentId)
+        const amountMatches = intent.amount === Math.round(totalAmount * 100)
+        const ownerMatches = intent.metadata?.userId === user._id.toString()
+        if (intent.status !== 'succeeded' || !amountMatches || !ownerMatches) {
+          return NextResponse.json({ success: false, error: 'Payment verification failed' }, { status: 400 })
+        }
+        paymentStatus = 'paid'
+      } catch {
+        return NextResponse.json({ success: false, error: 'Payment verification failed' }, { status: 400 })
+      }
+    }
+
     const order = await Order.create({
       user: user._id,
       items: orderItems,
       shippingAddress,
       paymentMethod,
-      paymentStatus: stripePaymentIntentId ? 'paid' : 'pending',
-      status: 'confirmed',
+      paymentStatus,
+      status: paymentStatus === 'paid' ? 'confirmed' : 'pending',
       subtotal,
       shippingCost,
       discount,
