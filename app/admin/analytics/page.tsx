@@ -133,7 +133,22 @@ export default function AdvancedAnalyticsPage() {
     { key: 'traffic',      label: 'Traffic' },
     { key: 'conversions',  label: 'Conversions' },
     { key: 'abandoned',    label: 'Abandoned Carts' },
+    { key: 'forecast',     label: '🔮 Demand Forecast' },
   ]
+
+const FORECAST_DATA = {
+  categories: ['Electronics', 'Fashion', 'Home & Garden', 'Books', 'Sports', 'Beauty'],
+  nextMonthDemand: [+18, +12, +8, -3, +22, +15],
+  predicted:    [320000, 290000, 310000, 280000, 340000, 370000, 350000, 390000, 410000, 430000, 450000, 480000],
+  actual:       [298000, 278000, 305000, 271000, 325000, 360000, 345000, 385000, 402000, 421000, null, null],
+  topProducts:  [
+    { title: 'Samsung Galaxy A35', category: 'Electronics', forecastSales: 148, trend: '+32%', confidence: 91 },
+    { title: 'Nike Running Shoes', category: 'Fashion',     forecastSales: 94,  trend: '+18%', confidence: 86 },
+    { title: 'Air Purifier HEPA',  category: 'Home',        forecastSales: 67,  trend: '+41%', confidence: 78 },
+    { title: 'JBL Earbuds Pro',    category: 'Electronics', forecastSales: 112, trend: '+25%', confidence: 88 },
+    { title: 'Yoga Mat Premium',   category: 'Sports',      forecastSales: 83,  trend: '+55%', confidence: 82 },
+  ],
+}
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -541,6 +556,108 @@ export default function AdvancedAnalyticsPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Demand Forecast ── */}
+      {tab === 'forecast' && (
+        <div className="space-y-5">
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              { label: 'Projected Next Month Revenue', value: 'Rs.5,20,000', change: '+15.6%', up: true },
+              { label: 'Projected Orders', value: '920', change: '+18%', up: true },
+              { label: 'Forecast Accuracy (30d)',   value: '87.4%', change: '+2.1%', up: true },
+            ].map(({ label, value, change, up }) => (
+              <div key={label} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm text-center">
+                <p className={`text-3xl font-black ${up ? 'text-green-600' : 'text-red-500'}`}>{value}</p>
+                <p className="font-bold text-gray-900 text-sm mt-1">{label}</p>
+                <p className={`text-xs font-semibold mt-0.5 ${up ? 'text-green-500' : 'text-red-400'}`}>{change} predicted</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Predicted vs Actual chart */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+            <h2 className="font-black text-gray-900 mb-1">Revenue — Predicted vs Actual (Rs.)</h2>
+            <p className="text-xs text-gray-500 mb-4">Grey = predicted · Violet = actual · Last 2 months = forecast only</p>
+            <div className="relative h-36">
+              <svg viewBox={`0 0 ${12 * 30} 120`} className="w-full h-full" preserveAspectRatio="none">
+                {FORECAST_DATA.predicted.map((v, i) => {
+                  const maxV = Math.max(...FORECAST_DATA.predicted)
+                  const barH = (v / maxV) * 96
+                  const isForecastOnly = i >= 10
+                  return (
+                    <rect key={i} x={i * 30 + 4} y={112 - barH} width={22} height={barH} rx="3"
+                      fill={isForecastOnly ? 'rgba(124,58,237,0.25)' : 'rgba(124,58,237,0.15)'}
+                      stroke={isForecastOnly ? 'rgba(124,58,237,0.5)' : 'none'}
+                      strokeWidth={isForecastOnly ? '1' : '0'}
+                      strokeDasharray={isForecastOnly ? '3,2' : '0'}
+                    />
+                  )
+                })}
+                {(() => {
+                  const maxV = Math.max(...FORECAST_DATA.predicted)
+                  const actualPts = FORECAST_DATA.actual
+                    .map((v, i) => v !== null ? `${i * 30 + 15},${112 - ((v / maxV) * 96)}` : null)
+                    .filter(Boolean)
+                  return <polyline points={actualPts.join(' ')} fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                })()}
+              </svg>
+            </div>
+            <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+              {MONTHS.map(m => <span key={m}>{m}</span>)}
+            </div>
+          </div>
+
+          {/* Category demand heatmap */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+            <h2 className="font-black text-gray-900 mb-4">Next Month Demand by Category</h2>
+            <div className="space-y-3">
+              {FORECAST_DATA.categories.map((cat, i) => {
+                const change = FORECAST_DATA.nextMonthDemand[i]
+                const isUp = change >= 0
+                return (
+                  <div key={cat} className="flex items-center gap-4">
+                    <p className="text-sm font-semibold text-gray-900 w-36 flex-shrink-0">{cat}</p>
+                    <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full flex items-center justify-end pr-2 transition-all"
+                        style={{ width: `${Math.min(Math.abs(change) * 3, 100)}%`, background: isUp ? 'rgba(34,197,94,0.7)' : 'rgba(239,68,68,0.7)' }}>
+                        <span className="text-[10px] font-black text-white">{isUp ? '+' : ''}{change}%</span>
+                      </div>
+                    </div>
+                    <span className={`text-xs font-black w-16 text-right ${isUp ? 'text-green-600' : 'text-red-500'}`}>{isUp ? '▲' : '▼'} {Math.abs(change)}%</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Top forecasted products */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+            <h2 className="font-black text-gray-900 mb-4">Top Forecasted Products — Next 30 Days</h2>
+            <table className="w-full text-sm">
+              <thead><tr className="text-xs text-gray-500 border-b pb-2">
+                <th className="pb-3 text-left">Product</th>
+                <th className="pb-3 text-left">Category</th>
+                <th className="pb-3 text-right">Forecast Sales</th>
+                <th className="pb-3 text-right">Trend</th>
+                <th className="pb-3 text-right">Confidence</th>
+              </tr></thead>
+              <tbody>
+                {FORECAST_DATA.topProducts.map(p => (
+                  <tr key={p.title} className="border-b border-gray-50 hover:bg-gray-50">
+                    <td className="py-2.5 font-medium text-gray-900">{p.title}</td>
+                    <td className="py-2.5 text-gray-500">{p.category}</td>
+                    <td className="py-2.5 text-right font-bold">{p.forecastSales} units</td>
+                    <td className="py-2.5 text-right text-green-600 font-bold">{p.trend}</td>
+                    <td className="py-2.5 text-right">
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${p.confidence >= 90 ? 'bg-green-100 text-green-700' : p.confidence >= 80 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>{p.confidence}%</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

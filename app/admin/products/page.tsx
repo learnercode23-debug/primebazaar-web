@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation'
 import { Product } from '@/types'
 import { formatPrice, formatDate } from '@/lib/utils'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { FiCheck, FiX, FiTrash2 } from 'react-icons/fi'
+import { FiCheck, FiX, FiTrash2, FiUpload } from 'react-icons/fi'
 
 export default function AdminProductsPage() {
   const { user } = useAuth()
@@ -19,6 +19,8 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all')
+  const [csvImporting, setCsvImporting] = useState(false)
+  const [csvResult, setCsvResult] = useState<{ imported: number; errors: string[] } | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -58,11 +60,57 @@ export default function AdminProductsPage() {
     ? products.filter((p) => p.isApproved)
     : products
 
+  async function handleCsvUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setCsvImporting(true)
+    setCsvResult(null)
+    try {
+      const text = await file.text()
+      const lines = text.trim().split('\n')
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
+      const rows = lines.slice(1)
+      let imported = 0
+      const errors: string[] = []
+      for (let i = 0; i < rows.length; i++) {
+        const vals = rows[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''))
+        const obj: Record<string, string> = {}
+        headers.forEach((h, idx) => { obj[h] = vals[idx] || '' })
+        if (!obj.title || !obj.price) { errors.push(`Row ${i + 2}: missing title or price`); continue }
+        try {
+          await axios.post('/api/products', {
+            title: obj.title, price: parseFloat(obj.price),
+            description: obj.description || obj.title,
+            brand: obj.brand || 'Unknown', stock: parseInt(obj.stock || '10'),
+            images: obj.image ? [obj.image] : [],
+          })
+          imported++
+        } catch { errors.push(`Row ${i + 2}: ${obj.title} — failed`) }
+      }
+      setCsvResult({ imported, errors })
+      if (imported > 0) { toast.success(`Imported ${imported} products`); loadProducts() }
+    } catch { toast.error('Failed to parse CSV') }
+    finally { setCsvImporting(false); e.target.value = '' }
+  }
+
   if (!user || loading) return <LoadingSpinner fullPage />
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Product Management</h1>
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
+        <label className={`flex items-center gap-2 cursor-pointer bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors ${csvImporting ? 'opacity-50 pointer-events-none' : ''}`}>
+          <FiUpload /> {csvImporting ? 'Importing…' : 'Bulk Import CSV'}
+          <input type="file" accept=".csv" className="hidden" onChange={handleCsvUpload} />
+        </label>
+      </div>
+      {csvResult && (
+        <div className={`mb-4 p-4 rounded-xl border text-sm ${csvResult.errors.length === 0 ? 'bg-green-50 border-green-200 text-green-800' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
+          <p className="font-bold">{csvResult.imported} products imported successfully{csvResult.errors.length > 0 ? `, ${csvResult.errors.length} failed` : ''}</p>
+          {csvResult.errors.length > 0 && <ul className="mt-1 list-disc list-inside text-xs">{csvResult.errors.slice(0,5).map((e,i) => <li key={i}>{e}</li>)}</ul>}
+          <p className="text-xs mt-1 opacity-70">CSV format: title, price, description, brand, stock, image</p>
+        </div>
+      )}
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6">

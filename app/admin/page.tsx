@@ -14,6 +14,7 @@ import {
   FiUsers, FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiShield, FiCpu,
   FiLayers, FiImage, FiClock, FiRotateCcw, FiPercent, FiMapPin, FiUnlock,
   FiSmartphone, FiBriefcase, FiTag, FiStar, FiMessageSquare, FiHeadphones, FiRefreshCw,
+  FiAlertTriangle, FiBell, FiZap, FiActivity, FiAward,
 } from 'react-icons/fi'
 import RevenueChart from '@/components/ui/RevenueChart'
 
@@ -50,8 +51,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!user) return
     if (user.role !== 'admin') { router.push('/'); return }
-    axios.get('/api/admin/analytics').then((r) => setAnalytics(r.data.data))
-      .finally(() => setLoading(false))
+    const fetchAnalytics = () => axios.get('/api/admin/analytics').then((r) => setAnalytics(r.data.data))
+    fetchAnalytics().finally(() => setLoading(false))
+    const interval = setInterval(fetchAnalytics, 30000)
+    return () => clearInterval(interval)
   }, [user, router])
 
   if (!user || loading) return <LoadingSpinner fullPage />
@@ -100,18 +103,22 @@ export default function AdminDashboard() {
         {
           group: 'Analytics & Intelligence',
           cards: [
-            { href: '/admin/analytics',  label: '📊 Advanced Analytics', desc: 'Cohort, LTV, churn, traffic & conversion funnel', icon: FiTrendingUp,  color: 'bg-violet-50 border-violet-200' },
-            { href: '/admin/customers',  label: '👥 Customer Segments',  desc: 'RFM segmentation — champions, at-risk, lost',     icon: FiUsers,       color: 'bg-blue-50 border-blue-200' },
-            { href: '/admin/fraud',      label: '🛡️ Fraud Detection',    desc: 'AI-flagged suspicious orders and risk scoring',   icon: FiShield,      color: 'bg-red-50 border-red-200' },
-            { href: '/admin/promos',     label: '📅 Promo Calendar',     desc: 'Schedule and manage promotional campaigns',       icon: FiCpu,         color: 'bg-amber-50 border-amber-200' },
+            { href: '/admin/analytics',        label: '📊 Advanced Analytics',   desc: 'Cohort, LTV, churn, demand forecast & funnel',    icon: FiTrendingUp,    color: 'bg-violet-50 border-violet-200' },
+            { href: '/admin/customers',        label: '👥 Customer Segments',    desc: 'RFM segmentation — champions, at-risk, lost',     icon: FiUsers,         color: 'bg-blue-50 border-blue-200' },
+            { href: '/admin/fraud',            label: '🛡️ Fraud Detection',      desc: 'AI-flagged suspicious orders and risk scoring',   icon: FiShield,        color: 'bg-red-50 border-red-200' },
+            { href: '/admin/ab-testing',       label: '⚡ A/B Testing',           desc: 'Controlled experiments — optimize listings & UI', icon: FiZap,           color: 'bg-amber-50 border-amber-200' },
+            { href: '/admin/dynamic-pricing',  label: '💰 Dynamic Pricing AI',   desc: 'AI pricing suggestions based on demand & stock',  icon: FiActivity,      color: 'bg-emerald-50 border-emerald-200' },
+            { href: '/admin/promos',           label: '📅 Promo Calendar',       desc: 'Schedule and manage promotional campaigns',       icon: FiCpu,           color: 'bg-pink-50 border-pink-200' },
           ],
         },
         {
           group: 'Catalog',
           cards: [
-            { href: '/admin/products',   label: 'Products',          desc: 'Approve, edit, or remove listings',          icon: FiPackage,     color: 'bg-purple-50 border-purple-200' },
-            { href: '/admin/categories', label: 'Categories',        desc: 'Category tree and commission rules',          icon: FiLayers,      color: 'bg-yellow-50 border-yellow-200' },
-            { href: '/admin/banners',    label: 'Banners',           desc: 'Homepage promotional banners',                icon: FiImage,       color: 'bg-pink-50 border-pink-200' },
+            { href: '/admin/products',          label: 'Products',           desc: 'Approve, edit, or remove listings',           icon: FiPackage,       color: 'bg-purple-50 border-purple-200' },
+            { href: '/admin/categories',        label: 'Categories',         desc: 'Category tree and commission rules',           icon: FiLayers,        color: 'bg-yellow-50 border-yellow-200' },
+            { href: '/admin/banners',           label: 'Banners',            desc: 'Homepage promotional banners',                 icon: FiImage,         color: 'bg-pink-50 border-pink-200' },
+            { href: '/admin/brands',            label: '🏆 Brand Registry',  desc: 'Approve brand applications, protect IP',       icon: FiAward,         color: 'bg-amber-50 border-amber-200' },
+            { href: '/admin/inventory-alerts',  label: '⚠️ Inventory Alerts', desc: 'Low-stock alerts and seller notifications',    icon: FiAlertTriangle, color: 'bg-red-50 border-red-200' },
           ],
         },
         {
@@ -138,10 +145,12 @@ export default function AdminDashboard() {
         {
           group: 'People & Support',
           cards: [
-            { href: '/admin/users',   label: 'Manage Users',      desc: 'View and manage all customers and sellers',  icon: FiUsers,         color: 'bg-blue-50 border-blue-200' },
-            { href: '/admin/reviews', label: 'Review Moderation', desc: 'Approve and moderate customer reviews',      icon: FiStar,          color: 'bg-red-50 border-red-200' },
-            { href: '/admin/support', label: 'Customer Support',  desc: 'Help articles, ticket metrics, CSAT scores', icon: FiMessageSquare, color: 'bg-cyan-50 border-cyan-200' },
-            { href: '/agent',         label: 'Agent Dashboard',   desc: 'Handle support tickets and queries',         icon: FiHeadphones,    color: 'bg-sky-50 border-sky-200' },
+            { href: '/admin/users',                label: 'Manage Users',        desc: 'View and manage all customers and sellers',  icon: FiUsers,         color: 'bg-blue-50 border-blue-200' },
+            { href: '/admin/reviews',              label: 'Review Moderation',   desc: 'Approve and moderate customer reviews',      icon: FiStar,          color: 'bg-red-50 border-red-200' },
+            { href: '/admin/support',              label: 'Customer Support',    desc: 'Help articles, ticket metrics, CSAT scores', icon: FiMessageSquare, color: 'bg-cyan-50 border-cyan-200' },
+            { href: '/agent',                      label: 'Agent Dashboard',     desc: 'Handle support tickets and queries',         icon: FiHeadphones,    color: 'bg-sky-50 border-sky-200' },
+            { href: '/admin/push-notifications',   label: '🔔 Push Notifications', desc: 'Broadcast to all users, customers, or sellers', icon: FiBell,     color: 'bg-violet-50 border-violet-200' },
+            { href: '/admin/gdpr',                 label: '🛡️ GDPR Deletion',    desc: 'Anonymize user data — Article 17 compliance',icon: FiShield,        color: 'bg-gray-50 border-gray-200' },
           ],
         },
       ].map(({ group, cards }) => (
