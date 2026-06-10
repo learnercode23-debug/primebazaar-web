@@ -18,6 +18,9 @@ import { createNotification } from '@/lib/notifications'
 export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
   if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+  if (user.role !== 'delivery' && user.role !== 'admin') {
+    return NextResponse.json({ success: false, error: 'Delivery agents only' }, { status: 403 })
+  }
   await connectDB()
 
   // Support both old DeliveryAgent model and direct User assignment
@@ -59,6 +62,9 @@ export async function PUT(req: NextRequest) {
   try {
     const user = await getAuthUser(req)
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    if (user.role !== 'delivery' && user.role !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Delivery agents only' }, { status: 403 })
+    }
     await connectDB()
 
     const { orderId, action, failureReason } = await req.json()

@@ -131,20 +131,15 @@ export default function AdminCODPage() {
   useEffect(() => { if (user?.role === 'admin') { fetchOrders(); fetchSettings() } }, [fetchOrders, fetchSettings, user])
   useEffect(() => { if (tab === 'remittance' && user?.role === 'admin') fetchRemittance() }, [tab, fetchRemittance, user])
 
-  /* Load users for agent dropdown — delivery-role agents first, all users as fallback */
+  /* Load delivery-role agents for the assign dropdown */
   async function openAssignModal(order: CODOrder) {
     setAssignTarget(order)
     setSelectedAgent('')
     if (agentList.length === 0) {
       try {
         const agents = await axios.get('/api/admin/users?role=delivery&limit=100')
-        if ((agents.data.data || []).length > 0) {
-          setAgentList(agents.data.data)
-        } else {
-          const res = await axios.get('/api/admin/users?limit=100')
-          setAgentList(res.data.data || [])
-        }
-      } catch { toast.error('Failed to load users') }
+        setAgentList(agents.data.data || [])
+      } catch { toast.error('Failed to load delivery agents') }
     }
   }
 
@@ -644,20 +639,29 @@ export default function AdminCODPage() {
               <p className="font-medium">#{assignTarget.orderNumber}</p>
               <p className="text-xs text-gray-500">{assignTarget.user?.name} · Rs.{(assignTarget.totalAmount||0).toLocaleString()}</p>
             </div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Select Agent / User</label>
-            <select
-              value={selectedAgent}
-              onChange={e=>setSelectedAgent(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2"
-            >
-              <option value="">Choose a user…</option>
-              {agentList.map(a=>(
-                <option key={a._id} value={a._id}>{a.name} ({a.email})</option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-400 mb-5">
-              The selected user will see this order at <strong>/delivery</strong> and can verify the customer&apos;s code.
-            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Select Delivery Agent</label>
+            {agentList.length === 0 ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-5 text-xs text-yellow-800">
+                No delivery agents yet. Go to <a href="/admin/users" className="font-bold underline">User Management</a> and
+                set a user&apos;s role to <strong>Delivery Agent</strong> — they&apos;ll then appear here.
+              </div>
+            ) : (
+              <>
+                <select
+                  value={selectedAgent}
+                  onChange={e=>setSelectedAgent(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2"
+                >
+                  <option value="">Choose an agent…</option>
+                  {agentList.map(a=>(
+                    <option key={a._id} value={a._id}>{a.name} ({a.email})</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mb-5">
+                  The agent will see this order on their <strong>Delivery Dashboard</strong> and can verify the customer&apos;s code.
+                </p>
+              </>
+            )}
             <div className="flex gap-3">
               <button onClick={()=>setAssignTarget(null)} className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm">Cancel</button>
               <button onClick={handleAssign} disabled={!selectedAgent||assigning}

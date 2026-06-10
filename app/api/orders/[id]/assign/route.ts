@@ -28,10 +28,13 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'agentUserId required' }, { status: 400 })
     }
 
-    // Validate agent exists
-    const agent = await User.findOne({ _id: agentUserId, isActive: true }).select('name email')
+    // Validate agent exists and has the delivery role (admins allowed for testing)
+    const agent = await User.findOne({ _id: agentUserId, isActive: true }).select('name email role')
     if (!agent) {
       return NextResponse.json({ success: false, error: 'Delivery agent not found' }, { status: 404 })
+    }
+    if (agent.role !== 'delivery' && agent.role !== 'admin') {
+      return NextResponse.json({ success: false, error: `${agent.name} is not a delivery agent — set their role to Delivery Agent in User Management first` }, { status: 400 })
     }
 
     const order = await Order.findById(params.id)

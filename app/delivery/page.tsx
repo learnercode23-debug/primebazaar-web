@@ -124,10 +124,11 @@ export default function DeliveryAgentPage() {
 
   useEffect(() => () => stopGPSBroadcast(), [])
 
-  // Auth guard — redirect to login if not signed in
+  // Auth guard — delivery agents and admins only
   useEffect(() => {
     if (authLoading) return
-    if (!user) router.push('/login?redirect=/delivery')
+    if (!user) { router.push('/login?redirect=/delivery'); return }
+    if (user.role !== 'delivery' && user.role !== 'admin') router.push('/')
   }, [user, authLoading, router])
 
   const fetchOrders = useCallback(async () => {
@@ -284,7 +285,7 @@ export default function DeliveryAgentPage() {
   }
 
   // Show nothing while auth loads or redirecting
-  if (authLoading || !user) return null
+  if (authLoading || !user || (user.role !== 'delivery' && user.role !== 'admin')) return null
 
   /* ─────────────────────────────────────────────────────── */
   return (

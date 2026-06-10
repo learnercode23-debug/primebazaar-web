@@ -9,6 +9,9 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getAuthUser(req)
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    if (user.role !== 'delivery' && user.role !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Delivery agents only' }, { status: 403 })
+    }
 
     const body = await req.json()
     const { orderId, lat, lng, speed, heading } = body
