@@ -49,6 +49,48 @@ function confidence(a: Variant, b: Variant): number {
   return Math.max(0, Math.min(99, Math.round(conf)))
 }
 
+// Log observed traffic for a variant (e.g. from Google Analytics) — adds to running totals
+function RecordForm({ testId, onSaved }: { testId: string; onSaved: (t: ABTest) => void }) {
+  const [variant, setVariant] = useState<'A' | 'B'>('A')
+  const [visitors, setVisitors] = useState('')
+  const [conversions, setConversions] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function save() {
+    if (!Number(visitors) && !Number(conversions)) { toast.error('Enter visitors and/or conversions'); return }
+    setBusy(true)
+    try {
+      const r = await axios.patch('/api/admin/ab-testing', {
+        id: testId,
+        record: { variant, visitors: Number(visitors) || 0, conversions: Number(conversions) || 0 },
+      })
+      onSaved(r.data.data)
+      setVisitors(''); setConversions('')
+      toast.success(`Data recorded for Variant ${variant}`)
+    } catch { toast.error('Failed to record data') }
+    finally { setBusy(false) }
+  }
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2 justify-center bg-gray-50 border border-gray-100 rounded-xl p-3">
+      <span className="text-xs font-bold text-gray-500">Record data:</span>
+      <select value={variant} onChange={e => setVariant(e.target.value as 'A' | 'B')}
+        className="border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none">
+        <option value="A">Variant A</option>
+        <option value="B">Variant B</option>
+      </select>
+      <input type="number" min="0" value={visitors} onChange={e => setVisitors(e.target.value)} placeholder="+ visitors"
+        className="w-24 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none" />
+      <input type="number" min="0" value={conversions} onChange={e => setConversions(e.target.value)} placeholder="+ conversions"
+        className="w-28 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none" />
+      <button onClick={save} disabled={busy}
+        className="text-xs bg-gray-900 hover:bg-gray-700 disabled:opacity-50 text-white font-bold px-3 py-1.5 rounded-lg transition-colors">
+        {busy ? 'Saving…' : 'Add'}
+      </button>
+    </div>
+  )
+}
+
 export default function ABTestingPage() {
   const { user } = useAuth()
   const router = useRouter()
@@ -191,6 +233,10 @@ export default function ABTestingPage() {
                     )
                   })}
                 </div>
+
+                {test.status === 'running' && (
+                  <RecordForm testId={test._id} onSaved={updated => setTests(t => t.map(x => x._id === updated._id ? updated : x))} />
+                )}
 
                 {lift !== 0 && (
                   <p className="mt-3 text-sm text-center">
