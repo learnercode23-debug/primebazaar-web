@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Shipping: same threshold as regular orders (free over Rs.50 / $50)
-    const baseShipping = subtotal > 500 ? 0 : 99
+    const baseShipping = subtotal > 999 ? 0 : 99
     const shippingCost = deliveryOption === 'express' ? 199 : baseShipping
 
     // Calculate COD handling fee from settings

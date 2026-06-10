@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       itemLabels.push(`${product.title} ×${item.quantity}`)
     }
 
-    const shippingCost = subtotal > 500 ? 0 : 99
+    const shippingCost = subtotal > 999 ? 0 : 99
     let discount = 0
 
     if (couponCode) {
