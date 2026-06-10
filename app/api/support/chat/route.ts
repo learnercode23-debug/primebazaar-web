@@ -10,6 +10,18 @@ import { getAuthUser } from '@/lib/auth'
 import ChatSession from '@/models/ChatSession'
 import HelpArticle from '@/models/HelpArticle'
 import Order from '@/models/Order'
+import SupportTicket from '@/models/SupportTicket'
+import TicketMessage from '@/models/TicketMessage'
+import User from '@/models/User'
+import { createNotification } from '@/lib/notifications'
+
+// The bot tells users to say "agent" in nearly every reply — this detects that intent
+function wantsAgent(text: string): boolean {
+  const lower = text.toLowerCase()
+  return /\b(agent|human|real person|representative|customer care|support team)\b/.test(lower)
+    || lower.includes('talk to a person')
+    || lower.includes('talk to someone')
+}
 
 async function botReply(customerId: string, userMessage: string): Promise<string> {
   const lower = userMessage.toLowerCase()
@@ -134,8 +146,16 @@ export async function POST(req: NextRequest) {
     const { message } = await req.json()
     if (!message?.trim()) return NextResponse.json({ success: false, error: 'Message required' }, { status: 400 })
 
+    const asksAgent = wantsAgent(message)
+
     // Guest users: run bot without saving session
     if (!user) {
+      if (asksAgent) {
+        return NextResponse.json({
+          success: true,
+          botReply: 'To connect with a human agent, please [sign in](/login) first so we can link the conversation to your account and orders. Once signed in, say **"agent"** again and I\'ll connect you right away.',
+        })
+      }
       const botResponse = await botReply('', message)
       return NextResponse.json({ success: true, botReply: botResponse })
     }
@@ -145,6 +165,78 @@ export async function POST(req: NextRequest) {
       customer: user._id,
       status:   { $in: ['active', 'waiting_agent', 'with_agent'] },
     })
+
+    // Session already escalated to a human — relay the message to the ticket, don't bot-reply
+    if (session && session.mode === 'human') {
+      session.messages.push({ sender: user._id, senderRole: 'customer', body: message, createdAt: new Date() })
+      await session.save()
+      if (session.ticket) {
+        await TicketMessage.create({
+          ticket:     session.ticket,
+          sender:     user._id,
+          senderRole: 'customer',
+          body:       message,
+        }).catch(console.error)
+      }
+      const holdReply = session.status === 'with_agent'
+        ? 'Message delivered to your support agent — they\'ll reply here or on your [support ticket](/support).'
+        : 'You\'re in the queue for a human agent. Your message has been added to your [support ticket](/support) and an agent will reply shortly.'
+      return NextResponse.json({ success: true, data: session, botReply: holdReply })
+    }
+
+    // Customer asked for a human — escalate: create ticket from transcript + notify admins
+    if (asksAgent) {
+      if (!session) {
+        session = await ChatSession.create({
+          customer: user._id,
+          mode:     'bot',
+          status:   'active',
+          messages: [{ sender: user._id, senderRole: 'customer', body: message, createdAt: new Date() }],
+        })
+      } else {
+        session.messages.push({ sender: user._id, senderRole: 'customer', body: message, createdAt: new Date() })
+      }
+
+      const transcript = session.messages
+        .map(m => `[${m.senderRole.toUpperCase()}]: ${m.body}`)
+        .join('\n')
+
+      const ticket = await SupportTicket.create({
+        customer:    user._id,
+        category:    'other',
+        subject:     'Escalated from live chat',
+        description: `Chat escalated to human agent.\n\n--- Chat Transcript ---\n${transcript}`,
+        status:      'open',
+        priority:    'high',
+      })
+      await TicketMessage.create({
+        ticket:     ticket._id,
+        sender:     user._id,
+        senderRole: 'bot',
+        body:       `Chat transcript:\n${transcript}`,
+      }).catch(console.error)
+
+      const confirmMsg = `I'm connecting you to a human agent now. 🧑‍💻\n\nSupport ticket **#${ticket.ticketNumber}** has been created — our team has been notified and will reply shortly. You can keep typing here or follow up in [My Tickets](/support).`
+
+      session.status = 'waiting_agent'
+      session.mode   = 'human'
+      session.ticket = ticket._id
+      session.messages.push({ sender: user._id, senderRole: 'bot', body: confirmMsg, createdAt: new Date() })
+      await session.save()
+
+      const admins = await User.find({ role: 'admin' }).select('_id').lean()
+      for (const admin of admins) {
+        await createNotification(
+          admin._id.toString(),
+          'admin_alert',
+          'Chat Escalated — Agent Requested',
+          `Customer needs human support. Ticket #${ticket.ticketNumber}`,
+          `/support/tickets/${ticket._id}`
+        ).catch(console.error)
+      }
+
+      return NextResponse.json({ success: true, data: session, botReply: confirmMsg })
+    }
 
     const botResponse = await botReply(user._id.toString(), message)
 

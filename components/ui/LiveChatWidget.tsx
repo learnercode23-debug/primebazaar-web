@@ -16,6 +16,22 @@ function now() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
+// Bot replies use **bold** and [label](/path) markdown — strip bold, render links as anchors
+function renderText(text: string) {
+  const clean = text.replace(/\*\*(.*?)\*\*/g, '$1')
+  return clean.split(/(\[[^\]]+\]\([^)]+\))/g).map((part, i) => {
+    const m = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
+    if (m) {
+      return (
+        <a key={i} href={m[2]} className="underline font-semibold text-violet-700 hover:text-violet-900">
+          {m[1]}
+        </a>
+      )
+    }
+    return part
+  })
+}
+
 const GREET: Message = {
   role: 'bot',
   text: 'Hi! 👋 I\'m your PrimePasal assistant. Ask me anything — orders, returns, products, or type **"agent"** to reach support.',
@@ -115,7 +131,7 @@ export default function LiveChatWidget() {
                         ? 'bg-violet-600 text-white rounded-tr-sm'
                         : 'bg-gray-100 text-gray-800 rounded-tl-sm'
                     )}>
-                      <p className="leading-relaxed whitespace-pre-wrap">{msg.text.replace(/\*\*(.*?)\*\*/g, '$1')}</p>
+                      <p className="leading-relaxed whitespace-pre-wrap">{renderText(msg.text)}</p>
                       <p className={cn('text-[10px] mt-1 text-right', msg.role === 'user' ? 'text-violet-200' : 'text-gray-400')}>{msg.time}</p>
                     </div>
                   </div>
