@@ -73,8 +73,6 @@ export default function CheckoutPage() {
   const [codEligible, setCodEligible] = useState(true)
   const [codFee, setCodFee] = useState(0)
   const [codIneligibleReason, setCodIneligibleReason] = useState('')
-  const [deliveryInstructions, setDeliveryInstructions] = useState('')
-  const [deliveryDate, setDeliveryDate] = useState('')
   const [guestEmail, setGuestEmail] = useState('')
   const [guestName, setGuestName] = useState('')
   const [isGuest, setIsGuest] = useState(false)
@@ -363,44 +361,6 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               )}
-
-              {/* Delivery preferences */}
-              <div className="mt-5 border border-gray-200 rounded-xl p-4 space-y-3">
-                <p className="text-sm font-bold text-gray-900">Delivery preferences</p>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Preferred delivery date (optional)</label>
-                  <input
-                    type="date"
-                    value={deliveryDate}
-                    min={new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0]}
-                    max={new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]}
-                    onChange={e => setDeliveryDate(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Delivery instructions (optional)</label>
-                  <div className="flex gap-2 flex-wrap mb-2">
-                    {['Leave at door', 'Ring doorbell', 'Call on arrival', 'Leave with security'].map(opt => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => setDeliveryInstructions(opt)}
-                        className={`text-xs px-3 py-1 rounded-full border transition-colors ${deliveryInstructions === opt ? 'bg-amazon-orange text-white border-amazon-orange' : 'border-gray-300 text-gray-600 hover:border-gray-400'}`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                  <textarea
-                    value={deliveryInstructions}
-                    onChange={e => setDeliveryInstructions(e.target.value)}
-                    placeholder="Any other delivery notes…"
-                    rows={2}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange resize-none"
-                  />
-                </div>
-              </div>
 
               <button
                 onClick={() => setStep('payment')}
