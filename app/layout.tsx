@@ -25,6 +25,20 @@ export const metadata: Metadata = {
   alternates: { canonical: './' },
   title: 'PrimePasal — Shop Everything',
   description: 'PrimePasal — Your one-stop shop for electronics, fashion, home goods, and more. Best deals every day.',
+  openGraph: {
+    type: 'website',
+    siteName: 'PrimePasal',
+    url: 'https://www.primepasal.com',
+    title: 'PrimePasal — Shop Everything',
+    description: "Nepal's online marketplace for electronics, fashion, home goods, and more. Best deals every day, free delivery over Rs.999.",
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'PrimePasal — Shop Everything' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PrimePasal — Shop Everything',
+    description: "Nepal's online marketplace — best deals every day, free delivery over Rs.999.",
+    images: ['/og-image.png'],
+  },
   verification: {
     google: 'KC4bI1RQ7DfW4PZ1gYNztEmBdP1GdsglFWGkVnk9lYQ',
   },
