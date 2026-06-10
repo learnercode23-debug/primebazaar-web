@@ -1,45 +1,27 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import axios from 'axios'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
-import { FiArrowLeft, FiZap, FiPlus, FiTrendingUp, FiUsers, FiCheckCircle, FiClock, FiX } from 'react-icons/fi'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { FiArrowLeft, FiZap, FiPlus, FiTrendingUp, FiCheckCircle, FiClock, FiX } from 'react-icons/fi'
 
+interface Variant { name: string; visitors: number; conversions: number }
 interface ABTest {
-  id: string
+  _id: string
   name: string
   metric: string
   status: 'running' | 'paused' | 'completed'
   startDate: string
-  variantA: { name: string; visitors: number; conversions: number }
-  variantB: { name: string; visitors: number; conversions: number }
+  createdAt: string
+  variantA: Variant
+  variantB: Variant
   winner?: 'A' | 'B' | null
-  confidence: number
 }
-
-const SAMPLE_TESTS: ABTest[] = [
-  {
-    id: '1', name: 'CTA Button Color — Orange vs Purple', metric: 'Add to Cart clicks', status: 'running', startDate: '2026-06-01',
-    variantA: { name: 'Orange (control)', visitors: 4820, conversions: 1248 },
-    variantB: { name: 'Purple (variant)', visitors: 4765, conversions: 1381 },
-    confidence: 94,
-  },
-  {
-    id: '2', name: 'Product Page — Single image vs Gallery', metric: 'Purchase rate', status: 'completed', startDate: '2026-05-10',
-    variantA: { name: 'Single image', visitors: 8200, conversions: 574 },
-    variantB: { name: 'Gallery (3 images)', visitors: 8150, conversions: 718 },
-    winner: 'B', confidence: 99,
-  },
-  {
-    id: '3', name: 'Homepage Hero — Deals vs New Arrivals', metric: 'Click-through rate', status: 'paused', startDate: '2026-06-05',
-    variantA: { name: 'Deals banner', visitors: 1200, conversions: 312 },
-    variantB: { name: 'New Arrivals banner', visitors: 1185, conversions: 290 },
-    confidence: 61,
-  },
-]
 
 function cvr(visitors: number, conversions: number) {
   return visitors > 0 ? ((conversions / visitors) * 100).toFixed(2) : '0.00'
@@ -49,39 +31,75 @@ function uplift(a: number, b: number) {
   return a > 0 ? (((b - a) / a) * 100).toFixed(1) : '0.0'
 }
 
+// Standard error normal CDF — two-proportion z-test → confidence %.
+function erf(x: number) {
+  const t = 1 / (1 + 0.3275911 * Math.abs(x))
+  const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x)
+  return x >= 0 ? y : -y
+}
+function confidence(a: Variant, b: Variant): number {
+  if (a.visitors < 30 || b.visitors < 30) return 0
+  const p1 = a.conversions / a.visitors
+  const p2 = b.conversions / b.visitors
+  const p = (a.conversions + b.conversions) / (a.visitors + b.visitors)
+  const se = Math.sqrt(p * (1 - p) * (1 / a.visitors + 1 / b.visitors))
+  if (se === 0) return 0
+  const z = Math.abs(p2 - p1) / se
+  const conf = (erf(z / Math.SQRT2)) * 100 // two-tailed → 1 - 2*(1-Φ(z)) = erf(z/√2)
+  return Math.max(0, Math.min(99, Math.round(conf)))
+}
+
 export default function ABTestingPage() {
   const { user } = useAuth()
   const router = useRouter()
-  const [tests, setTests] = useState<ABTest[]>(SAMPLE_TESTS)
+  const [tests, setTests] = useState<ABTest[]>([])
+  const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({ name: '', metric: '', variantA: '', variantB: '' })
+  const [busy, setBusy] = useState(false)
 
-  if (user && user.role !== 'admin') { router.push('/'); return null }
+  useEffect(() => {
+    if (!user) return
+    if (user.role !== 'admin') { router.push('/'); return }
+    load()
+  }, [user, router])
 
-  function createTest() {
-    if (!form.name || !form.metric || !form.variantA || !form.variantB) { toast.error('Fill all fields'); return }
-    const newTest: ABTest = {
-      id: Date.now().toString(), name: form.name, metric: form.metric, status: 'running',
-      startDate: new Date().toISOString().split('T')[0],
-      variantA: { name: form.variantA, visitors: 0, conversions: 0 },
-      variantB: { name: form.variantB, visitors: 0, conversions: 0 },
-      confidence: 0,
-    }
-    setTests(t => [newTest, ...t])
-    setForm({ name: '', metric: '', variantA: '', variantB: '' })
-    setShowCreate(false)
-    toast.success('A/B test created!')
+  async function load() {
+    setLoading(true)
+    try {
+      const r = await axios.get('/api/admin/ab-testing')
+      setTests(r.data.data || [])
+    } catch { toast.error('Failed to load tests') }
+    finally { setLoading(false) }
   }
 
-  function declareWinner(id: string, winner: 'A' | 'B') {
-    setTests(t => t.map(test => test.id === id ? { ...test, status: 'completed', winner } : test))
-    toast.success(`Variant ${winner} declared winner!`)
+  async function createTest() {
+    if (!form.name || !form.metric || !form.variantA || !form.variantB) { toast.error('Fill all fields'); return }
+    setBusy(true)
+    try {
+      const r = await axios.post('/api/admin/ab-testing', form)
+      setTests(t => [r.data.data, ...t])
+      setForm({ name: '', metric: '', variantA: '', variantB: '' })
+      setShowCreate(false)
+      toast.success('A/B test created!')
+    } catch { toast.error('Failed to create test') }
+    finally { setBusy(false) }
+  }
+
+  async function declareWinner(id: string, winner: 'A' | 'B') {
+    try {
+      await axios.patch('/api/admin/ab-testing', { id, winner })
+      setTests(t => t.map(test => test._id === id ? { ...test, status: 'completed', winner } : test))
+      toast.success(`Variant ${winner} declared winner!`)
+    } catch { toast.error('Action failed') }
   }
 
   const statusBadge = (s: string) =>
     s === 'running' ? 'bg-green-100 text-green-700' :
     s === 'paused' ? 'bg-yellow-100 text-yellow-700' :
     'bg-gray-100 text-gray-600'
+
+  if (!user || loading) return <LoadingSpinner fullPage />
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -117,76 +135,85 @@ export default function ABTestingPage() {
         ))}
       </div>
 
-      {/* Tests list */}
-      <div className="space-y-4">
-        {tests.map(test => {
-          const cvrA = parseFloat(cvr(test.variantA.visitors, test.variantA.conversions))
-          const cvrB = parseFloat(cvr(test.variantB.visitors, test.variantB.conversions))
-          const lift = parseFloat(uplift(cvrA, cvrB))
-          const leading = cvrB > cvrA ? 'B' : cvrA > cvrB ? 'A' : null
-          return (
-            <div key={test.id} className="bg-white border border-gray-200 rounded-xl p-5">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-gray-900">{test.name}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${statusBadge(test.status)}`}>{test.status}</span>
-                    {test.winner && <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-violet-100 text-violet-700">Winner: {test.winner}</span>}
-                  </div>
-                  <p className="text-sm text-gray-500">Metric: <span className="font-medium text-gray-700">{test.metric}</span> · Started {test.startDate}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-gray-700">Confidence</p>
-                  <p className={`text-2xl font-black ${test.confidence >= 95 ? 'text-green-600' : test.confidence >= 80 ? 'text-amber-600' : 'text-gray-400'}`}>{test.confidence}%</p>
-                  <p className="text-xs text-gray-400">{test.confidence >= 95 ? '✓ Statistically significant' : 'Needs more data'}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                {(['A', 'B'] as const).map(v => {
-                  const variant = v === 'A' ? test.variantA : test.variantB
-                  const cvrVal = cvr(variant.visitors, variant.conversions)
-                  const isLeading = leading === v
-                  const isWinner = test.winner === v
-                  return (
-                    <div key={v} className={`rounded-xl p-4 border ${isWinner ? 'border-green-400 bg-green-50' : isLeading ? 'border-violet-300 bg-violet-50' : 'border-gray-200 bg-gray-50'}`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${isWinner ? 'bg-green-200 text-green-800' : isLeading ? 'bg-violet-200 text-violet-800' : 'bg-gray-200 text-gray-600'}`}>Variant {v}</span>
-                        {isWinner && <FiCheckCircle className="text-green-600" />}
-                        {isLeading && !isWinner && <FiTrendingUp className="text-violet-600" />}
-                      </div>
-                      <p className="font-semibold text-gray-900 text-sm mb-3">{variant.name}</p>
-                      <div className="grid grid-cols-3 gap-2 text-center">
-                        <div><p className="text-lg font-black text-gray-900">{cvrVal}%</p><p className="text-[10px] text-gray-500">CVR</p></div>
-                        <div><p className="text-lg font-black text-gray-900">{variant.visitors.toLocaleString()}</p><p className="text-[10px] text-gray-500">Visitors</p></div>
-                        <div><p className="text-lg font-black text-gray-900">{variant.conversions.toLocaleString()}</p><p className="text-[10px] text-gray-500">Converts</p></div>
-                      </div>
+      {tests.length === 0 ? (
+        <div className="text-center py-16 text-gray-400 bg-white border border-gray-200 rounded-xl">
+          <FiZap className="text-5xl mx-auto mb-3 opacity-40" />
+          <p className="font-semibold">No experiments yet</p>
+          <p className="text-sm mt-1">Click &quot;New Test&quot; to create your first A/B experiment.</p>
+        </div>
+      ) : (
+        /* Tests list */
+        <div className="space-y-4">
+          {tests.map(test => {
+            const cvrA = parseFloat(cvr(test.variantA.visitors, test.variantA.conversions))
+            const cvrB = parseFloat(cvr(test.variantB.visitors, test.variantB.conversions))
+            const lift = parseFloat(uplift(cvrA, cvrB))
+            const conf = confidence(test.variantA, test.variantB)
+            const leading = cvrB > cvrA ? 'B' : cvrA > cvrB ? 'A' : null
+            return (
+              <div key={test._id} className="bg-white border border-gray-200 rounded-xl p-5">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-gray-900">{test.name}</h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${statusBadge(test.status)}`}>{test.status}</span>
+                      {test.winner && <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-violet-100 text-violet-700">Winner: {test.winner}</span>}
                     </div>
-                  )
-                })}
-              </div>
-
-              {lift !== 0 && (
-                <p className="mt-3 text-sm text-center">
-                  {lift > 0 ? (
-                    <span className="text-green-600 font-semibold">▲ Variant B is {Math.abs(lift)}% better than A on {test.metric}</span>
-                  ) : (
-                    <span className="text-red-500 font-semibold">▼ Variant A is {Math.abs(lift)}% better than B on {test.metric}</span>
-                  )}
-                </p>
-              )}
-
-              {test.status === 'running' && test.confidence >= 95 && !test.winner && (
-                <div className="mt-4 flex gap-3 justify-center">
-                  <p className="text-sm text-gray-600 self-center">Declare winner:</p>
-                  <button onClick={() => declareWinner(test.id, 'A')} className="px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-700">Variant A</button>
-                  <button onClick={() => declareWinner(test.id, 'B')} className="px-4 py-2 bg-violet-600 text-white text-sm font-bold rounded-xl hover:bg-violet-700">Variant B</button>
+                    <p className="text-sm text-gray-500">Metric: <span className="font-medium text-gray-700">{test.metric}</span> · Started {new Date(test.startDate || test.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-gray-700">Confidence</p>
+                    <p className={`text-2xl font-black ${conf >= 95 ? 'text-green-600' : conf >= 80 ? 'text-amber-600' : 'text-gray-400'}`}>{conf}%</p>
+                    <p className="text-xs text-gray-400">{conf >= 95 ? '✓ Statistically significant' : 'Needs more data'}</p>
+                  </div>
                 </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {(['A', 'B'] as const).map(v => {
+                    const variant = v === 'A' ? test.variantA : test.variantB
+                    const cvrVal = cvr(variant.visitors, variant.conversions)
+                    const isLeading = leading === v
+                    const isWinner = test.winner === v
+                    return (
+                      <div key={v} className={`rounded-xl p-4 border ${isWinner ? 'border-green-400 bg-green-50' : isLeading ? 'border-violet-300 bg-violet-50' : 'border-gray-200 bg-gray-50'}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${isWinner ? 'bg-green-200 text-green-800' : isLeading ? 'bg-violet-200 text-violet-800' : 'bg-gray-200 text-gray-600'}`}>Variant {v}</span>
+                          {isWinner && <FiCheckCircle className="text-green-600" />}
+                          {isLeading && !isWinner && <FiTrendingUp className="text-violet-600" />}
+                        </div>
+                        <p className="font-semibold text-gray-900 text-sm mb-3">{variant.name}</p>
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div><p className="text-lg font-black text-gray-900">{cvrVal}%</p><p className="text-[10px] text-gray-500">CVR</p></div>
+                          <div><p className="text-lg font-black text-gray-900">{variant.visitors.toLocaleString()}</p><p className="text-[10px] text-gray-500">Visitors</p></div>
+                          <div><p className="text-lg font-black text-gray-900">{variant.conversions.toLocaleString()}</p><p className="text-[10px] text-gray-500">Converts</p></div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {lift !== 0 && (
+                  <p className="mt-3 text-sm text-center">
+                    {lift > 0 ? (
+                      <span className="text-green-600 font-semibold">▲ Variant B is {Math.abs(lift)}% better than A on {test.metric}</span>
+                    ) : (
+                      <span className="text-red-500 font-semibold">▼ Variant A is {Math.abs(lift)}% better than B on {test.metric}</span>
+                    )}
+                  </p>
+                )}
+
+                {test.status === 'running' && conf >= 95 && !test.winner && (
+                  <div className="mt-4 flex gap-3 justify-center">
+                    <p className="text-sm text-gray-600 self-center">Declare winner:</p>
+                    <button onClick={() => declareWinner(test._id, 'A')} className="px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-700">Variant A</button>
+                    <button onClick={() => declareWinner(test._id, 'B')} className="px-4 py-2 bg-violet-600 text-white text-sm font-bold rounded-xl hover:bg-violet-700">Variant B</button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Create modal */}
       {showCreate && (
@@ -211,8 +238,8 @@ export default function ABTestingPage() {
                 </div>
               ))}
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setShowCreate(false)} className="flex-1 border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl text-sm">Cancel</button>
-                <button onClick={createTest} className="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-bold py-2.5 rounded-xl text-sm">Create Test</button>
+                <button onClick={() => setShowCreate(false)} disabled={busy} className="flex-1 border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50">Cancel</button>
+                <button onClick={createTest} disabled={busy} className="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-bold py-2.5 rounded-xl text-sm disabled:opacity-50">{busy ? 'Creating…' : 'Create Test'}</button>
               </div>
             </div>
           </div>

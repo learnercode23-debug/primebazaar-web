@@ -1,54 +1,69 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import axios from 'axios'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { FiArrowLeft, FiShield, FiCheck, FiX, FiSearch, FiAward, FiClock } from 'react-icons/fi'
 
 interface BrandApplication {
-  id: string
+  _id: string
   brandName: string
-  sellerName: string
-  sellerEmail: string
+  seller?: { _id: string; name: string; email: string }
   website?: string
   category: string
   tradeMark: boolean
+  trademarkNumber?: string
   status: 'pending' | 'approved' | 'rejected'
-  submittedAt: string
+  createdAt: string
   note?: string
 }
-
-const SAMPLE: BrandApplication[] = [
-  { id: '1', brandName: 'TechNova', sellerName: 'Ram Sharma', sellerEmail: 'ram@technova.np', website: 'technova.np', category: 'Electronics', tradeMark: true, status: 'pending', submittedAt: '2026-06-08' },
-  { id: '2', brandName: 'NepFashion', sellerName: 'Sita Poudel', sellerEmail: 'sita@nepfashion.com', category: 'Fashion', tradeMark: false, status: 'pending', submittedAt: '2026-06-07' },
-  { id: '3', brandName: 'HomePlus', sellerName: 'Bikash Karki', sellerEmail: 'bk@homeplus.np', website: 'homeplus.np', category: 'Home & Garden', tradeMark: true, status: 'approved', submittedAt: '2026-05-20', note: 'Trademark verified' },
-  { id: '4', brandName: 'FakeGoods', sellerName: 'Unknown', sellerEmail: 'x@unknown.com', category: 'Electronics', tradeMark: false, status: 'rejected', submittedAt: '2026-05-15', note: 'Failed brand verification' },
-]
 
 export default function BrandRegistryPage() {
   const { user } = useAuth()
   const router = useRouter()
-  const [apps, setApps] = useState<BrandApplication[]>(SAMPLE)
+  const [apps, setApps] = useState<BrandApplication[]>([])
+  const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'pending' | 'approved' | 'rejected'>('pending')
   const [search, setSearch] = useState('')
   const [noteModal, setNoteModal] = useState<{ id: string; action: 'approve' | 'reject' } | null>(null)
   const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  if (user && user.role !== 'admin') { router.push('/'); return null }
+  useEffect(() => {
+    if (!user) return
+    if (user.role !== 'admin') { router.push('/'); return }
+    load()
+  }, [user, router])
 
-  function handle(id: string, action: 'approve' | 'reject') {
-    setApps(a => a.map(app => app.id === id ? { ...app, status: action === 'approve' ? 'approved' : 'rejected', note } : app))
-    toast.success(action === 'approve' ? 'Brand approved! Seller notified.' : 'Application rejected.')
-    setNoteModal(null)
-    setNote('')
+  async function load() {
+    setLoading(true)
+    try {
+      const r = await axios.get('/api/admin/brands')
+      setApps(r.data.data || [])
+    } catch { toast.error('Failed to load applications') }
+    finally { setLoading(false) }
+  }
+
+  async function handle(id: string, action: 'approve' | 'reject') {
+    setBusy(true)
+    try {
+      await axios.patch('/api/admin/brands', { id, action, note })
+      setApps(a => a.map(app => app._id === id ? { ...app, status: action === 'approve' ? 'approved' : 'rejected', note } : app))
+      toast.success(action === 'approve' ? 'Brand approved! Seller notified.' : 'Application rejected. Seller notified.')
+      setNoteModal(null)
+      setNote('')
+    } catch { toast.error('Action failed') }
+    finally { setBusy(false) }
   }
 
   const filtered = apps.filter(a =>
     a.status === tab &&
-    (search === '' || a.brandName.toLowerCase().includes(search.toLowerCase()) || a.sellerName.toLowerCase().includes(search.toLowerCase()))
+    (search === '' || a.brandName.toLowerCase().includes(search.toLowerCase()) || (a.seller?.name || '').toLowerCase().includes(search.toLowerCase()))
   )
 
   const tabCounts = {
@@ -56,6 +71,8 @@ export default function BrandRegistryPage() {
     approved: apps.filter(a => a.status === 'approved').length,
     rejected: apps.filter(a => a.status === 'rejected').length,
   }
+
+  if (!user || loading) return <LoadingSpinner fullPage />
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -96,30 +113,30 @@ export default function BrandRegistryPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map(app => (
-            <div key={app.id} className="bg-white border border-gray-200 rounded-xl p-5">
+            <div key={app._id} className="bg-white border border-gray-200 rounded-xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-lg flex-shrink-0">
-                    {app.brandName[0]}
+                    {app.brandName[0]?.toUpperCase()}
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-0.5">
                       <h3 className="font-bold text-gray-900">{app.brandName}</h3>
-                      {app.tradeMark && <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">™ Trademarked</span>}
+                      {app.tradeMark && <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">™ Trademarked{app.trademarkNumber ? ` · ${app.trademarkNumber}` : ''}</span>}
                     </div>
-                    <p className="text-sm text-gray-600">{app.sellerName} · {app.sellerEmail}</p>
+                    <p className="text-sm text-gray-600">{app.seller?.name || 'Unknown'}{app.seller?.email ? ` · ${app.seller.email}` : ''}</p>
                     <p className="text-xs text-gray-400 mt-0.5">Category: {app.category}{app.website ? ` · ${app.website}` : ''}</p>
-                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5"><FiClock className="text-[10px]" /> Applied {app.submittedAt}</p>
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5"><FiClock className="text-[10px]" /> Applied {new Date(app.createdAt).toLocaleDateString()}</p>
                     {app.note && <p className="text-xs text-gray-500 mt-1 italic">Note: {app.note}</p>}
                   </div>
                 </div>
                 {tab === 'pending' && (
                   <div className="flex gap-2 flex-shrink-0">
-                    <button onClick={() => { setNoteModal({ id: app.id, action: 'approve' }); setNote('Trademark verified') }}
+                    <button onClick={() => { setNoteModal({ id: app._id, action: 'approve' }); setNote('Trademark verified') }}
                       className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-xl">
                       <FiCheck /> Approve
                     </button>
-                    <button onClick={() => { setNoteModal({ id: app.id, action: 'reject' }); setNote('') }}
+                    <button onClick={() => { setNoteModal({ id: app._id, action: 'reject' }); setNote('') }}
                       className="flex items-center gap-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-xs font-bold px-3 py-2 rounded-xl">
                       <FiX /> Reject
                     </button>
@@ -144,10 +161,10 @@ export default function BrandRegistryPage() {
             <input value={note} onChange={e => setNote(e.target.value)} placeholder="Reason or note…"
               className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 mb-4" />
             <div className="flex gap-3">
-              <button onClick={() => { setNoteModal(null); setNote('') }} className="flex-1 border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl text-sm">Cancel</button>
-              <button onClick={() => handle(noteModal.id, noteModal.action)}
-                className={`flex-1 text-white font-bold py-2.5 rounded-xl text-sm ${noteModal.action === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>
-                Confirm
+              <button onClick={() => { setNoteModal(null); setNote('') }} disabled={busy} className="flex-1 border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50">Cancel</button>
+              <button onClick={() => handle(noteModal.id, noteModal.action)} disabled={busy}
+                className={`flex-1 text-white font-bold py-2.5 rounded-xl text-sm disabled:opacity-50 ${noteModal.action === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>
+                {busy ? 'Saving…' : 'Confirm'}
               </button>
             </div>
           </div>

@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { formatPrice, formatDate } from '@/lib/utils'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiPlus, FiMessageSquare, FiStar, FiCreditCard, FiTruck } from 'react-icons/fi'
+import { FiPackage, FiDollarSign, FiShoppingBag, FiTrendingUp, FiPlus, FiMessageSquare, FiStar, FiCreditCard, FiTruck, FiAward } from 'react-icons/fi'
 import RevenueChart from '@/components/ui/RevenueChart'
 
 interface Analytics {
@@ -89,6 +89,7 @@ export default function SellerDashboard() {
           { href: '/seller/earnings',  label: 'Earnings & Payouts', desc: 'Wallet balance, ledger, bank accounts',      icon: FiDollarSign,  color: 'bg-green-50 border-green-200' },
           { href: '/seller/ads',         label: '⚡ Sponsored Ads',     desc: 'Boost products to reach more customers',     icon: FiTrendingUp,  color: 'bg-violet-50 border-violet-200' },
           { href: '/seller/brand',       label: '🏪 Brand Store',       desc: 'Edit your A+ brand page and story',          icon: FiStar,        color: 'bg-indigo-50 border-indigo-200' },
+          { href: '/seller/brand-registry', label: '🏆 Brand Registry',  desc: 'Register your brand for IP protection',       icon: FiAward,       color: 'bg-amber-50 border-amber-200' },
           { href: '/seller/performance', label: '📊 Performance Score',  desc: 'Account health, defect rate & scorecard',    icon: FiTrendingUp,  color: 'bg-green-50 border-green-200' },
           { href: '/seller/inventory',   label: '📦 Inventory Forecast', desc: 'Stock levels, restock alerts & demand',      icon: FiPackage,     color: 'bg-orange-50 border-orange-200' },
           { href: '/seller/products/bulk', label: '📤 Bulk Upload',     desc: 'Import multiple products via CSV',           icon: FiPackage,     color: 'bg-teal-50 border-teal-200' },
