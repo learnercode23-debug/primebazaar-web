@@ -87,7 +87,10 @@ export default function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex-shrink-0 flex items-center gap-1.5 group">
-              <img src="/brand/bag.png" alt="" className="h-9 sm:h-11 w-auto drop-shadow-md group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200" />
+              <span className="relative">
+                <span className="absolute inset-0 bg-violet-500/40 blur-xl rounded-full scale-75 group-hover:scale-110 transition-transform" />
+                <img src="/brand/bag.png" alt="" className="relative h-9 sm:h-11 w-auto drop-shadow-md group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200" />
+              </span>
               <span className="flex items-baseline leading-none">
                 <span className="font-black text-white text-xl sm:text-2xl tracking-tight">Prime</span>
                 <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-400 text-xl sm:text-2xl tracking-tight">Pasal</span>
@@ -109,7 +112,7 @@ export default function Navbar() {
               <div className="relative hidden sm:block" ref={userMenuRef}>
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 text-white hover:bg-white/10 rounded-xl px-2.5 py-1.5 transition-colors"
+                  className="flex items-center gap-2 text-white hover:bg-white/10 rounded-full px-2.5 py-1.5 transition-all"
                 >
                   {user ? <UserAvatar name={user.name} /> : <FiUser className="text-lg" />}
                   <div className="hidden md:flex flex-col items-start leading-none">
@@ -168,22 +171,28 @@ export default function Navbar() {
                 )}
               </div>
 
+              {/* Hairline divider */}
+              <span className="hidden md:block w-px h-6 bg-white/10 mx-1" />
+
               {/* Notification bell */}
               <NotificationBell />
 
               {/* Messages */}
               {user && (
-                <Link href="/messages" className="relative hidden md:flex items-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-colors">
+                <Link href="/messages" title="Messages" className="relative hidden md:flex items-center justify-center w-10 h-10 text-white/75 hover:text-white hover:bg-white/10 rounded-full transition-all">
                   <FiMessageSquare className="text-xl" />
                   {unreadMessages > 0 && (
-                    <span className="absolute top-1 right-1 bg-violet-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none shadow-md">
+                    <span className="absolute top-1 right-1 bg-violet-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none shadow-md ring-2 ring-[#1E1B4B]">
                       {unreadMessages > 9 ? '9+' : unreadMessages}
                     </span>
                   )}
                 </Link>
               )}
 
-              <Link href="/wishlist" aria-label="Wishlist" className="hidden md:flex items-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-colors"><FiHeart className="text-xl" /></Link>
+              <Link href="/wishlist" aria-label="Wishlist" title="Wishlist" className="hidden md:flex items-center justify-center w-10 h-10 text-white/75 hover:text-white hover:bg-white/10 rounded-full transition-all"><FiHeart className="text-xl" /></Link>
+
+              {/* Hairline divider */}
+              <span className="hidden lg:block w-px h-6 bg-white/10 mx-1" />
 
               {/* Rewards points badge — real balance */}
               {user && rewardPoints !== null && (
@@ -206,7 +215,7 @@ export default function Navbar() {
               {/* Dark mode toggle */}
               <button
                 onClick={toggleTheme}
-                className="flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all theme-icon"
+                className="flex items-center justify-center w-10 h-10 text-white/75 hover:text-white hover:bg-white/10 rounded-full transition-all theme-icon"
                 aria-label="Toggle dark mode"
               >
                 {theme === 'dark'
@@ -215,11 +224,13 @@ export default function Navbar() {
                 }
               </button>
 
-              {/* Cart */}
-              <Link href="/cart" aria-label="Cart" className="relative flex items-center text-white hover:bg-white/10 rounded-xl p-2 transition-colors group">
-                <FiShoppingCart className="text-xl sm:text-2xl group-hover:scale-110 transition-transform" />
+              {/* Cart — primary action */}
+              <Link href="/cart" aria-label="Cart"
+                className="relative flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-gray-900 rounded-full px-2.5 sm:px-3.5 py-2 transition-all shadow-lg shadow-orange-950/30 hover:scale-105 group ml-0.5">
+                <FiShoppingCart className="text-lg sm:text-xl group-hover:scale-110 transition-transform" />
+                <span className="hidden lg:inline text-xs font-black">Cart</span>
                 {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-br from-amber-400 to-orange-500 text-gray-900 text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none shadow-md">
+                  <span className="absolute -top-1 -right-1 bg-white text-indigo-900 text-[9px] font-black rounded-full w-[18px] h-[18px] flex items-center justify-center leading-none shadow-md ring-2 ring-[#1E1B4B]">
                     {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
@@ -243,10 +254,11 @@ export default function Navbar() {
       {/* ════════════════════════════════════════════
           SECONDARY NAV — desktop only
           ════════════════════════════════════════════ */}
-      <div className="hidden sm:block bg-gradient-to-r from-[#312E81] via-[#332C8A] to-[#312E81] border-t border-white/5">
+      <div className="hidden sm:block bg-[#272363]/95 border-t border-white/[0.06] backdrop-blur">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center h-10 gap-1 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center h-11 gap-0.5 overflow-x-auto scrollbar-hide">
             <MegaMenu />
+            <span className="w-px h-5 bg-white/10 mx-1.5 flex-shrink-0" />
             {[
               { label: '🏷️ All Deals',      ariaLabel: 'All Deals',               href: '/deals' },
               { label: "Today's Deals 🔥",  ariaLabel: "Today's Deals",           href: '/products?dealOfDay=true' },
@@ -255,22 +267,40 @@ export default function Navbar() {
               { label: '🆕 New Releases',    ariaLabel: 'New Releases',            href: '/products?sort=createdAt&order=desc' },
               { label: '🥬 Fresh',           ariaLabel: 'PrimePasal Fresh grocery',href: '/fresh' },
               { label: '♻️ Renewed',         ariaLabel: 'Renewed — refurbished',   href: '/renewed' },
-              { label: '⚡ Digital',         ariaLabel: 'Digital products',        href: '/digital' },
+              { label: '💾 Digital',         ariaLabel: 'Digital products',        href: '/digital' },
               { label: '🎁 Gift Cards',      ariaLabel: 'Gift Cards',              href: '/gift-cards' },
-              { label: '🔴 Live',            ariaLabel: 'Live Shopping',           href: '/live' },
             ].map(({ label, ariaLabel, href }) => {
               const isActive = !href.includes('?') && pathname === href
               return (
                 <Link key={href} href={href} aria-label={ariaLabel}
-                  className={`text-sm whitespace-nowrap px-3 py-1.5 rounded-full transition-all ${
-                    isActive
-                      ? 'bg-white/15 text-white font-bold shadow-inner ring-1 ring-white/20'
-                      : 'text-white/80 hover:text-white hover:bg-white/10 hover:-translate-y-px'
-                  }`}>
+                  className={`relative text-[13px] whitespace-nowrap px-3 py-2.5 transition-colors
+                    after:absolute after:left-3 after:right-3 after:bottom-1 after:h-0.5 after:rounded-full
+                    after:bg-gradient-to-r after:from-orange-400 after:to-amber-400
+                    after:transition-transform after:origin-left
+                    ${isActive
+                      ? 'text-white font-bold after:scale-x-100'
+                      : 'text-white/70 hover:text-white font-medium after:scale-x-0 hover:after:scale-x-100'
+                    }`}>
                   {label}
                 </Link>
               )
             })}
+            {/* Live — animated pulse dot */}
+            <Link href="/live" aria-label="Live Shopping"
+              className={`relative flex items-center gap-1.5 text-[13px] whitespace-nowrap px-3 py-2.5 transition-colors
+                after:absolute after:left-3 after:right-3 after:bottom-1 after:h-0.5 after:rounded-full
+                after:bg-gradient-to-r after:from-red-400 after:to-rose-400
+                after:transition-transform after:origin-left
+                ${pathname === '/live'
+                  ? 'text-white font-bold after:scale-x-100'
+                  : 'text-white/70 hover:text-white font-medium after:scale-x-0 hover:after:scale-x-100'
+                }`}>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+              </span>
+              Live
+            </Link>
           </div>
         </div>
       </div>

@@ -71,9 +71,9 @@ export default function SearchAutocomplete({ className = '' }: { className?: str
 
   return (
     <div className={`relative ${className}`}>
-      <form onSubmit={handleSubmit} className="flex rounded-lg overflow-hidden">
+      <form onSubmit={handleSubmit} className="flex rounded-full overflow-hidden ring-1 ring-white/15 focus-within:ring-2 focus-within:ring-violet-400/70 shadow-lg shadow-indigo-950/40 transition-all">
         <div className="relative flex-1 flex bg-white">
-          <select className="bg-gray-200 text-gray-700 text-sm rounded-l-md px-2 border-r border-gray-300 hidden sm:block focus:outline-none cursor-pointer">
+          <select className="bg-gray-50 text-gray-600 text-sm pl-4 pr-1 border-r border-gray-200 hidden sm:block focus:outline-none cursor-pointer">
             <option>All</option>
             <option>Electronics</option>
             <option>Fashion</option>
@@ -87,8 +87,8 @@ export default function SearchAutocomplete({ className = '' }: { className?: str
             value={query}
             onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
             onFocus={() => setOpen(true)}
-            placeholder="Search products..."
-            className="flex-1 px-3 py-1.5 sm:py-2 text-gray-900 text-sm focus:outline-none min-w-0"
+            placeholder="Search for products, brands and more…"
+            className="flex-1 px-4 py-1.5 sm:py-2.5 text-gray-900 text-sm focus:outline-none min-w-0 placeholder:text-gray-400"
             style={{ fontSize: 16 }}
           />
           {query && (
@@ -96,7 +96,7 @@ export default function SearchAutocomplete({ className = '' }: { className?: str
               <FiX className="text-sm" />
             </button>
           )}
-          <button type="submit" className="bg-violet-600 hover:bg-violet-700 px-3 sm:px-4 flex items-center justify-center transition-colors flex-shrink-0">
+          <button type="submit" aria-label="Search" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 px-4 sm:px-5 flex items-center justify-center transition-all flex-shrink-0">
             <FiSearch className="text-white text-base sm:text-lg" />
           </button>
         </div>
@@ -104,7 +104,7 @@ export default function SearchAutocomplete({ className = '' }: { className?: str
 
       {/* Dropdown */}
       {open && (query.length >= 2) && (
-        <div ref={dropdownRef} className="absolute top-full left-0 right-0 bg-white shadow-2xl rounded-b-xl border border-gray-200 z-50 max-h-[480px] overflow-y-auto">
+        <div ref={dropdownRef} className="absolute top-full left-0 right-0 mt-2 bg-white shadow-2xl shadow-black/20 rounded-2xl border border-gray-100 z-50 max-h-[480px] overflow-y-auto">
           {loading ? (
             <div className="p-4 text-sm text-gray-500 text-center">Searching...</div>
           ) : results ? (
