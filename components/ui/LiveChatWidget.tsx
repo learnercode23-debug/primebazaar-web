@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import axios from 'axios'
 import { FiMessageCircle, FiX, FiSend, FiMinus } from 'react-icons/fi'
 import { cn } from '@/lib/utils'
@@ -22,6 +23,7 @@ const GREET: Message = {
 }
 
 export default function LiveChatWidget() {
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [minimised, setMinimised] = useState(false)
   const [messages, setMessages] = useState<Message[]>([GREET])
@@ -53,6 +55,9 @@ export default function LiveChatWidget() {
       setLoading(false)
     }
   }
+
+  // Support page has its own integrated chat panel — hide the global widget there
+  if (pathname === '/support') return null
 
   return (
     <>
