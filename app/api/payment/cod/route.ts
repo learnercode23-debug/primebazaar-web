@@ -86,7 +86,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const totalAmount = Math.max(0, Math.round((subtotal + shippingCost + codFee - discount) * 100) / 100)
+    const totalBeforeCredit = Math.max(0, Math.round((subtotal + shippingCost + codFee - discount) * 100) / 100)
+
+    // Apply store credit from redeemed gift cards (reduces the amount due on delivery)
+    const buyer = await User.findById(user._id).select('storeCredit')
+    const availableCredit = buyer?.storeCredit || 0
+    const storeCreditUsed = Math.min(availableCredit, totalBeforeCredit)
+    const totalAmount = Math.max(0, Math.round((totalBeforeCredit - storeCreditUsed) * 100) / 100)
 
     // Generate 5-digit delivery verification code on placement
     const deliveryCode = String(Math.floor(10000 + Math.random() * 90000))
@@ -106,12 +112,18 @@ export async function POST(req: NextRequest) {
       subtotal,
       shippingCost,
       discount,
+      storeCreditUsed,
       totalAmount,
       codFee,
       codRemittanceStatus: 'pending',
       couponCode: couponCode || undefined,
       trackingNumber: generateTrackingNumber(),
     })
+
+    // Deduct the store credit actually used
+    if (storeCreditUsed > 0) {
+      await User.findByIdAndUpdate(user._id, { $inc: { storeCredit: -storeCreditUsed } })
+    }
 
     // Decrement stock
     for (const item of cart.items) {

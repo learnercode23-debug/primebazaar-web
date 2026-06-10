@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import axios from 'axios'
+import toast from 'react-hot-toast'
 import { FiGift, FiCheck, FiCopy } from 'react-icons/fi'
 
 const AMOUNTS = [500, 1000, 2000, 5000]
@@ -11,10 +13,6 @@ const DESIGNS = [
   { id: 'thank-you',  label: '🙏 Thank You',   bg: 'from-amber-400 to-orange-500' },
   { id: 'diwali',     label: '🪔 Dashain',     bg: 'from-green-500 to-teal-600' },
 ]
-
-function generateCode() {
-  return 'PP-' + Math.random().toString(36).slice(2, 6).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase()
-}
 
 export default function GiftCardsPage() {
   const [amount, setAmount]     = useState(1000)
@@ -26,13 +24,36 @@ export default function GiftCardsPage() {
   const [purchased, setPurchased]           = useState(false)
   const [code, setCode]                     = useState('')
   const [copied, setCopied]                 = useState(false)
+  const [buying, setBuying]                 = useState(false)
+  const [redeemCode, setRedeemCode]         = useState('')
+  const [redeeming, setRedeeming]           = useState(false)
 
-  function handlePurchase(e: React.FormEvent) {
+  async function handlePurchase(e: React.FormEvent) {
     e.preventDefault()
-    const gc = generateCode()
-    setCode(gc)
-    setPurchased(true)
-    // In a real app this would hit /api/gift-cards/purchase
+    setBuying(true)
+    try {
+      const r = await axios.post('/api/gift-cards', { amount, design: design.id, recipientName, recipientEmail, senderName, message })
+      setCode(r.data.data.code)
+      setPurchased(true)
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to purchase gift card')
+    } finally {
+      setBuying(false)
+    }
+  }
+
+  async function handleRedeem() {
+    if (!redeemCode.trim()) return
+    setRedeeming(true)
+    try {
+      const r = await axios.post('/api/gift-cards/redeem', { code: redeemCode })
+      toast.success(`Rs.${r.data.data.credited.toLocaleString()} added! Store credit balance: Rs.${r.data.data.storeCredit.toLocaleString()}`)
+      setRedeemCode('')
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Could not redeem code')
+    } finally {
+      setRedeeming(false)
+    }
   }
 
   function copy() {
@@ -178,22 +199,28 @@ export default function GiftCardsPage() {
             </div>
             <button
               type="submit"
-              className="w-full bg-amazon-yellow hover:bg-yellow-400 text-gray-900 font-black py-3 rounded-full text-sm transition-colors"
+              disabled={buying}
+              className="w-full bg-amazon-yellow hover:bg-yellow-400 disabled:opacity-60 text-gray-900 font-black py-3 rounded-full text-sm transition-colors"
             >
-              Buy Gift Card — Rs.{amount.toLocaleString()}
+              {buying ? 'Processing…' : `Buy Gift Card — Rs.${amount.toLocaleString()}`}
             </button>
             <p className="text-xs text-gray-500 text-center mt-3">
-              Instant delivery · Valid for 1 year · No expiry fees
+              Emailed instantly · Valid for 1 year · No expiry fees
             </p>
           </div>
 
           {/* Redeem section */}
           <div className="border border-gray-200 rounded-2xl p-4">
             <p className="font-bold text-sm text-gray-900 mb-1">Have a gift card to redeem?</p>
-            <p className="text-xs text-gray-500 mb-3">Enter your code during checkout under &quot;Apply coupon / gift card&quot;, or add it to your account balance here.</p>
-            <Link href="/cart" className="text-sm text-violet-600 hover:underline font-semibold">
-              Go to Cart to redeem →
-            </Link>
+            <p className="text-xs text-gray-500 mb-3">Add it to your store credit — it applies automatically at checkout.</p>
+            <div className="flex gap-2">
+              <input value={redeemCode} onChange={e => setRedeemCode(e.target.value)} placeholder="PP-XXXX-XXXX"
+                className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-violet-400" />
+              <button type="button" onClick={handleRedeem} disabled={redeeming || !redeemCode.trim()}
+                className="px-4 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors">
+                {redeeming ? '…' : 'Redeem'}
+              </button>
+            </div>
           </div>
         </div>
       </form>

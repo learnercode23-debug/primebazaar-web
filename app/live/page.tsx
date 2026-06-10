@@ -1,16 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
-import { FiShoppingCart, FiHeart, FiShare2, FiUsers, FiEye, FiZap } from 'react-icons/fi'
+import axios from 'axios'
+import { FiShoppingCart, FiShare2, FiZap } from 'react-icons/fi'
 import { useCart } from '@/contexts/CartContext'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
-const FEATURED_PRODUCTS = [
-  { id: '1', title: 'Sony WH-1000XM5 Noise Cancelling Headphones', price: 32999, originalPrice: 41999, image: 'https://m.media-amazon.com/images/I/71o8Q5XJS5L._SX522_.jpg', stock: 7 },
-  { id: '2', title: 'Apple iPad 10th Gen 64GB WiFi', price: 69999, originalPrice: 84999, image: 'https://m.media-amazon.com/images/I/81gC7frRJyL._SX522_.jpg', stock: 3 },
-  { id: '3', title: 'Samsung Galaxy Watch 6 Classic', price: 42999, originalPrice: 52999, image: 'https://m.media-amazon.com/images/I/71G6cRz-lzL._SX522_.jpg', stock: 12 },
-]
+interface LiveProduct { id: string; title: string; price: number; originalPrice: number; image: string; stock: number }
 
 const UPCOMING = [
   { time: '4:00 PM', host: 'TechZone Nepal', topic: 'Laptop Mega Sale — Up to 40% off', viewers: '1.2K', tag: 'Electronics' },
@@ -38,53 +35,82 @@ const MSGS = [
   'Discount code please?', 'Sharing with friends!', 'YESS finally!!!',
 ]
 
+interface ApiProduct { _id: string; title: string; price: number; discountPrice?: number; images: string[]; stock: number }
+
 export default function LivePage() {
   const { addToCart } = useCart()
+  const [products, setProducts] = useState<LiveProduct[]>([])
+  const [loadingProducts, setLoadingProducts] = useState(true)
   const [featured, setFeatured] = useState(0)
-  const [viewers, setViewers] = useState(1847)
-  const [likes, setLikes] = useState(342)
+  const [likes, setLikes] = useState(0)
   const [liked, setLiked] = useState(false)
   const [chat, setChat] = useState(SEED_CHAT)
-  const [dealTime, setDealTime] = useState(847)
-  const [boughtCount, setBoughtCount] = useState(23)
+  const [dealTime, setDealTime] = useState(600)
   const chatRef = useRef<HTMLDivElement>(null)
 
-  const product = FEATURED_PRODUCTS[featured]
-  const discount = Math.round((1 - product.price / product.originalPrice) * 100)
+  // Real featured products — prefer today's deals, fall back to general catalog
+  useEffect(() => {
+    function map(list: ApiProduct[]): LiveProduct[] {
+      return list.filter(p => p.images?.[0]).slice(0, 6).map(p => ({
+        id: p._id, title: p.title,
+        price: p.discountPrice || p.price, originalPrice: p.price,
+        image: p.images[0], stock: p.stock,
+      }))
+    }
+    axios.get('/api/products?dealOfDay=true&limit=6')
+      .then(async r => {
+        let list = map(r.data.data || [])
+        if (list.length === 0) { const f = await axios.get('/api/products?limit=6'); list = map(f.data.data || []) }
+        setProducts(list)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingProducts(false))
+  }, [])
 
-  // Simulate live chat
+  // Light ambient activity for the live experience (presence is not yet wired to real streaming)
   useEffect(() => {
     const interval = setInterval(() => {
       const name = NAMES[Math.floor(Math.random() * NAMES.length)]
       const msg = MSGS[Math.floor(Math.random() * MSGS.length)]
       const color = COLORS[Math.floor(Math.random() * COLORS.length)]
       setChat(prev => [...prev.slice(-30), { name, msg, color }])
-      setViewers(v => v + Math.floor(Math.random() * 5 - 1))
-      if (Math.random() > 0.7) setBoughtCount(c => c + 1)
-    }, 1500)
+    }, 2500)
     return () => clearInterval(interval)
   }, [])
 
-  // Scroll chat
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight
   }, [chat])
 
-  // Deal countdown
+  // Rotate the featured deal
   useEffect(() => {
+    if (products.length === 0) return
     const interval = setInterval(() => {
       setDealTime(t => {
-        if (t <= 0) { setFeatured(f => (f + 1) % FEATURED_PRODUCTS.length); return 600 }
+        if (t <= 0) { setFeatured(f => (f + 1) % products.length); return 600 }
         return t - 1
       })
     }, 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [products.length])
 
   function handleAddToCart() {
-    addToCart(product.id)
+    if (product) addToCart(product.id)
   }
 
+  if (loadingProducts) return <LoadingSpinner fullPage />
+  if (products.length === 0) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-20 text-center text-gray-500">
+        <FiZap className="text-5xl mx-auto mb-3 text-gray-300" />
+        <p className="font-semibold">No live deals right now</p>
+        <p className="text-sm mt-1">Check back soon for live-only offers.</p>
+      </div>
+    )
+  }
+
+  const product = products[featured] ?? products[0]
+  const discount = product.originalPrice > product.price ? Math.round((1 - product.price / product.originalPrice) * 100) : 0
   const mm = String(Math.floor(dealTime / 60)).padStart(2, '0')
   const ss = String(dealTime % 60).padStart(2, '0')
 
@@ -101,12 +127,7 @@ export default function LivePage() {
             </span>
             PrimePasal Live
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Shop in real-time with exclusive live-only deals</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <FiEye className="text-red-500" />
-          <span className="font-bold text-gray-900">{viewers.toLocaleString()}</span>
-          watching
+          <p className="text-sm text-gray-500 mt-0.5">Shop exclusive live-only deals</p>
         </div>
       </div>
 
@@ -135,10 +156,6 @@ export default function LivePage() {
               <span className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-black px-2.5 py-1.5 rounded-full shadow">
                 <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                 LIVE
-              </span>
-              <span className="bg-black/60 text-white text-xs px-2.5 py-1.5 rounded-full backdrop-blur-sm flex items-center gap-1">
-                <FiUsers className="text-[10px]" />
-                {viewers.toLocaleString()}
               </span>
             </div>
 
@@ -207,13 +224,15 @@ export default function LivePage() {
             </div>
 
             <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-500">
-              <span className="text-green-600 font-bold">🔥 {boughtCount} people bought this in the last hour</span>
+              <span className={`font-bold ${product.stock <= 5 ? 'text-red-600' : 'text-green-600'}`}>
+                {product.stock <= 5 ? `🔥 Only ${product.stock} left in stock — selling fast!` : `✓ In stock (${product.stock} available)`}
+              </span>
             </div>
           </div>
 
           {/* Product switcher */}
           <div className="grid grid-cols-3 gap-3">
-            {FEATURED_PRODUCTS.map((p, i) => (
+            {products.map((p, i) => (
               <button key={p.id} onClick={() => { setFeatured(i); setDealTime(600) }}
                 className={`rounded-xl border-2 p-3 text-left transition-all ${featured === i ? 'border-violet-600 bg-violet-50' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
                 <div className="w-full aspect-square bg-gray-50 rounded-lg mb-2 overflow-hidden">
@@ -231,7 +250,7 @@ export default function LivePage() {
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col overflow-hidden" style={{ height: 520 }}>
             <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
               <p className="font-black text-sm text-gray-900">Live Chat</p>
-              <span className="text-xs text-gray-400">{viewers.toLocaleString()} watching</span>
+              <span className="flex items-center gap-1 text-xs text-red-500 font-bold"><span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" /> Live</span>
             </div>
             <div ref={chatRef} className="flex-1 overflow-y-auto p-3 space-y-2">
               {chat.map((m, i) => (
