@@ -33,7 +33,8 @@ export default function InventoryAlertsPage() {
   useEffect(() => {
     if (!user) return
     if (user.role !== 'admin') { router.push('/'); return }
-    load()
+    const t = setTimeout(load, 400)
+    return () => clearTimeout(t)
   }, [user, router, threshold])
 
   async function load() {

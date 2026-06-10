@@ -4,7 +4,6 @@ import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import User from '@/models/User'
 import Notification from '@/models/Notification'
-import Review from '@/models/Review'
 
 export async function GET(req: NextRequest) {
   try {
@@ -40,7 +39,6 @@ export async function DELETE(req: NextRequest) {
       isActive: false,
     }})
     await Notification.deleteMany({ user: userId })
-    await Review.updateMany({ user: userId }, { $set: { authorName: '[Deleted]' } })
     return NextResponse.json({ data: { success: true, anonymizedEmail: anonEmail } })
   } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
