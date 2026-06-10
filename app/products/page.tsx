@@ -9,7 +9,7 @@ import FadeIn from '@/components/ui/FadeIn'
 import FilterSidebar from '@/components/product/FilterSidebar'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Breadcrumb from '@/components/ui/Breadcrumb'
-import { FiGrid, FiList, FiSliders } from 'react-icons/fi'
+import { FiGrid, FiList, FiSliders, FiZap } from 'react-icons/fi'
 
 function ProductsContent() {
   const params = useSearchParams()
@@ -19,6 +19,7 @@ function ProductsContent() {
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [mlRanked, setMlRanked] = useState(false)
 
   const page = parseInt(params.get('page') || '1')
   const category = params.get('category')
@@ -30,6 +31,7 @@ function ProductsContent() {
       setProducts(r.data.data || [])
       setTotal(r.data.total || 0)
       setTotalPages(r.data.totalPages || 0)
+      setMlRanked(r.data.mlRanked === true)
     }).finally(() => setLoading(false))
   }, [params])
 
@@ -85,7 +87,14 @@ function ProductsContent() {
                 <h1 className="text-base sm:text-lg font-bold text-gray-900">All Products</h1>
               )}
               {!loading && (
-                <p className="text-xs sm:text-sm text-gray-500">{total.toLocaleString()} results</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs sm:text-sm text-gray-500">{total.toLocaleString()} results</p>
+                  {mlRanked && (
+                    <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
+                      <FiZap className="text-[10px]" /> ML Ranked
+                    </span>
+                  )}
+                </div>
               )}
             </div>
 

@@ -54,7 +54,7 @@ export default function FilterSidebar() {
 
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current) }, [])
 
-  const hasFilters = params.get('category') || params.get('minPrice') || params.get('maxPrice') || params.get('minRating') || params.get('brand')
+  const hasFilters = params.get('category') || params.get('minPrice') || params.get('maxPrice') || params.get('minRating') || params.get('brand') || params.get('hasDiscount') || params.get('inStock') || params.get('newArrivals')
   const minPct = (minVal / PRICE_MAX) * 100
   const maxPct = (maxVal / PRICE_MAX) * 100
 
@@ -77,6 +77,34 @@ export default function FilterSidebar() {
               <FiX /> Clear all
             </button>
           )}
+        </div>
+
+        {/* Quick toggles */}
+        <div className="py-3 border-b border-gray-200">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Quick Filters</p>
+          <div className="flex flex-col gap-1.5">
+            {([
+              { label: '🔖 On Sale', key: 'hasDiscount', value: 'true' },
+              { label: '📦 In Stock', key: 'inStock',     value: 'true' },
+              { label: '🆕 New Arrivals', key: 'newArrivals', value: 'true' },
+            ] as { label: string; key: string; value: string }[]).map(({ label, key, value }) => {
+              const active = params.get(key) === value
+              return (
+                <button
+                  key={key}
+                  onClick={() => updateFilter(key, active ? null : value)}
+                  className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border transition-all text-left ${
+                    active ? 'bg-violet-600 text-white border-violet-600 font-semibold' : 'border-gray-200 text-gray-700 hover:border-violet-300 hover:text-violet-700'
+                  }`}
+                >
+                  <span className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${active ? 'bg-white border-white' : 'border-gray-300'}`}>
+                    {active && <svg className="w-2.5 h-2.5 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                  </span>
+                  {label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <Section title="Category" sectionKey="category">
@@ -225,11 +253,13 @@ export default function FilterSidebar() {
         <Section title="Sort By" sectionKey="sort">
           <div className="space-y-1">
             {[
-              ['Best Match',          'createdAt', 'desc'],
-              ['Price: Low to High',  'price',     'asc'],
-              ['Price: High to Low',  'price',     'desc'],
-              ['Top Rated',           'rating',    'desc'],
-              ['Most Reviews',        'reviewCount','desc'],
+              ['Best Match',          'createdAt',   'desc'],
+              ['Best Sellers',        'salesCount',  'desc'],
+              ['Top Rated',           'rating',      'desc'],
+              ['Price: Low to High',  'price',       'asc'],
+              ['Price: High to Low',  'price',       'desc'],
+              ['Most Reviews',        'reviewCount', 'desc'],
+              ['Newest First',        'createdAt',   'desc'],
             ].map(([label, sort, order]) => (
               <button
                 key={label}

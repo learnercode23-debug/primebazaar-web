@@ -6,6 +6,7 @@ import CategorySection from '@/components/home/CategorySection'
 import DealOfTheDay from '@/components/home/DealOfTheDay'
 import FeaturedProducts from '@/components/home/FeaturedProducts'
 import RecentlyViewed from '@/components/product/RecentlyViewed'
+import PersonalizedForYou from '@/components/home/PersonalizedForYou'
 import FadeIn from '@/components/ui/FadeIn'
 import { FiTruck, FiShield, FiRefreshCw, FiHeadphones } from 'react-icons/fi'
 
@@ -86,6 +87,7 @@ export default function HomePage() {
         <FadeIn><FeaturedProducts title="New Arrivals" query="sort=createdAt&order=desc" limit={8} /></FadeIn>
 
         <RecentlyViewed />
+        <PersonalizedForYou />
 
         {/* Seller promo banner */}
         <FadeIn>

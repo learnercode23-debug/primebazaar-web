@@ -41,6 +41,8 @@ export interface Product {
   dealEndTime?: string
   tags: string[]
   specifications?: Record<string, string>
+  salesCount?: number
+  viewCount?: number
   createdAt: string
 }
 

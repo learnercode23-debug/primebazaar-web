@@ -10,20 +10,24 @@ export async function GET(req: NextRequest) {
     await connectDB()
     const { searchParams } = new URL(req.url)
 
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const category = searchParams.get('category')
-    const subcategory = searchParams.get('subcategory')
-    const brand = searchParams.get('brand')
-    const minPrice = searchParams.get('minPrice')
-    const maxPrice = searchParams.get('maxPrice')
-    const minRating = searchParams.get('minRating')
-    const search = searchParams.get('search')
-    const sort = searchParams.get('sort') || 'createdAt'
-    const order = searchParams.get('order') || 'desc'
-    const featured = searchParams.get('featured')
-    const dealOfDay = searchParams.get('dealOfDay')
-    const lightning = searchParams.get('lightning')
+    const page       = parseInt(searchParams.get('page') || '1')
+    const limit      = parseInt(searchParams.get('limit') || '20')
+    const category   = searchParams.get('category')
+    const subcategory= searchParams.get('subcategory')
+    const brand      = searchParams.get('brand')
+    const minPrice   = searchParams.get('minPrice')
+    const maxPrice   = searchParams.get('maxPrice')
+    const minRating  = searchParams.get('minRating')
+    const search     = searchParams.get('search')
+    const sort       = searchParams.get('sort') || 'createdAt'
+    const order      = searchParams.get('order') || 'desc'
+    const featured   = searchParams.get('featured')
+    const dealOfDay  = searchParams.get('dealOfDay')
+    const lightning  = searchParams.get('lightning')
+    const hasDiscount= searchParams.get('hasDiscount')
+    const inStock    = searchParams.get('inStock')
+    const newArrivals= searchParams.get('newArrivals')
+    const discountPct= searchParams.get('discountPct')  // minimum discount %
 
     const query: Record<string, unknown> = { isApproved: true }
 
@@ -37,6 +41,15 @@ export async function GET(req: NextRequest) {
     if (featured === 'true') query.isFeatured = true
     if (dealOfDay === 'true') query.isDealOfDay = true
     if (lightning === 'true') query.isLightningDeal = true
+    if (hasDiscount === 'true') query.discountPrice = { $exists: true, $gt: 0 }
+    if (inStock === 'true') query.stock = { $gt: 0 }
+    if (newArrivals === 'true') query.createdAt = { $gte: new Date(Date.now() - 30 * 86_400_000) }
+
+    if (discountPct) {
+      // products where (1 - discountPrice/price) * 100 >= discountPct — filter post-aggregation
+      // approximate with a raw filter: discountPrice is set
+      query.discountPrice = { $exists: true, $gt: 0 }
+    }
 
     if (minPrice || maxPrice) {
       query.price = {}
@@ -46,13 +59,59 @@ export async function GET(req: NextRequest) {
 
     if (minRating) query.rating = { $gte: parseFloat(minRating) }
 
+    const skip = (page - 1) * limit
+
+    // ── ML-ranked search: use aggregation when a search query is present ──────
     if (search) {
       query.$text = { $search: search }
+
+      const pipeline = [
+        { $match: query },
+        {
+          $addFields: {
+            _textScore: { $meta: 'textScore' },
+            _salesNorm: { $min: [{ $divide: [{ $ifNull: ['$salesCount', 0] }, 500] }, 1] },
+            _ratingNorm: { $divide: [{ $ifNull: ['$rating', 0] }, 5] },
+          },
+        },
+        {
+          $addFields: {
+            mlRelevance: {
+              $add: [
+                { $multiply: ['$_textScore', 0.40] },
+                { $multiply: ['$_salesNorm',  0.35] },
+                { $multiply: ['$_ratingNorm', 0.25] },
+              ],
+            },
+          },
+        },
+        { $sort: { mlRelevance: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        { $lookup: { from: 'users', localField: 'seller', foreignField: '_id', as: '_seller' } },
+        { $addFields: { seller: { $arrayElemAt: ['$_seller', 0] } } },
+        { $project: { _seller: 0, _textScore: 0, _salesNorm: 0, _ratingNorm: 0 } },
+      ]
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const [products, totalArr] = await Promise.all([
+        Product.aggregate(pipeline as Parameters<typeof Product.aggregate>[0]),
+        Product.countDocuments(query),
+      ])
+
+      return NextResponse.json({
+        success: true,
+        data: products,
+        total: totalArr,
+        page,
+        totalPages: Math.ceil(totalArr / limit),
+        mlRanked: true,
+      })
     }
 
+    // ── Standard sort (no search query) ──────────────────────────────────────
     const sortObj: Record<string, 1 | -1> = { [sort]: order === 'asc' ? 1 : -1 }
 
-    const skip = (page - 1) * limit
     const [products, total] = await Promise.all([
       Product.find(query)
         .populate('seller', 'name')

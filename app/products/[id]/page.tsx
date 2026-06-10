@@ -18,6 +18,7 @@ import ProductQASection from '@/components/product/ProductQASection'
 import Recommendations from '@/components/product/Recommendations'
 import RecentlyViewed from '@/components/product/RecentlyViewed'
 import FrequentlyBoughtTogether from '@/components/product/FrequentlyBoughtTogether'
+import YouMightAlsoLike from '@/components/product/YouMightAlsoLike'
 import { ProductDetailSkeleton } from '@/components/ui/Skeleton'
 import Breadcrumb from '@/components/ui/Breadcrumb'
 import { useCart } from '@/contexts/CartContext'
@@ -992,6 +993,19 @@ export default function ProductDetailPage() {
             }}
           />
         </div>
+      )}
+
+      {/* You might also like — ML scored */}
+      {product && (
+        <YouMightAlsoLike
+          anchorId={id}
+          anchorPrice={product.discountPrice || product.price}
+          category={(product as unknown as { category?: { name?: string } | string }).category
+            ? (typeof (product as unknown as { category: { name?: string } | string }).category === 'object'
+                ? ((product as unknown as { category: { name?: string } }).category.name)
+                : String((product as unknown as { category: string }).category))
+            : undefined}
+        />
       )}
 
       {/* Co-purchase recommendations */}

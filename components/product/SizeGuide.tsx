@@ -34,12 +34,18 @@ const FOOTWEAR_SIZES = [
 ]
 
 const isFootwear = (cat?: string) =>
-  cat && /shoe|footwear|sneaker|boot|sandal/i.test(cat)
+  !!cat && /shoe|footwear|sneaker|boot|sandal|slipper/i.test(cat)
+
+const isSizeRelevant = (cat?: string) =>
+  !!cat && /fashion|cloth|apparel|wear|garment|shirt|tshirt|t-shirt|dress|pant|jean|jacket|top|bottom|kurta|saree|suit|knitwear|sportswear|lingerie|underwear|sock|shoe|footwear|sneaker|boot|sandal|slipper/i.test(cat)
 
 export default function SizeGuide({ category }: SizeGuideProps) {
   const [open, setOpen] = useState(false)
   const [unit, setUnit] = useState<Unit>('cm')
   const footwear = isFootwear(category)
+
+  // Only show for clothing/footwear categories
+  if (!isSizeRelevant(category)) return null
 
   return (
     <>
