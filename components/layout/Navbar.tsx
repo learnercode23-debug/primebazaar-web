@@ -10,7 +10,6 @@ import {
   FiSun, FiMoon, FiStar, FiZap,
 } from 'react-icons/fi'
 import { useTheme } from '@/contexts/ThemeContext'
-import { useLang } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import axios from 'axios'
@@ -31,7 +30,6 @@ export default function Navbar() {
   const { user, logout } = useAuth()
   const { itemCount } = useCart()
   const { theme, toggle: toggleTheme } = useTheme()
-  const { lang, setLang } = useLang()
   const router = useRouter()
 
   const pathname = usePathname()
@@ -204,16 +202,6 @@ export default function Navbar() {
               <Link href={user ? '/profile' : '/login'} className="sm:hidden flex items-center text-white/80 hover:text-white p-2 rounded-xl">
                 {user ? <UserAvatar name={user.name} /> : <FiUser className="text-xl" />}
               </Link>
-
-              {/* Language toggle */}
-              <button
-                onClick={() => setLang(lang === 'en' ? 'ne' : 'en')}
-                className="flex items-center gap-1 text-white/80 hover:text-white hover:bg-white/10 rounded-xl px-2 py-1.5 transition-all text-xs font-bold"
-                aria-label="Switch language"
-                title={lang === 'en' ? 'Switch to Nepali' : 'Switch to English'}
-              >
-                {lang === 'en' ? '🇳🇵 NE' : '🇬🇧 EN'}
-              </button>
 
               {/* Dark mode toggle */}
               <button
