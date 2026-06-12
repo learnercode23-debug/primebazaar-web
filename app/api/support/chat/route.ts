@@ -104,12 +104,13 @@ async function botReply(customerId: string, userMessage: string): Promise<string
     return `**Delivery Times:**\n\n📍 **Kathmandu Valley:** 1-2 business days\n📍 **Major cities** (Pokhara, Biratnagar, Butwal): 2-4 business days\n📍 **Other areas:** 4-7 business days\n\nDelivery times may vary during festivals (Dashain, Tihar) and bad weather. You'll receive SMS/notification when your order ships.\n\nCheck your specific order's estimated date in [My Orders](/orders).`
   }
 
-  // Search articles
-  const articles = await HelpArticle.find({
+  // Search articles — escape each keyword before building the alternation regex
+  const keywords = userMessage.split(' ').filter(w => w.length > 3).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  const articles = keywords.length === 0 ? [] : await HelpArticle.find({
     isPublished: true,
     $or: [
-      { title: { $regex: userMessage.split(' ').filter(w => w.length > 3).join('|'), $options: 'i' } },
-      { tags:  { $regex: userMessage.split(' ').filter(w => w.length > 3).join('|'), $options: 'i' } },
+      { title: { $regex: keywords.join('|'), $options: 'i' } },
+      { tags:  { $regex: keywords.join('|'), $options: 'i' } },
     ]
   }).select('title').limit(3).lean()
 

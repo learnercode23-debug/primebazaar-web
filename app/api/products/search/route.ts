@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import Product from '@/models/Product'
 import { cacheGet, cacheSet } from '@/lib/redis'
+import { escapeRegex } from '@/lib/utils'
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,13 +21,14 @@ export async function GET(req: NextRequest) {
 
     await connectDB()
 
+    const safe = escapeRegex(q)
     const products = await Product.find(
       {
         isApproved: true,
         $or: [
-          { title: { $regex: q, $options: 'i' } },
-          { brand: { $regex: q, $options: 'i' } },
-          { tags: { $regex: q, $options: 'i' } },
+          { title: { $regex: safe, $options: 'i' } },
+          { brand: { $regex: safe, $options: 'i' } },
+          { tags: { $regex: safe, $options: 'i' } },
         ],
       },
       { title: 1, images: 1, price: 1, discountPrice: 1, brand: 1, rating: 1, slug: 1 }
@@ -38,7 +40,7 @@ export async function GET(req: NextRequest) {
     // Also get matching brands and categories
     const brands = await Product.distinct('brand', {
       isApproved: true,
-      brand: { $regex: q, $options: 'i' },
+      brand: { $regex: safe, $options: 'i' },
     })
 
     const result = {

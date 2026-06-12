@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import HelpArticle from '@/models/HelpArticle'
+import { escapeRegex } from '@/lib/utils'
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,10 +20,10 @@ export async function GET(req: NextRequest) {
     const filter: Record<string, unknown> = { isPublished: true }
     if (category) filter.category = category
     if (q) {
-      // Try text search first; fall back to regex if no text index
+      const safe = escapeRegex(q)
       filter.$or = [
-        { title: { $regex: q, $options: 'i' } },
-        { tags:  { $regex: q, $options: 'i' } },
+        { title: { $regex: safe, $options: 'i' } },
+        { tags:  { $regex: safe, $options: 'i' } },
       ]
     }
 

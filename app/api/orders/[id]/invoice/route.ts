@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import Order from '@/models/Order'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, escapeHtml } from '@/lib/utils'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>Invoice ${order.invoiceNumber || order.orderNumber}</title>
+  <title>Invoice ${escapeHtml(order.invoiceNumber || order.orderNumber)}</title>
   <style>
     * { box-sizing: border-box; }
     body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #333; }
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     </div>
     <div class="invoice-title">
       <div>INVOICE</div>
-      <div class="invoice-number">${order.invoiceNumber || order.orderNumber}</div>
+      <div class="invoice-number">${escapeHtml(order.invoiceNumber || order.orderNumber)}</div>
       <div style="font-size:12px;color:#666;margin-top:4px">Date: ${new Date(order.createdAt as string).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
     </div>
   </div>
@@ -74,15 +74,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
     <div class="section">
       <div class="section-title">Billed To</div>
-      <strong>${orderUser.name}</strong><br/>
-      ${orderUser.email}
+      <strong>${escapeHtml(orderUser.name)}</strong><br/>
+      ${escapeHtml(orderUser.email)}
     </div>
     <div class="section">
       <div class="section-title">Ship To</div>
-      <strong>${address.name}</strong><br/>
-      ${address.street}<br/>
-      ${address.city}, ${address.state} ${address.zipCode}<br/>
-      ${address.country}
+      <strong>${escapeHtml(address.name)}</strong><br/>
+      ${escapeHtml(address.street)}<br/>
+      ${escapeHtml(address.city)}, ${escapeHtml(address.state)} ${escapeHtml(address.zipCode)}<br/>
+      ${escapeHtml(address.country)}
     </div>
   </div>
 
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       <tbody>
         ${items.map(item => `
         <tr>
-          <td>${item.title}${item.variantLabel ? `<br/><span style="color:#666;font-size:12px">${item.variantLabel}</span>` : ''}</td>
+          <td>${escapeHtml(item.title)}${item.variantLabel ? `<br/><span style="color:#666;font-size:12px">${escapeHtml(item.variantLabel)}</span>` : ''}</td>
           <td style="text-align:center">${item.quantity}</td>
           <td style="text-align:right">${formatPrice(item.price)}</td>
           <td style="text-align:right">${formatPrice(item.price * item.quantity)}</td>

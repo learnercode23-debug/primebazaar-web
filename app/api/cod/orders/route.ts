@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import Order from '@/models/Order'
+import { escapeRegex } from '@/lib/utils'
 
 export async function GET(req: NextRequest) {
   try {
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
     if (collected === 'true')  filter.codCollected = true
     if (collected === 'false') filter.codCollected = false
     if (remittance) filter.codRemittanceStatus = remittance
-    if (search)     filter.orderNumber = { $regex: search, $options: 'i' }
+    if (search)     filter.orderNumber = { $regex: escapeRegex(search), $options: 'i' }
 
     const [orders, total] = await Promise.all([
       Order.find(filter)

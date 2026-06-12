@@ -4,6 +4,22 @@ export function cn(...inputs: ClassValue[]) {
   return clsx(inputs)
 }
 
+// Escape user input before using it as a MongoDB $regex pattern.
+// Prevents ReDoS (catastrophic backtracking) and unintended regex behavior.
+export function escapeRegex(input: string): string {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// Escape a value before interpolating it into raw HTML (prevents XSS).
+export function escapeHtml(input: unknown): string {
+  return String(input ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 export function formatPrice(price: number): string {
   return 'Rs. ' + new Intl.NumberFormat('en-NP', {
     minimumFractionDigits: 0,

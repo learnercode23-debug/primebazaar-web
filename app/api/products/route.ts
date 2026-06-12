@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import Product from '@/models/Product'
 import Category from '@/models/Category'
+import { escapeRegex } from '@/lib/utils'
 
 export async function GET(req: NextRequest) {
   try {
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
       query.category = cat?._id ?? null
     }
     if (subcategory) query.subcategory = subcategory
-    if (brand) query.brand = { $regex: brand, $options: 'i' }
+    if (brand) query.brand = { $regex: escapeRegex(brand), $options: 'i' }
     if (featured === 'true') query.isFeatured = true
     if (dealOfDay === 'true') query.isDealOfDay = true
     if (lightning === 'true') query.isLightningDeal = true

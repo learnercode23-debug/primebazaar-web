@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import User from '@/models/User'
 import Notification from '@/models/Notification'
+import { escapeRegex } from '@/lib/utils'
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,9 +12,10 @@ export async function GET(req: NextRequest) {
     if (!user || user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     await connectDB()
     const q = new URL(req.url).searchParams.get('q') || ''
+    const safe = escapeRegex(q)
     const query = q ? { $or: [
-      { name: { $regex: q, $options: 'i' } },
-      { email: { $regex: q, $options: 'i' } },
+      { name: { $regex: safe, $options: 'i' } },
+      { email: { $regex: safe, $options: 'i' } },
     ]} : {}
     const users = await User.find(query).select('name email role createdAt isActive').limit(20).lean()
     return NextResponse.json({ data: users })

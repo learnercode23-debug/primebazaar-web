@@ -11,6 +11,7 @@ import SupportTicket from '@/models/SupportTicket'
 import TicketMessage from '@/models/TicketMessage'
 import { createNotification } from '@/lib/notifications'
 import User from '@/models/User'
+import { escapeRegex } from '@/lib/utils'
 
 export async function GET(req: NextRequest) {
   try {
@@ -32,10 +33,10 @@ export async function GET(req: NextRequest) {
     const q        = sp.get('q')
     if (priority) filter.priority = priority
     if (category) filter.category = category
-    if (q) filter.$or = [
-      { subject:      { $regex: q, $options: 'i' } },
-      { ticketNumber: { $regex: q, $options: 'i' } },
-    ]
+    if (q) { const safe = escapeRegex(q); filter.$or = [
+      { subject:      { $regex: safe, $options: 'i' } },
+      { ticketNumber: { $regex: safe, $options: 'i' } },
+    ] }
 
     const tickets = await SupportTicket.find(filter)
       .populate('customer',      'name email')
