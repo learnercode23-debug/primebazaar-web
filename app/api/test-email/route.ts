@@ -11,13 +11,30 @@ import { sendEmail, emailDiagnostics } from '@/lib/email'
  *  - the real result of attempting a send (which provider, or the error)
  */
 export async function GET(req: NextRequest) {
-  // Access either as a signed-in admin, OR with ?secret=CRON_SECRET so you can
-  // diagnose from any browser without logging in first.
+  // Read-only status check — no auth, no email sent, no secrets revealed.
+  // Visit /api/test-email?check=1 to see if Gmail SMTP auth actually works.
+  if (req.nextUrl.searchParams.get('check') === '1') {
+    const diag = await emailDiagnostics()
+    return NextResponse.json({
+      gmailConfigured: diag.gmailConfigured,
+      gmailFrom: diag.gmailFrom,
+      gmailAuthWorks: diag.gmailVerify.ok,
+      gmailError: diag.gmailVerify.error || null,
+      resendConfigured: diag.resendConfigured,
+      verdict: !diag.gmailConfigured
+        ? 'Gmail NOT configured on this deployment.'
+        : diag.gmailVerify.ok
+        ? 'Gmail auth OK — emails should send. If users do not get them, check spam.'
+        : `Gmail auth FAILING: ${diag.gmailVerify.error}`,
+    })
+  }
+
+  // Sending a real test email still requires admin (or ?secret=CRON_SECRET).
   const secret = req.nextUrl.searchParams.get('secret')
   const secretOk = !!process.env.CRON_SECRET && secret === process.env.CRON_SECRET
   const user = await getAuthUser(req)
   if (!secretOk && (!user || user.role !== 'admin')) {
-    return NextResponse.json({ success: false, error: 'Admin only — sign in as admin, or append &secret=YOUR_CRON_SECRET' }, { status: 403 })
+    return NextResponse.json({ success: false, error: 'Admin only — sign in as admin, or use ?check=1 for a no-login status check' }, { status: 403 })
   }
 
   const to = req.nextUrl.searchParams.get('to') || user?.email || 'test@example.com'
