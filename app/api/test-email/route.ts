@@ -11,12 +11,16 @@ import { sendEmail, emailDiagnostics } from '@/lib/email'
  *  - the real result of attempting a send (which provider, or the error)
  */
 export async function GET(req: NextRequest) {
+  // Access either as a signed-in admin, OR with ?secret=CRON_SECRET so you can
+  // diagnose from any browser without logging in first.
+  const secret = req.nextUrl.searchParams.get('secret')
+  const secretOk = !!process.env.CRON_SECRET && secret === process.env.CRON_SECRET
   const user = await getAuthUser(req)
-  if (!user || user.role !== 'admin') {
-    return NextResponse.json({ success: false, error: 'Admin only' }, { status: 403 })
+  if (!secretOk && (!user || user.role !== 'admin')) {
+    return NextResponse.json({ success: false, error: 'Admin only — sign in as admin, or append &secret=YOUR_CRON_SECRET' }, { status: 403 })
   }
 
-  const to = req.nextUrl.searchParams.get('to') || user.email
+  const to = req.nextUrl.searchParams.get('to') || user?.email || 'test@example.com'
   const diag = await emailDiagnostics()
 
   const result = await sendEmail(
