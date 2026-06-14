@@ -3,14 +3,21 @@ import nodemailer from 'nodemailer'
 
 const BASE = process.env.NEXT_PUBLIC_BASE_URL || 'https://primepasal.com'
 
+// Gmail shows app passwords as "abcd efgh ijkl mnop" — the real password has no
+// spaces. Strip them so a copy-paste with spaces still authenticates.
+const GMAIL_PASS = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '')
+
 // ── Gmail SMTP (works for ANY recipient email — no domain needed) ─────────────
-const gmailTransporter = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
+const gmailTransporter = process.env.GMAIL_USER && GMAIL_PASS
   ? nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
-      tls: { rejectUnauthorized: false },
+      port: 465,
+      secure: true,
+      auth: { user: process.env.GMAIL_USER, pass: GMAIL_PASS },
+      // Fail fast on Vercel instead of hanging the whole request
+      connectionTimeout: 10000,
+      greetingTimeout: 8000,
+      socketTimeout: 10000,
     })
   : null
 
@@ -22,34 +29,65 @@ function resolveRecipient(to: string): string {
   return process.env.RESEND_TO_OVERRIDE || to
 }
 
+export interface SendResult { ok: boolean; via: 'gmail' | 'resend' | 'none'; error?: string }
+
 // ── Unified send — Gmail first, Resend fallback, console last ────────────────
-export async function sendEmail(to: string, subject: string, html: string) {
-  const gmail = gmailTransporter
-  const r = resend
+export async function sendEmail(to: string, subject: string, html: string): Promise<SendResult> {
+  let gmailError: string | undefined
 
   // 1. Try Gmail SMTP — sends to the real address regardless of any override
-  if (gmail) {
+  if (gmailTransporter) {
     try {
-      await gmail.sendMail({
-        from: `Primepasal <${process.env.GMAIL_USER}>`,
-        to, subject, html,
-      })
+      await gmailTransporter.sendMail({ from: `Primepasal <${process.env.GMAIL_USER}>`, to, subject, html })
       console.log('[EMAIL] Sent via Gmail SMTP to:', to)
-      return
-    } catch (gmailErr) {
-      console.error('[EMAIL] Gmail SMTP failed, trying Resend fallback:', gmailErr)
+      return { ok: true, via: 'gmail' }
+    } catch (err) {
+      gmailError = err instanceof Error ? err.message : String(err)
+      console.error('[EMAIL] Gmail SMTP failed, trying Resend fallback:', gmailError)
     }
   }
 
-  // 2. Resend fallback (free plan only delivers to verified account email)
-  if (r) {
-    const recipient = resolveRecipient(to)
-    await r.emails.send({ from: FROM, to: recipient, subject, html })
-    console.log('[EMAIL] Sent via Resend to:', recipient)
-    return
+  // 2. Resend fallback (free plan only delivers to the verified account email)
+  if (resend) {
+    try {
+      const recipient = resolveRecipient(to)
+      const { error } = await resend.emails.send({ from: FROM, to: recipient, subject, html })
+      if (error) throw new Error(typeof error === 'string' ? error : JSON.stringify(error))
+      console.log('[EMAIL] Sent via Resend to:', recipient)
+      return { ok: true, via: 'resend' }
+    } catch (err) {
+      const resendError = err instanceof Error ? err.message : String(err)
+      console.error('[EMAIL] Resend failed:', resendError)
+      return { ok: false, via: 'resend', error: `gmail: ${gmailError || 'not configured'} | resend: ${resendError}` }
+    }
   }
 
   console.log('[EMAIL] No provider configured. Subject:', subject, '→', to)
+  return { ok: false, via: 'none', error: gmailError || 'No email provider configured' }
+}
+
+// ── Diagnostics — used by /api/test-email to pinpoint delivery problems ────────
+export async function emailDiagnostics(): Promise<{
+  gmailConfigured: boolean; resendConfigured: boolean
+  gmailFrom?: string; resendFrom: string
+  gmailVerify: { ok: boolean; error?: string }
+}> {
+  let gmailVerify: { ok: boolean; error?: string } = { ok: false, error: 'Gmail not configured' }
+  if (gmailTransporter) {
+    try {
+      await gmailTransporter.verify()  // tests the SMTP connection + app-password auth
+      gmailVerify = { ok: true }
+    } catch (err) {
+      gmailVerify = { ok: false, error: err instanceof Error ? err.message : String(err) }
+    }
+  }
+  return {
+    gmailConfigured: !!gmailTransporter,
+    resendConfigured: !!resend,
+    gmailFrom: process.env.GMAIL_USER,
+    resendFrom: FROM,
+    gmailVerify,
+  }
 }
 
 // ── HTML wrapper ──────────────────────────────────────────────────────────────
