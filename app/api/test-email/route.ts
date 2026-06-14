@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/auth'
-import { sendEmail, emailDiagnostics, debugRawSend } from '@/lib/email'
+import { sendEmail, emailDiagnostics } from '@/lib/email'
 
 /**
  * GET /api/test-email?to=someone@example.com
@@ -27,14 +27,6 @@ export async function GET(req: NextRequest) {
         ? 'Gmail auth OK — emails should send. If users do not get them, check spam.'
         : `Gmail auth FAILING: ${diag.gmailVerify.error}`,
     })
-  }
-
-  // TEMP DEBUG: raw SMTP send that returns Gmail's actual accepted/rejected/response.
-  // No auth — remove after diagnosing. ?debugsend=1&to=email
-  if (req.nextUrl.searchParams.get('debugsend') === '1') {
-    const to = req.nextUrl.searchParams.get('to') || 'test@example.com'
-    const info = await debugRawSend(to)
-    return NextResponse.json({ to, ...info })
   }
 
   // Sending a real test email still requires admin (or ?secret=CRON_SECRET).

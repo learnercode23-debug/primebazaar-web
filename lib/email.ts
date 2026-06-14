@@ -35,10 +35,13 @@ export interface SendResult { ok: boolean; via: 'gmail' | 'resend' | 'none'; err
 export async function sendEmail(to: string, subject: string, html: string): Promise<SendResult> {
   let gmailError: string | undefined
 
+  // Plain-text fallback improves spam scoring vs HTML-only mail
+  const text = html.replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+
   // 1. Try Gmail SMTP — sends to the real address regardless of any override
   if (gmailTransporter) {
     try {
-      await gmailTransporter.sendMail({ from: `Primepasal <${process.env.GMAIL_USER}>`, to, subject, html })
+      await gmailTransporter.sendMail({ from: `Primepasal <${process.env.GMAIL_USER}>`, to, subject, html, text, replyTo: process.env.GMAIL_USER })
       console.log('[EMAIL] Sent via Gmail SMTP to:', to)
       return { ok: true, via: 'gmail' }
     } catch (err) {
@@ -64,28 +67,6 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
 
   console.log('[EMAIL] No provider configured. Subject:', subject, '→', to)
   return { ok: false, via: 'none', error: gmailError || 'No email provider configured' }
-}
-
-// ── TEMP raw-send debug — returns Gmail's actual SMTP response ────────────────
-export async function debugRawSend(to: string): Promise<Record<string, unknown>> {
-  if (!gmailTransporter) return { ok: false, error: 'Gmail not configured' }
-  try {
-    const info = await gmailTransporter.sendMail({
-      from: `Primepasal <${process.env.GMAIL_USER}>`,
-      to,
-      subject: 'PrimePasal raw send test',
-      html: '<p>Raw SMTP test. If you got this, sending works.</p>',
-    })
-    return {
-      ok: true,
-      messageId: info.messageId,
-      accepted: info.accepted,
-      rejected: info.rejected,
-      response: info.response,
-    }
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) }
-  }
 }
 
 // ── Diagnostics — used by /api/test-email to pinpoint delivery problems ────────
