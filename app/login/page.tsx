@@ -235,7 +235,7 @@ function LoginPageInner() {
                 disabled={loading || !input}
                 className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200"
               >
-                {loading ? 'Please waitâ€¦' : inputIsPhone ? 'Send OTP â†’' : 'Continue'}
+                {loading ? 'Please wait…' : inputIsPhone ? 'Send OTP →' : 'Continue'}
               </button>
             </form>
 
@@ -311,7 +311,7 @@ function LoginPageInner() {
               </div>
               <button type="submit" disabled={loading || !password}
                 className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200">
-                {loading ? 'Signing inâ€¦' : 'Sign in'}
+                {loading ? 'Signing in…' : 'Sign in'}
               </button>
             </form>
 
@@ -343,7 +343,7 @@ function LoginPageInner() {
             {devOtp && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-amber-700">Dev mode â€” SMS not configured</p>
+                  <p className="text-xs font-bold text-amber-700">Dev mode — SMS not configured</p>
                   <p className="text-xs text-amber-600">OTP: <span className="font-mono font-black text-lg tracking-widest">{devOtp}</span></p>
                 </div>
                 <button onClick={() => setOtp(devOtp.split(''))}
@@ -379,7 +379,7 @@ function LoginPageInner() {
               disabled={loading || otp.join('').length < 6}
               className="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-md shadow-violet-200 mb-4"
             >
-              {loading ? 'Verifyingâ€¦' : 'Verify & Continue'}
+              {loading ? 'Verifying…' : 'Verify & Continue'}
             </button>
 
             {/* Resend */}
