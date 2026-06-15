@@ -49,42 +49,50 @@ function resolveRecipient(to: string): string {
 
 export interface SendResult { ok: boolean; via: 'smtp' | 'gmail' | 'resend' | 'none'; error?: string }
 
-// ── Unified send — primary SMTP first, Resend fallback, console last ──────────
-export async function sendEmail(to: string, subject: string, html: string): Promise<SendResult> {
-  let smtpError: string | undefined
+// When RESEND_FROM_EMAIL is set (i.e. you verified your domain in Resend),
+// prefer Resend — it has proper SPF/DKIM and lands in the inbox, not spam.
+const PREFER_RESEND = !!resend && !!process.env.RESEND_FROM_EMAIL
 
+// ── Unified send — tries the best provider first, falls back to the other ─────
+export async function sendEmail(to: string, subject: string, html: string): Promise<SendResult> {
   // Plain-text fallback improves spam scoring vs HTML-only mail
   const text = html.replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  const errors: string[] = []
 
-  // 1. Primary SMTP (Hostinger / Gmail) — sends to the real address
-  if (smtpTransporter) {
+  async function trySmtp(): Promise<SendResult | null> {
+    if (!smtpTransporter) return null
     try {
       await smtpTransporter.sendMail({ from: MAIL_FROM, to, subject, html, text, replyTo: MAIL_USER })
       console.log(`[EMAIL] Sent via ${MAIL_PROVIDER} SMTP to:`, to)
       return { ok: true, via: MAIL_PROVIDER === 'gmail' ? 'gmail' : 'smtp' }
     } catch (err) {
-      smtpError = err instanceof Error ? err.message : String(err)
-      console.error('[EMAIL] SMTP failed, trying Resend fallback:', smtpError)
+      errors.push(`smtp: ${err instanceof Error ? err.message : String(err)}`)
+      return null
     }
   }
 
-  // 2. Resend fallback (free plan only delivers to the verified account email)
-  if (resend) {
+  async function tryResend(): Promise<SendResult | null> {
+    if (!resend) return null
     try {
       const recipient = resolveRecipient(to)
-      const { error } = await resend.emails.send({ from: FROM, to: recipient, subject, html })
+      const { error } = await resend.emails.send({ from: FROM, to: recipient, subject, html, text })
       if (error) throw new Error(typeof error === 'string' ? error : JSON.stringify(error))
       console.log('[EMAIL] Sent via Resend to:', recipient)
       return { ok: true, via: 'resend' }
     } catch (err) {
-      const resendError = err instanceof Error ? err.message : String(err)
-      console.error('[EMAIL] Resend failed:', resendError)
-      return { ok: false, via: 'resend', error: `smtp: ${smtpError || 'not configured'} | resend: ${resendError}` }
+      errors.push(`resend: ${err instanceof Error ? err.message : String(err)}`)
+      return null
     }
   }
 
-  console.log('[EMAIL] No provider configured. Subject:', subject, '→', to)
-  return { ok: false, via: 'none', error: smtpError || 'No email provider configured' }
+  const order = PREFER_RESEND ? [tryResend, trySmtp] : [trySmtp, tryResend]
+  for (const attempt of order) {
+    const result = await attempt()
+    if (result) return result
+  }
+
+  console.log('[EMAIL] All providers failed. Subject:', subject, '→', to, errors)
+  return { ok: false, via: 'none', error: errors.join(' | ') || 'No email provider configured' }
 }
 
 // ── Diagnostics — used by /api/test-email to pinpoint delivery problems ────────
