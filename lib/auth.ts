@@ -32,6 +32,18 @@ export async function getAuthUser(req: NextRequest): Promise<IUser | null> {
 
   await connectDB()
   const user = await User.findById(decoded.userId).select('-password')
+
+  // Track presence for "active now" — throttled to at most one write per 60s
+  if (user) {
+    const last = user.lastSeen ? new Date(user.lastSeen).getTime() : 0
+    if (Date.now() - last > 60_000) {
+      const now = new Date()
+      user.lastSeen = now
+      // fire-and-forget so it never slows the request
+      User.updateOne({ _id: user._id }, { $set: { lastSeen: now } }).catch(() => {})
+    }
+  }
+
   return user
 }
 
