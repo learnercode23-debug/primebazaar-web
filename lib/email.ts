@@ -3,50 +3,68 @@ import nodemailer from 'nodemailer'
 
 const BASE = process.env.NEXT_PUBLIC_BASE_URL || 'https://primepasal.com'
 
-// Gmail shows app passwords as "abcd efgh ijkl mnop" — the real password has no
-// spaces. Strip them so a copy-paste with spaces still authenticates.
-const GMAIL_PASS = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '')
+const TIMEOUTS = { connectionTimeout: 10000, greetingTimeout: 8000, socketTimeout: 10000 }
 
-// ── Gmail SMTP (works for ANY recipient email — no domain needed) ─────────────
-const gmailTransporter = process.env.GMAIL_USER && GMAIL_PASS
-  ? nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user: process.env.GMAIL_USER, pass: GMAIL_PASS },
-      // Fail fast on Vercel instead of hanging the whole request
-      connectionTimeout: 10000,
-      greetingTimeout: 8000,
-      socketTimeout: 10000,
-    })
-  : null
+// ── Primary SMTP transporter ──────────────────────────────────────────────────
+// Prefers a custom SMTP provider (e.g. Hostinger / Titan on your own domain),
+// falls back to Gmail. Sending from your own domain gets mail into the inbox.
+let smtpTransporter: nodemailer.Transporter | null = null
+let MAIL_FROM = 'Primepasal <onboarding@resend.dev>'
+let MAIL_USER: string | undefined        // the authenticated mailbox (for reply-to)
+let MAIL_PROVIDER: 'smtp' | 'gmail' | 'none' = 'none'
+
+if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  // Custom SMTP — Hostinger: host smtp.hostinger.com, port 465 (SSL).
+  const port = parseInt(process.env.SMTP_PORT || '465')
+  smtpTransporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port,
+    secure: port === 465,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    ...TIMEOUTS,
+  })
+  MAIL_USER = process.env.SMTP_USER
+  MAIL_FROM = process.env.EMAIL_FROM || `PrimePasal <${process.env.SMTP_USER}>`
+  MAIL_PROVIDER = 'smtp'
+} else if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+  // Gmail app passwords show as "abcd efgh ijkl mnop" — strip spaces so a paste works.
+  const gmailPass = process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, '')
+  smtpTransporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com', port: 465, secure: true,
+    auth: { user: process.env.GMAIL_USER, pass: gmailPass },
+    ...TIMEOUTS,
+  })
+  MAIL_USER = process.env.GMAIL_USER
+  MAIL_FROM = process.env.EMAIL_FROM || `Primepasal <${process.env.GMAIL_USER}>`
+  MAIL_PROVIDER = 'gmail'
+}
 
 // ── Resend fallback (free plan only delivers to Resend account email) ─────────
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-const FROM   = process.env.RESEND_FROM_EMAIL || 'Primepasal <onboarding@resend.dev>'
+const FROM   = process.env.RESEND_FROM_EMAIL || MAIL_FROM
 
 function resolveRecipient(to: string): string {
   return process.env.RESEND_TO_OVERRIDE || to
 }
 
-export interface SendResult { ok: boolean; via: 'gmail' | 'resend' | 'none'; error?: string }
+export interface SendResult { ok: boolean; via: 'smtp' | 'gmail' | 'resend' | 'none'; error?: string }
 
-// ── Unified send — Gmail first, Resend fallback, console last ────────────────
+// ── Unified send — primary SMTP first, Resend fallback, console last ──────────
 export async function sendEmail(to: string, subject: string, html: string): Promise<SendResult> {
-  let gmailError: string | undefined
+  let smtpError: string | undefined
 
   // Plain-text fallback improves spam scoring vs HTML-only mail
   const text = html.replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 
-  // 1. Try Gmail SMTP — sends to the real address regardless of any override
-  if (gmailTransporter) {
+  // 1. Primary SMTP (Hostinger / Gmail) — sends to the real address
+  if (smtpTransporter) {
     try {
-      await gmailTransporter.sendMail({ from: `Primepasal <${process.env.GMAIL_USER}>`, to, subject, html, text, replyTo: process.env.GMAIL_USER })
-      console.log('[EMAIL] Sent via Gmail SMTP to:', to)
-      return { ok: true, via: 'gmail' }
+      await smtpTransporter.sendMail({ from: MAIL_FROM, to, subject, html, text, replyTo: MAIL_USER })
+      console.log(`[EMAIL] Sent via ${MAIL_PROVIDER} SMTP to:`, to)
+      return { ok: true, via: MAIL_PROVIDER === 'gmail' ? 'gmail' : 'smtp' }
     } catch (err) {
-      gmailError = err instanceof Error ? err.message : String(err)
-      console.error('[EMAIL] Gmail SMTP failed, trying Resend fallback:', gmailError)
+      smtpError = err instanceof Error ? err.message : String(err)
+      console.error('[EMAIL] SMTP failed, trying Resend fallback:', smtpError)
     }
   }
 
@@ -61,35 +79,36 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     } catch (err) {
       const resendError = err instanceof Error ? err.message : String(err)
       console.error('[EMAIL] Resend failed:', resendError)
-      return { ok: false, via: 'resend', error: `gmail: ${gmailError || 'not configured'} | resend: ${resendError}` }
+      return { ok: false, via: 'resend', error: `smtp: ${smtpError || 'not configured'} | resend: ${resendError}` }
     }
   }
 
   console.log('[EMAIL] No provider configured. Subject:', subject, '→', to)
-  return { ok: false, via: 'none', error: gmailError || 'No email provider configured' }
+  return { ok: false, via: 'none', error: smtpError || 'No email provider configured' }
 }
 
 // ── Diagnostics — used by /api/test-email to pinpoint delivery problems ────────
 export async function emailDiagnostics(): Promise<{
   gmailConfigured: boolean; resendConfigured: boolean
-  gmailFrom?: string; resendFrom: string
+  gmailFrom?: string; resendFrom: string; provider: string
   gmailVerify: { ok: boolean; error?: string }
 }> {
-  let gmailVerify: { ok: boolean; error?: string } = { ok: false, error: 'Gmail not configured' }
-  if (gmailTransporter) {
+  let smtpVerify: { ok: boolean; error?: string } = { ok: false, error: 'No SMTP transporter configured' }
+  if (smtpTransporter) {
     try {
-      await gmailTransporter.verify()  // tests the SMTP connection + app-password auth
-      gmailVerify = { ok: true }
+      await smtpTransporter.verify()  // tests the SMTP connection + auth
+      smtpVerify = { ok: true }
     } catch (err) {
-      gmailVerify = { ok: false, error: err instanceof Error ? err.message : String(err) }
+      smtpVerify = { ok: false, error: err instanceof Error ? err.message : String(err) }
     }
   }
   return {
-    gmailConfigured: !!gmailTransporter,
+    gmailConfigured: !!smtpTransporter,   // "is a sending transporter configured"
     resendConfigured: !!resend,
-    gmailFrom: process.env.GMAIL_USER,
+    gmailFrom: MAIL_FROM,
     resendFrom: FROM,
-    gmailVerify,
+    provider: MAIL_PROVIDER,
+    gmailVerify: smtpVerify,
   }
 }
 
