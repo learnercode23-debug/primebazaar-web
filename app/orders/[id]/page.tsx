@@ -12,7 +12,7 @@ import { Order } from '@/types'
 import { formatPrice, formatDate } from '@/lib/utils'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Breadcrumb from '@/components/ui/Breadcrumb'
-import { FiPackage, FiDownload, FiRefreshCw, FiX, FiTruck } from 'react-icons/fi'
+import { FiPackage, FiDownload, FiRefreshCw, FiX, FiTruck, FiMessageSquare } from 'react-icons/fi'
 
 interface SubOrderItem { title: string; image: string; price: number; quantity: number; product: string }
 interface SubOrder {
@@ -149,6 +149,7 @@ export default function OrderDetailPage() {
   const [returnReason, setReturnReason] = useState('not_needed')
   const [returnDetail, setReturnDetail] = useState('')
   const [submittingReturn, setSubmittingReturn] = useState(false)
+  const [messagingSeller, setMessagingSeller] = useState(false)
   const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(null)
 
   useEffect(() => {
@@ -211,6 +212,17 @@ export default function OrderDetailPage() {
     }
   }
 
+  async function messageSeller() {
+    setMessagingSeller(true)
+    try {
+      const r = await axios.post('/api/messages', { orderId: id })
+      router.push(`/messages/${r.data.data.conversationId}`)
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Could not open chat')
+      setMessagingSeller(false)
+    }
+  }
+
   if (loading) return <LoadingSpinner fullPage />
   if (!order) return null
 
@@ -228,6 +240,10 @@ export default function OrderDetailPage() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>
         <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={messageSeller} disabled={messagingSeller}
+            className="flex items-center gap-1.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full transition-colors disabled:opacity-60">
+            <FiMessageSquare /> {messagingSeller ? 'Opening…' : 'Message Seller'}
+          </button>
           {['shipped', 'out_for_delivery', 'delivered'].includes(order.status) && (
             <a href={`/orders/${id}/invoice`} target="_blank" rel="noreferrer"
               className="flex items-center gap-1 text-sm border border-gray-300 text-gray-700 px-3 py-2 rounded-full hover:bg-gray-50 transition-colors">

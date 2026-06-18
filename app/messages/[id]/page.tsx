@@ -7,7 +7,7 @@ import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { FiArrowLeft, FiSend, FiPackage, FiMessageSquare } from 'react-icons/fi'
+import { FiArrowLeft, FiSend, FiPackage, FiMessageSquare, FiX } from 'react-icons/fi'
 
 interface Message {
   _id: string
@@ -22,6 +22,7 @@ interface Conversation {
   customer: { _id: string; name: string; avatar?: string }
   seller:   { _id: string; name: string; avatar?: string }
   product?: { _id: string; title: string; images: string[]; price: number }
+  order?:   { _id: string; orderNumber: string; createdAt: string; items: { title: string; image: string }[] }
 }
 
 const QUICK_REPLIES_SELLER = [
@@ -62,6 +63,7 @@ export default function ChatRoom() {
   const [text, setText]         = useState('')
   const [sending, setSending]   = useState(false)
   const [typing, setTyping]     = useState(false)
+  const [showOrderCard, setShowOrderCard] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLTextAreaElement>(null)
 
@@ -234,6 +236,31 @@ export default function ChatRoom() {
         )}
         <div ref={bottomRef}/>
       </div>
+
+      {/* Order context card — pinned above the input (like a marketplace order chat) */}
+      {convo.order && showOrderCard && (
+        <div className="px-3 pt-2 bg-gray-50 sm:border-l sm:border-r sm:border-gray-200 flex-shrink-0">
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-3 flex items-center gap-3">
+            {convo.order.items?.[0]?.image && (
+              <img src={convo.order.items[0].image} alt="" className="w-12 h-12 rounded-lg object-cover border border-gray-100 flex-shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-gray-900 truncate">Order #{convo.order.orderNumber}</p>
+              <p className="text-xs text-gray-400">
+                Placed on {new Date(convo.order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {convo.order.items?.length > 1 ? ` · ${convo.order.items.length} items` : ''}
+              </p>
+            </div>
+            <Link href={`/orders/${convo.order._id}`}
+              className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-4 py-2 rounded-full transition-colors flex-shrink-0">
+              View Order
+            </Link>
+            <button onClick={() => setShowOrderCard(false)} className="text-gray-300 hover:text-gray-500 flex-shrink-0" aria-label="Dismiss">
+              <FiX className="text-lg" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Quick replies */}
       <div className="px-3 py-2 bg-gray-50 sm:border-l sm:border-r sm:border-gray-200 overflow-x-auto flex-shrink-0">

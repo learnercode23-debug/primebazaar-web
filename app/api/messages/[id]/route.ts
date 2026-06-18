@@ -24,6 +24,7 @@ export async function GET(
       .populate('customer', 'name avatar')
       .populate('seller',   'name avatar')
       .populate('product',  'title images price seller')
+      .populate('order',    'orderNumber createdAt items')
       .lean()
 
     if (!convo) return NextResponse.json({ error: 'Not found' }, { status: 404 })

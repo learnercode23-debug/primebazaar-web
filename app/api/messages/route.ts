@@ -9,6 +9,7 @@ import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import Conversation from '@/models/Conversation'
 import DirectMessage from '@/models/DirectMessage'
+import Order from '@/models/Order'
 import { createNotification } from '@/lib/notifications'
 
 export async function GET(req: NextRequest) {
@@ -47,60 +48,81 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     await connectDB()
 
-    const { sellerId, productId, message } = await req.json()
-    if (!sellerId || !message?.trim()) {
-      return NextResponse.json({ error: 'sellerId and message required' }, { status: 400 })
+    let { sellerId, productId, message, orderId } = await req.json()
+
+    // When messaging about an order, resolve the seller (and a thumbnail product)
+    // from the order itself — the customer only needs to send the orderId.
+    let orderRef: string | undefined
+    if (orderId) {
+      const order = await Order.findById(orderId).select('user items orderNumber')
+      if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+      if (order.user.toString() !== user._id.toString()) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      const firstItem = order.items?.[0]
+      if (!firstItem?.seller) return NextResponse.json({ error: 'No seller on this order' }, { status: 400 })
+      sellerId = firstItem.seller.toString()
+      orderRef = order._id.toString()
+    }
+
+    if (!sellerId) {
+      return NextResponse.json({ error: 'sellerId or orderId required' }, { status: 400 })
     }
     if (user._id.toString() === sellerId) {
       return NextResponse.json({ error: 'Cannot message yourself' }, { status: 400 })
     }
 
-    // Find or create conversation
+    // Find or create the conversation (scoped by order, else by product)
     const query: Record<string, unknown> = { customer: user._id, seller: sellerId }
-    if (productId) query.product = productId
+    if (orderRef) query.order = orderRef
+    else if (productId) query.product = productId
 
     let convo = await Conversation.findOne(query)
+    const isNew = !convo
     if (!convo) {
       convo = await Conversation.create({
         customer:       user._id,
         seller:         sellerId,
-        product:        productId || undefined,
-        lastMessage:    message.trim().slice(0, 100),
+        product:        orderRef ? undefined : (productId || undefined),
+        order:          orderRef || undefined,
+        lastMessage:    message?.trim().slice(0, 100) || 'Started a conversation',
         lastSenderRole: 'customer',
-        unreadBySeller: 1,
+        unreadBySeller: message?.trim() ? 1 : 0,
       })
-    } else {
-      convo.lastMessage    = message.trim().slice(0, 100)
-      convo.lastSenderRole = 'customer'
-      convo.unreadBySeller += 1
-      convo.lastMessageAt   = new Date()
-      await convo.save()
+      // Welcome line so the thread is never empty
+      await DirectMessage.create({
+        conversation: convo._id,
+        sender:       null,
+        senderRole:   'bot',
+        body:         orderRef
+          ? `✓ You're now chatting with the seller about your order. Ask anything — delivery, returns, or product details.`
+          : `✓ Your message has been sent to the seller. You'll get a notification when they reply.`,
+      })
     }
 
-    // Save message
-    await DirectMessage.create({
-      conversation: convo._id,
-      sender:       user._id,
-      senderRole:   'customer',
-      body:         message.trim(),
-    })
-
-    // Auto-bot reply (immediate confirmation to customer)
-    await DirectMessage.create({
-      conversation: convo._id,
-      sender:       null,
-      senderRole:   'bot',
-      body:         `✓ Your message has been sent to the seller. You'll get a notification when they reply. Meanwhile, you can also [open a support ticket](/support) if this is urgent.`,
-    })
-
-    // Notify seller
-    await createNotification(
-      sellerId,
-      'admin_alert',
-      'New message from customer',
-      `${user.name}: ${message.trim().slice(0, 60)}`,
-      `/messages/${convo._id}`
-    ).catch(console.error)
+    // Save the customer's message if one was provided
+    if (message?.trim()) {
+      if (!isNew) {
+        convo.lastMessage    = message.trim().slice(0, 100)
+        convo.lastSenderRole = 'customer'
+        convo.unreadBySeller += 1
+        convo.lastMessageAt   = new Date()
+        await convo.save()
+      }
+      await DirectMessage.create({
+        conversation: convo._id,
+        sender:       user._id,
+        senderRole:   'customer',
+        body:         message.trim(),
+      })
+      await createNotification(
+        sellerId,
+        'admin_alert',
+        'New message from customer',
+        `${user.name}: ${message.trim().slice(0, 60)}`,
+        `/messages/${convo._id}`
+      ).catch(console.error)
+    }
 
     return NextResponse.json({ success: true, data: { conversationId: convo._id } }, { status: 201 })
   } catch (err) {
