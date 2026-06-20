@@ -101,9 +101,13 @@ export default function HeroBanner() {
   const TagIcon = slide.tagIcon
 
   return (
-    <div className={`relative bg-gradient-to-r ${slide.bg} overflow-hidden`} style={{ minHeight: 180 }}>
-      <div className="absolute inset-0 opacity-15">
-        <Image src={slide.image} alt="" fill className="object-cover" />
+    <div
+      className={`relative bg-gradient-to-r ${slide.bg} overflow-hidden`}
+      // Inline fallbacks so the banner stays contained even if CSS hasn't applied yet
+      style={{ position: 'relative', overflow: 'hidden', minHeight: 180, maxHeight: 440, backgroundColor: '#1E1B4B' }}
+    >
+      <div className="absolute inset-0 opacity-15" style={{ position: 'absolute', inset: 0, opacity: 0.15 }}>
+        <Image src={slide.image} alt="" fill className="object-cover" style={{ objectFit: 'cover' }} />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 lg:py-14 flex items-center justify-between gap-4">
