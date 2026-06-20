@@ -75,9 +75,12 @@ export async function POST(req: NextRequest) {
 
     const token = signToken(user._id.toString(), user.role)
 
+    // Single response that BOTH sets the web auth cookie AND returns the token
+    // in the body (React Native apps read the token directly).
     const res = NextResponse.json({
       success: true,
-      isNewUser: !user.name || user.name.startsWith('User '),
+      token,
+      isNewUser: !user.createdAt || (Date.now() - user.createdAt.getTime()) < 5000,
       data: {
         _id: user._id,
         name: user.name,
@@ -90,22 +93,11 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days on mobile
+      maxAge: 60 * 60 * 24 * 30, // 30 days
       path: '/',
     })
 
-    // Also return token in response body — React Native apps use this directly
-    return NextResponse.json({
-      success: true,
-      token,
-      isNewUser: !user.createdAt || (Date.now() - user.createdAt.getTime()) < 5000,
-      data: {
-        _id: user._id,
-        name: user.name,
-        phone: user.phone,
-        role: user.role,
-      },
-    })
+    return res
   } catch (err) {
     console.error('OTP verify error:', err)
     return NextResponse.json({ success: false, error: 'Verification failed' }, { status: 500 })

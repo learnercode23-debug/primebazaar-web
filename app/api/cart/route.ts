@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
+import mongoose from 'mongoose'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import Cart from '@/models/Cart'
@@ -28,6 +29,10 @@ export async function POST(req: NextRequest) {
 
     await connectDB()
     const { productId, quantity = 1 } = await req.json()
+
+    if (!mongoose.isValidObjectId(productId)) {
+      return NextResponse.json({ success: false, error: 'Invalid product' }, { status: 400 })
+    }
 
     const product = await Product.findById(productId)
     if (!product || !product.isApproved) {
@@ -72,6 +77,10 @@ export async function PUT(req: NextRequest) {
     await connectDB()
     const { productId, quantity } = await req.json()
 
+    if (!mongoose.isValidObjectId(productId)) {
+      return NextResponse.json({ success: false, error: 'Invalid product' }, { status: 400 })
+    }
+
     const cart = await Cart.findOne({ user: user._id })
     if (!cart) return NextResponse.json({ success: false, error: 'Cart not found' }, { status: 404 })
 
@@ -98,7 +107,9 @@ export async function DELETE(req: NextRequest) {
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
 
     await connectDB()
-    const { productId } = await req.json()
+    // DELETE with no body = clear the whole cart; with { productId } = remove one item
+    const body = await req.json().catch(() => ({} as { productId?: string }))
+    const { productId } = body
 
     const cart = await Cart.findOne({ user: user._id })
     if (!cart) return NextResponse.json({ success: false, error: 'Cart not found' }, { status: 404 })
