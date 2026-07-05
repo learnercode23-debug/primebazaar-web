@@ -17,6 +17,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import Order from '@/models/Order'
+import Product from '@/models/Product'
+import User from '@/models/User'
 import { createNotification } from '@/lib/notifications'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -59,6 +61,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     order.rejectionReason = reason.trim()
     order.rejectionCategory = category
     await order.save()
+
+    // Restore stock (deducted at checkout) and refund any store credit used.
+    for (const item of order.items as Array<{ product: unknown; quantity: number }>) {
+      await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } })
+    }
+    if (order.storeCreditUsed && order.storeCreditUsed > 0) {
+      await User.findByIdAndUpdate(order.user, { $inc: { storeCredit: order.storeCreditUsed } })
+    }
 
     await createNotification(
       order.user.toString(),

@@ -95,17 +95,24 @@ export async function POST(req: NextRequest) {
         isActive: true,
         validFrom: { $lte: new Date() },
         validTo: { $gte: new Date() },
-        $expr: { $lt: ['$usedCount', '$usageLimit'] },
       })
 
       if (coupon && subtotal >= coupon.minPurchase) {
-        if (coupon.discountType === 'percentage') {
-          discount = (subtotal * coupon.discountValue) / 100
-          if (coupon.maxDiscount) discount = Math.min(discount, coupon.maxDiscount)
-        } else {
-          discount = coupon.discountValue
+        // Atomically claim one use only if still under the limit — prevents
+        // concurrent orders from exceeding usageLimit (TOCTOU race).
+        const claimed = await Coupon.findOneAndUpdate(
+          { _id: coupon._id, $expr: { $lt: ['$usedCount', '$usageLimit'] } },
+          { $inc: { usedCount: 1 } },
+          { new: true }
+        )
+        if (claimed) {
+          if (coupon.discountType === 'percentage') {
+            discount = (subtotal * coupon.discountValue) / 100
+            if (coupon.maxDiscount) discount = Math.min(discount, coupon.maxDiscount)
+          } else {
+            discount = coupon.discountValue
+          }
         }
-        await Coupon.findByIdAndUpdate(coupon._id, { $inc: { usedCount: 1 } })
       }
     }
 

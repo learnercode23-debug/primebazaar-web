@@ -49,6 +49,16 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const body = await req.json()
     const { status, trackingNumber, carrier } = body
 
+    // A seller must never mark an order 'delivered' themselves — that mints earnings
+    // with no proof of delivery or (for COD) cash collected. Only the delivery
+    // agent (via delivery-code verification) or an admin may complete delivery.
+    if (status === 'delivered' && user.role !== 'admin') {
+      return NextResponse.json({
+        success: false,
+        error: 'Only the delivery agent can mark an order delivered (via delivery verification).',
+      }, { status: 403 })
+    }
+
     // Check it's a valid transition from current status
     const expectedNext = ALLOWED_TRANSITIONS[order.status]
     if (!expectedNext || status !== expectedNext) {

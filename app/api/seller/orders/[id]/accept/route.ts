@@ -71,10 +71,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }, { status: 400 })
     }
 
-    // ── Deduct stock ──────────────────────────────────────────────────────────
+    // ── Record the sale ───────────────────────────────────────────────────────
+    // Stock was already decremented at checkout — only bump the sales counter here.
     for (const item of myItems) {
       await Product.findByIdAndUpdate(item.product, {
-        $inc: { stock: -item.quantity, salesCount: item.quantity },
+        $inc: { salesCount: item.quantity },
       })
     }
 

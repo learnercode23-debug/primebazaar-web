@@ -35,6 +35,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       await Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } })
     }
 
+    // Refund any store credit that was applied to this order
+    if (order.storeCreditUsed && order.storeCreditUsed > 0) {
+      await User.findByIdAndUpdate(order.user, { $inc: { storeCredit: order.storeCreditUsed } })
+    }
+
     // Send cancellation email to customer (awaited so Vercel doesn't kill it early)
     console.log('[CANCEL] Looking up customer for order.user:', order.user?.toString())
     const customer = await User.findById(order.user).select('email name').lean() as { email: string; name: string } | null
