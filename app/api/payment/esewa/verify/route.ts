@@ -30,9 +30,21 @@ export async function GET(req: NextRequest) {
 
     // Verify with eSewa
     const verification = await verifyEsewaPayment(encodedData)
-    if (!verification.success) {
+    if (!verification.success || !verification.transactionUuid) {
       return NextResponse.redirect(new URL('/payment/failure?reason=verification_failed', req.url))
     }
+
+    await connectDB()
+
+    // Idempotency — this transaction may back at most one order (block replay).
+    const already = await Order.findOne({ stripePaymentIntentId: verification.transactionUuid }).select('_id').lean()
+    if (already) {
+      return NextResponse.redirect(new URL(`/payment/success?orderId=${(already as { _id: string })._id}&method=esewa`, req.url))
+    }
+
+    // Amount actually confirmed by eSewa (from the signed response)
+    const decoded = JSON.parse(Buffer.from(encodedData, 'base64').toString('utf-8')) as { total_amount?: string }
+    const paidAmount = parseFloat(String(decoded.total_amount || '0').replace(/,/g, ''))
 
     // Retrieve pending order data from cookie
     const pendingCookie = req.cookies.get('esewa-pending')?.value
@@ -58,9 +70,11 @@ export async function GET(req: NextRequest) {
     }
 
     const orderItems = []
+    let serverSubtotal = 0
     for (const item of cart.items) {
       const product = item.product as InstanceType<typeof Product>
       const price = product.discountPrice || product.price
+      serverSubtotal += price * item.quantity
       const assignment = await assignProductSeller(
         product._id.toString(),
         product.seller.toString(),
@@ -79,7 +93,29 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    // Create the order
+    // Recompute the total server-side from the real cart — never trust the cookie amounts.
+    const shippingCost = serverSubtotal > 999 ? 0 : 99
+    let discount = 0
+    if (pending.couponCode) {
+      const coupon = await Coupon.findOne({
+        code: pending.couponCode.toUpperCase(), isActive: true,
+        validFrom: { $lte: new Date() }, validTo: { $gte: new Date() },
+        $expr: { $lt: ['$usedCount', '$usageLimit'] },
+      })
+      if (coupon && serverSubtotal >= coupon.minPurchase) {
+        discount = coupon.discountType === 'percentage'
+          ? Math.min((serverSubtotal * coupon.discountValue) / 100, coupon.maxDiscount || Infinity)
+          : coupon.discountValue
+      }
+    }
+    const serverTotal = Math.max(0, Math.round((serverSubtotal + shippingCost - discount) * 100) / 100)
+
+    // The amount eSewa actually confirmed must match what this cart costs.
+    if (Math.abs(paidAmount - serverTotal) > 1) {
+      return NextResponse.redirect(new URL('/payment/failure?reason=amount_mismatch', req.url))
+    }
+
+    // Create the order with server-computed amounts
     const order = await Order.create({
       user: user._id,
       items: orderItems,
@@ -87,10 +123,10 @@ export async function GET(req: NextRequest) {
       paymentMethod: 'esewa',
       paymentStatus: 'paid',
       status: 'confirmed',
-      subtotal: pending.subtotal,
-      shippingCost: pending.shippingCost,
-      discount: pending.discount,
-      totalAmount: pending.totalAmount,
+      subtotal: serverSubtotal,
+      shippingCost,
+      discount,
+      totalAmount: serverTotal,
       couponCode: pending.couponCode,
       trackingNumber: generateTrackingNumber(),
       stripePaymentIntentId: verification.transactionUuid,

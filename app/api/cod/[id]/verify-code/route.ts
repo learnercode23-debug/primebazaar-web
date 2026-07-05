@@ -26,6 +26,10 @@ export async function POST(
   try {
     const user = await getAuthUser(req)
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    // Only a delivery agent or admin may verify a delivery code — never the buyer.
+    if (user.role !== 'delivery' && user.role !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Delivery agents only' }, { status: 403 })
+    }
 
     await connectDB()
 
@@ -34,6 +38,10 @@ export async function POST(
 
     const order = await Order.findById(params.id)
     if (!order) return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 })
+    // A delivery agent may only verify an order actually assigned to them (admins exempt).
+    if (user.role === 'delivery' && order.deliveryCodeCollectedBy?.toString() !== user._id.toString()) {
+      return NextResponse.json({ success: false, error: 'This order is not assigned to you' }, { status: 403 })
+    }
 
     // Must be a COD order that is shipped or out for delivery
     if (order.paymentMethod !== 'cod') {

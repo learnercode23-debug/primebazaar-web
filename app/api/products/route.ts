@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 
     if (category) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const cat: any = await Category.findOne({ name: { $regex: `^${category}$`, $options: 'i' } }).lean()
+      const cat: any = await Category.findOne({ name: { $regex: `^${escapeRegex(category)}$`, $options: 'i' } }).lean()
       query.category = cat?._id ?? null
     }
     if (subcategory) query.subcategory = subcategory
@@ -155,8 +155,19 @@ export async function POST(req: NextRequest) {
       if (cat) categoryId = cat._id
     }
 
+    // Allow-list of user-settable fields — never trust the client for ranking/visibility
+    // fields (salesCount, rating, reviewCount, isFeatured, isDealOfDay, isApproved, ...).
+    const ALLOWED = [
+      'title', 'description', 'price', 'discountPrice', 'brand', 'images', 'variants',
+      'stock', 'tags', 'specifications', 'featureBullets', 'subcategory', 'subcategoryPath',
+      'weight', 'dimensions', 'freeShipping', 'shippingCost', 'metaTitle', 'metaDescription',
+      'condition', 'warranty', 'sku',
+    ]
+    const clean: Record<string, unknown> = {}
+    for (const k of ALLOWED) if (body[k] !== undefined) clean[k] = body[k]
+
     const product = await Product.create({
-      ...body,
+      ...clean,
       category: categoryId,
       seller: user._id,
       isApproved: user.role === 'admin',

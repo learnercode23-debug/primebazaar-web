@@ -6,7 +6,8 @@ import Review from '@/models/Review'
 export async function GET(_: NextRequest, { params }: { params: { productId: string } }) {
   try {
     await connectDB()
-    const reviews = await Review.find({ product: params.productId })
+    // Only show approved reviews — a review an admin removed must disappear from the storefront.
+    const reviews = await Review.find({ product: params.productId, isApproved: { $ne: false } })
       .populate('user', 'name avatar')
       .sort({ createdAt: -1 })
       .lean()

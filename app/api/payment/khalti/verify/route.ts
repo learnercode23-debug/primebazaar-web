@@ -27,9 +27,12 @@ export async function GET(req: NextRequest) {
     const user = await getAuthUser(req)
     if (!user) return NextResponse.redirect(new URL('/login', req.url))
 
-    const isDemoMode = pidx.startsWith('DEMO-')
+    // Demo mode is a SERVER decision (no real key), never something the client's pidx can assert.
+    // Once a live Khalti key is configured, a "DEMO-" pidx is treated as invalid and fails verification.
+    const liveKeyConfigured = !!process.env.KHALTI_SECRET_KEY && !process.env.KHALTI_SECRET_KEY.includes('test')
+    const isDemoMode = pidx.startsWith('DEMO-') && !liveKeyConfigured
 
-    // LIVE MODE: verify with Khalti API
+    let paidAmountPaisa: number | null = null
     if (!isDemoMode) {
       const verification = await verifyKhaltiPayment(pidx)
       if (verification.status !== 'Completed') {
@@ -37,8 +40,16 @@ export async function GET(req: NextRequest) {
           new URL(`/payment/failure?reason=${encodeURIComponent(verification.status)}`, req.url)
         )
       }
+      paidAmountPaisa = verification.total_amount
     }
-    // DEMO MODE: status=Completed is passed directly from the demo page
+
+    await connectDB()
+
+    // Idempotency — this pidx may back at most one order (block replay).
+    const already = await Order.findOne({ stripePaymentIntentId: pidx }).select('_id').lean()
+    if (already) {
+      return NextResponse.redirect(new URL(`/payment/success?orderId=${(already as { _id: string })._id}&method=khalti`, req.url))
+    }
 
     const pendingCookie = req.cookies.get('khalti-pending')?.value
     if (!pendingCookie) {
@@ -63,9 +74,11 @@ export async function GET(req: NextRequest) {
     }
 
     const orderItems = []
+    let serverSubtotal = 0
     for (const item of cart.items) {
       const product = item.product as InstanceType<typeof Product>
       const price = product.discountPrice || product.price
+      serverSubtotal += price * item.quantity
       const assignment = await assignProductSeller(
         product._id.toString(),
         product.seller.toString(),
@@ -84,6 +97,28 @@ export async function GET(req: NextRequest) {
       })
     }
 
+    // Recompute the total server-side from the real cart — never trust the cookie amounts.
+    const shippingCost = serverSubtotal > 999 ? 0 : 99
+    let discount = 0
+    if (pending.couponCode) {
+      const coupon = await Coupon.findOne({
+        code: pending.couponCode.toUpperCase(), isActive: true,
+        validFrom: { $lte: new Date() }, validTo: { $gte: new Date() },
+        $expr: { $lt: ['$usedCount', '$usageLimit'] },
+      })
+      if (coupon && serverSubtotal >= coupon.minPurchase) {
+        discount = coupon.discountType === 'percentage'
+          ? Math.min((serverSubtotal * coupon.discountValue) / 100, coupon.maxDiscount || Infinity)
+          : coupon.discountValue
+      }
+    }
+    const serverTotal = Math.max(0, Math.round((serverSubtotal + shippingCost - discount) * 100) / 100)
+
+    // In live mode, the amount Khalti confirmed (paisa) must match this cart's cost.
+    if (paidAmountPaisa != null && Math.abs(paidAmountPaisa - Math.round(serverTotal * 100)) > 100) {
+      return NextResponse.redirect(new URL('/payment/failure?reason=amount_mismatch', req.url))
+    }
+
     const order = await Order.create({
       user: user._id,
       items: orderItems,
@@ -91,10 +126,10 @@ export async function GET(req: NextRequest) {
       paymentMethod: 'khalti',
       paymentStatus: 'paid',
       status: 'confirmed',
-      subtotal: pending.subtotal,
-      shippingCost: pending.shippingCost,
-      discount: pending.discount,
-      totalAmount: pending.totalAmount,
+      subtotal: serverSubtotal,
+      shippingCost,
+      discount,
+      totalAmount: serverTotal,
       couponCode: pending.couponCode,
       trackingNumber: generateTrackingNumber(),
       stripePaymentIntentId: pidx,

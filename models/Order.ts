@@ -218,5 +218,8 @@ OrderSchema.pre('save', function (next) {
 // Index for seller hub queries
 OrderSchema.index({ 'items.seller': 1, status: 1, createdAt: -1 })
 OrderSchema.index({ user: 1, createdAt: -1 })
+// Idempotency: a single payment reference (Stripe intent / Khalti pidx / eSewa uuid)
+// can back at most one order — prevents replaying a payment callback into duplicate orders.
+OrderSchema.index({ stripePaymentIntentId: 1 }, { unique: true, sparse: true })
 
 export default mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema)

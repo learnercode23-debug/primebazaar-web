@@ -35,10 +35,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const returnItems = items.map((item: { productId: string; quantity: number; reason: string }) => {
       const orderItem = order.items.find((i: { product: { toString: () => string } }) => i.product.toString() === item.productId)
       if (!orderItem) throw new Error('Item not found in order')
+      // Clamp the returned quantity to what was actually ordered — never allow over-claiming a refund.
+      const requested = Math.floor(Number(item.quantity) || orderItem.quantity)
+      const quantity = Math.max(1, Math.min(requested, orderItem.quantity))
       return {
         product: orderItem.product,
         title: orderItem.title,
-        quantity: item.quantity || orderItem.quantity,
+        quantity,
         price: orderItem.price,
         reason: item.reason || reason,
       }

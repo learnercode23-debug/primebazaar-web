@@ -11,6 +11,11 @@ export async function POST(req: NextRequest) {
   if (!user || user.role !== 'seller') {
     return NextResponse.json({ success: false, error: 'Seller only' }, { status: 403 })
   }
+  // This is a local testing convenience only — it reassigns existing catalog
+  // products to the caller, so it must never run against the real catalog.
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ success: false, error: 'Not available' }, { status: 403 })
+  }
   await connectDB()
 
   // Only claim if this seller currently has no products

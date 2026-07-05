@@ -11,6 +11,7 @@ export interface IGiftCard extends Document {
   message?: string
   purchasedBy?: mongoose.Types.ObjectId
   redeemedBy?: mongoose.Types.ObjectId
+  paymentRef?: string
   status: 'active' | 'redeemed' | 'expired'
   expiresAt: Date
   createdAt: Date
@@ -29,10 +30,14 @@ const GiftCardSchema = new Schema<IGiftCard>(
     message: { type: String },
     purchasedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     redeemedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    paymentRef: { type: String },
     status: { type: String, enum: ['active', 'redeemed', 'expired'], default: 'active', index: true },
     expiresAt: { type: Date, required: true },
   },
   { timestamps: true }
 )
+
+// One verified payment can mint at most one gift card.
+GiftCardSchema.index({ paymentRef: 1 }, { unique: true, sparse: true })
 
 export default mongoose.models.GiftCard || mongoose.model<IGiftCard>('GiftCard', GiftCardSchema)

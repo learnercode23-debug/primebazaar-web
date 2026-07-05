@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic'
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
+import { getAuthUser } from '@/lib/auth'
 import Order from '@/models/Order'
 import User from '@/models/User'
 import Product from '@/models/Product'
@@ -17,6 +18,10 @@ import { generateTrackingNumber } from '@/lib/utils'
 
 export async function POST(req: NextRequest) {
   try {
+    const admin = await getAuthUser(req)
+    if (!admin || admin.role !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Admin only' }, { status: 403 })
+    }
     await connectDB()
 
     // Ensure COD settings exist

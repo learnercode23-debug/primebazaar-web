@@ -26,9 +26,13 @@ export async function POST(req: NextRequest) {
 
     await connectDB()
 
-    // Update the order's driver location (works even if model has no explicit field — MongoDB is flexible)
-    const result = await Order.findByIdAndUpdate(
-      orderId,
+    // Scope the write to an order actually assigned to this agent (admins exempt),
+    // so an agent can't spoof GPS on arbitrary orders.
+    const filter: Record<string, unknown> = { _id: orderId }
+    if (user.role !== 'admin') filter.deliveryCodeCollectedBy = user._id
+
+    const result = await Order.findOneAndUpdate(
+      filter,
       {
         $set: {
           driverLocation: {
@@ -44,7 +48,7 @@ export async function POST(req: NextRequest) {
     ).lean()
 
     if (!result) {
-      return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'Order not found or not assigned to you' }, { status: 404 })
     }
 
     return NextResponse.json({ success: true })

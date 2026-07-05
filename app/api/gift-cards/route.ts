@@ -4,6 +4,8 @@ import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import GiftCard from '@/models/GiftCard'
 import { sendEmail } from '@/lib/email'
+import { escapeHtml } from '@/lib/utils'
+import { stripe } from '@/lib/stripe'
 
 function genCode() {
   const part = () => Math.random().toString(36).slice(2, 6).toUpperCase()
@@ -36,12 +38,28 @@ export async function POST(req: NextRequest) {
     const user = await getAuthUser(req)
     if (!user) return NextResponse.json({ error: 'Please log in to buy a gift card' }, { status: 401 })
     await connectDB()
-    const { amount, design, recipientName, recipientEmail, senderName, message } = await req.json()
+    const { amount, design, recipientName, recipientEmail, senderName, message, stripePaymentIntentId } = await req.json()
 
     const amt = Number(amount)
     if (!amt || amt < 100 || amt > 100000) return NextResponse.json({ error: 'Amount must be between Rs.100 and Rs.100,000' }, { status: 400 })
     if (!recipientName?.trim() || !recipientEmail?.trim() || !senderName?.trim()) {
       return NextResponse.json({ error: 'Recipient name, email and your name are required' }, { status: 400 })
+    }
+
+    // A gift card is real money — never mint balance without a verified payment.
+    if (!stripePaymentIntentId) {
+      return NextResponse.json({ error: 'Payment is required to purchase a gift card.' }, { status: 402 })
+    }
+    try {
+      const intent = await stripe.paymentIntents.retrieve(stripePaymentIntentId)
+      const amountMatches = intent.amount === Math.round(amt * 100)
+      const ownerMatches = intent.metadata?.userId === user._id.toString()
+      if (intent.status !== 'succeeded' || !amountMatches || !ownerMatches) {
+        return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
+      }
+      // Reuse of the same payment for a second card is blocked by the unique index on GiftCard.paymentRef.
+    } catch {
+      return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
     }
 
     const code = await uniqueCode()
@@ -56,18 +74,19 @@ export async function POST(req: NextRequest) {
       senderName: senderName.trim(),
       message: message?.trim() || undefined,
       purchasedBy: user._id,
+      paymentRef: stripePaymentIntentId,
       status: 'active',
       expiresAt,
     })
 
-    // Email the recipient their gift card (best-effort)
+    // Email the recipient their gift card (best-effort). Escape user-supplied text.
     sendEmail(
       card.recipientEmail,
-      `🎁 ${card.senderName} sent you a Rs.${amt.toLocaleString()} PrimePasal gift card!`,
+      `🎁 ${escapeHtml(card.senderName)} sent you a Rs.${amt.toLocaleString()} PrimePasal gift card!`,
       `<div style="font-family:sans-serif;max-width:480px;margin:auto">
         <h2>You've received a gift card!</h2>
-        <p><strong>${card.senderName}</strong> sent you a <strong>Rs.${amt.toLocaleString()}</strong> PrimePasal gift card.</p>
-        ${card.message ? `<p style="font-style:italic;color:#555">"${card.message}"</p>` : ''}
+        <p><strong>${escapeHtml(card.senderName)}</strong> sent you a <strong>Rs.${amt.toLocaleString()}</strong> PrimePasal gift card.</p>
+        ${card.message ? `<p style="font-style:italic;color:#555">"${escapeHtml(card.message)}"</p>` : ''}
         <div style="background:#7c3aed;color:#fff;padding:20px;border-radius:12px;text-align:center;margin:16px 0">
           <p style="margin:0;opacity:.8">Your code</p>
           <p style="font-size:24px;font-weight:bold;letter-spacing:2px;margin:6px 0">${card.code}</p>

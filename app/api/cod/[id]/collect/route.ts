@@ -19,7 +19,7 @@ export async function POST(
 ) {
   try {
     const user = await getAuthUser(req)
-    if (!user || (user.role !== 'admin' && user.role !== 'seller')) {
+    if (!user || !['admin', 'seller', 'delivery'].includes(user.role)) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
     }
     await connectDB()
@@ -31,6 +31,13 @@ export async function POST(
 
     const order = await Order.findOne({ _id: params.id, paymentMethod: 'cod' })
     if (!order) return NextResponse.json({ success: false, error: 'COD order not found' }, { status: 404 })
+    // Only the assigned delivery agent, a seller who owns an item, or an admin may collect.
+    if (user.role === 'delivery' && order.deliveryCodeCollectedBy?.toString() !== user._id.toString()) {
+      return NextResponse.json({ success: false, error: 'This order is not assigned to you' }, { status: 403 })
+    }
+    if (user.role === 'seller' && !order.items.some((i: { seller: { toString(): string } }) => i.seller.toString() === user._id.toString())) {
+      return NextResponse.json({ success: false, error: 'Not your order' }, { status: 403 })
+    }
     if (order.codCollected) {
       return NextResponse.json({ success: false, error: 'Cash already marked as collected' }, { status: 400 })
     }
