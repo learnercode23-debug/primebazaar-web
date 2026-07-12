@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
       : codFeeValue
 
     let discount = 0
+    let claimedCouponId: unknown = null   // set only if a coupon use was atomically claimed
 
     if (couponCode) {
       const coupon = await Coupon.findOne({
@@ -79,10 +80,18 @@ export async function POST(req: NextRequest) {
         $expr: { $lt: ['$usedCount', '$usageLimit'] },
       })
       if (coupon && subtotal >= coupon.minPurchase) {
-        discount = coupon.discountType === 'percentage'
-          ? Math.min((subtotal * coupon.discountValue) / 100, coupon.maxDiscount || Infinity)
-          : coupon.discountValue
-        await Coupon.findByIdAndUpdate(coupon._id, { $inc: { usedCount: 1 } })
+        // Atomically claim one use only if still under the limit (prevents over-redemption).
+        const claimed = await Coupon.findOneAndUpdate(
+          { _id: coupon._id, $expr: { $lt: ['$usedCount', '$usageLimit'] } },
+          { $inc: { usedCount: 1 } },
+          { new: true }
+        )
+        if (claimed) {
+          claimedCouponId = coupon._id
+          discount = coupon.discountType === 'percentage'
+            ? Math.min((subtotal * coupon.discountValue) / 100, coupon.maxDiscount || Infinity)
+            : coupon.discountValue
+        }
       }
     }
 
@@ -93,6 +102,22 @@ export async function POST(req: NextRequest) {
     const availableCredit = buyer?.storeCredit || 0
     const storeCreditUsed = Math.min(availableCredit, totalBeforeCredit)
     const totalAmount = Math.max(0, Math.round((totalBeforeCredit - storeCreditUsed) * 100) / 100)
+
+    // Reserve stock atomically BEFORE creating the order so two concurrent
+    // last-unit orders can't both succeed (oversell). Roll back on any shortfall.
+    const reserved: Array<{ product: unknown; quantity: number }> = []
+    for (const item of cart.items as Array<{ product: unknown; quantity: number }>) {
+      const ok = await Product.findOneAndUpdate(
+        { _id: item.product, stock: { $gte: item.quantity } },
+        { $inc: { stock: -item.quantity } }
+      )
+      if (!ok) {
+        for (const r of reserved) await Product.findByIdAndUpdate(r.product, { $inc: { stock: r.quantity } })
+        if (claimedCouponId) await Coupon.findByIdAndUpdate(claimedCouponId, { $inc: { usedCount: -1 } })
+        return NextResponse.json({ success: false, error: 'One or more items just went out of stock. Please try again.' }, { status: 409 })
+      }
+      reserved.push(item)
+    }
 
     // Generate 5-digit delivery verification code on placement
     const deliveryCode = String(Math.floor(10000 + Math.random() * 90000))
@@ -125,14 +150,7 @@ export async function POST(req: NextRequest) {
       await User.findByIdAndUpdate(user._id, { $inc: { storeCredit: -storeCreditUsed } })
     }
 
-    // Decrement stock atomically (only if enough remains) — prevents oversell on
-    // concurrent last-unit orders.
-    for (const item of cart.items) {
-      await Product.findOneAndUpdate(
-        { _id: item.product, stock: { $gte: item.quantity } },
-        { $inc: { stock: -item.quantity } }
-      )
-    }
+    // Stock was already reserved above (before order creation). Just clear the cart.
     await Cart.findOneAndUpdate({ user: user._id }, { items: [] })
 
     // Send confirmation email + notification

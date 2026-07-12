@@ -40,6 +40,16 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const body = await req.json()
 
+    // A seller must never be able to self-approve or set ranking/visibility fields
+    // via edit (they'd otherwise create-then-edit to bypass the create allow-list).
+    if (user.role !== 'admin') {
+      for (const k of [
+        'isApproved', 'isFeatured', 'isDealOfDay', 'isLightningDeal',
+        'lightningDealStock', 'lightningDealSold', 'lightningDealEndsAt',
+        'salesCount', 'rating', 'reviewCount', 'viewCount', 'qaCount', 'seller',
+      ]) delete body[k]
+    }
+
     // Resolve category name/slug → ObjectId
     if (body.category && typeof body.category === 'string' && body.category.length < 24) {
       const cat = await Category.findOne({

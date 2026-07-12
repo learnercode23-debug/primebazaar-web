@@ -32,11 +32,21 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const body = await req.json()
     const { items, reason, reasonDetail, photos, refundMethod } = body
 
-    const returnItems = items.map((item: { productId: string; quantity: number; reason: string }) => {
+    // Collapse duplicate rows for the same product so the refund can't be inflated
+    // by listing the same item multiple times.
+    const byProduct = new Map<string, { productId: string; quantity: number; reason?: string }>()
+    for (const item of (items as Array<{ productId: string; quantity: number; reason?: string }>)) {
+      const existing = byProduct.get(item.productId)
+      const qty = Math.floor(Number(item.quantity) || 0)
+      if (existing) existing.quantity += qty
+      else byProduct.set(item.productId, { productId: item.productId, quantity: qty, reason: item.reason })
+    }
+
+    const returnItems = Array.from(byProduct.values()).map((item) => {
       const orderItem = order.items.find((i: { product: { toString: () => string } }) => i.product.toString() === item.productId)
       if (!orderItem) throw new Error('Item not found in order')
-      // Clamp the returned quantity to what was actually ordered — never allow over-claiming a refund.
-      const requested = Math.floor(Number(item.quantity) || orderItem.quantity)
+      // Clamp the total returned quantity for this product to what was actually ordered.
+      const requested = item.quantity > 0 ? item.quantity : orderItem.quantity
       const quantity = Math.max(1, Math.min(requested, orderItem.quantity))
       return {
         product: orderItem.product,
