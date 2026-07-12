@@ -38,16 +38,17 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   }, [fetchWishlist])
 
   async function toggleWishlist(productId: string) {
-    if (!user) { toast.error('Please login to save items'); return }
+    // Stable toast ids so rapid/repeat clicks replace the toast instead of stacking dozens.
+    if (!user) { toast.error('Please login to save items', { id: 'wishlist-login' }); return }
     const wasWishlisted = isWishlisted(productId)
     try {
       const res = await axios.post('/api/wishlist', { productId })
       // Re-fetch to get full product data
       await fetchWishlist()
-      toast.success(wasWishlisted ? 'Removed from wishlist' : 'Added to wishlist')
+      toast.success(wasWishlisted ? 'Removed from wishlist' : 'Added to wishlist', { id: 'wishlist-toggle' })
       return res.data
     } catch {
-      toast.error('Failed to update wishlist')
+      toast.error('Failed to update wishlist', { id: 'wishlist-error' })
     }
   }
 

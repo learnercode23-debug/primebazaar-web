@@ -43,14 +43,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [fetchCart])
 
   async function addToCart(productId: string, quantity = 1) {
-    if (!user) { toast.error('Please login to add items to cart'); return }
+    // Stable toast ids so rapid clicks replace the toast instead of stacking many.
+    if (!user) { toast.error('Please login to add items to cart', { id: 'cart-login' }); return }
     try {
       const res = await axios.post('/api/cart', { productId, quantity })
       setItems(res.data.data?.items || [])
-      toast.success('Added to cart!')
+      toast.success('Added to cart!', { id: 'cart-add' })
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to add to cart'
-      toast.error(msg)
+      toast.error(msg, { id: 'cart-error' })
     }
   }
 
