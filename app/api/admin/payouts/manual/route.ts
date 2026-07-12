@@ -18,8 +18,12 @@ export async function POST(req: NextRequest) {
     await connectDB()
 
     const { sellerId, referenceId, method, notes, amount } = await req.json()
-    if (!sellerId || !referenceId || !amount) {
-      return NextResponse.json({ error: 'sellerId, referenceId and amount are required' }, { status: 400 })
+    if (!sellerId || !referenceId) {
+      return NextResponse.json({ error: 'sellerId and referenceId are required' }, { status: 400 })
+    }
+    const amt = Number(amount)
+    if (!Number.isFinite(amt) || amt <= 0) {
+      return NextResponse.json({ error: 'A positive payout amount is required' }, { status: 400 })
     }
 
     const wallet = await SellerWallet.findOne({ seller: sellerId })
@@ -27,7 +31,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No available balance for this seller' }, { status: 400 })
     }
 
-    const payoutAmount = Math.min(Number(amount), wallet.availableBalance)
+    // A manual payout settles the seller's FULL available balance. Marking all
+    // 'available' ledger entries paid while debiting only a partial amount would
+    // strand the remainder forever, so we require the amount to cover it in full.
+    if (amt < wallet.availableBalance - 0.01) {
+      return NextResponse.json({
+        error: `Manual payout settles the full available balance. Enter Rs.${wallet.availableBalance.toFixed(2)}.`,
+      }, { status: 400 })
+    }
+    const payoutAmount = wallet.availableBalance
 
     // Get bank details if available
     const bank = await SellerBankAccount.findOne({ seller: sellerId }).lean()

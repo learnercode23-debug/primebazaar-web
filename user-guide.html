@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PrimePasal — User Guide</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1f2937; margin: 0; line-height: 1.55; font-size: 11.5pt; }
+  .cover { text-align: center; padding-top: 140px; page-break-after: always; }
+  .cover img { width: 420px; max-width: 90%; }
+  .cover h1 { font-size: 34pt; color: #1E1B4B; margin: 30px 0 6px; }
+  .cover p.sub { font-size: 14pt; color: #6b7280; margin: 0; }
+  .cover .url { display: inline-block; margin-top: 26px; background: #1E1B4B; color: #fff; padding: 10px 26px; border-radius: 999px; font-weight: bold; font-size: 12pt; }
+  .cover .date { margin-top: 60px; color: #9ca3af; font-size: 10pt; }
+  h1.section { font-size: 20pt; color: #fff; background: linear-gradient(90deg, #1E1B4B, #4C1D95); padding: 12px 18px; border-radius: 12px; page-break-before: always; margin: 0 0 18px; }
+  h1.section.first { page-break-before: avoid; }
+  h2 { font-size: 14pt; color: #4C1D95; border-bottom: 2px solid #ede9fe; padding-bottom: 4px; margin: 22px 0 8px; }
+  h3 { font-size: 12pt; color: #1E1B4B; margin: 14px 0 4px; }
+  p { margin: 6px 0; }
+  ol, ul { margin: 6px 0 10px; padding-left: 22px; }
+  li { margin: 4px 0; }
+  .tip { background: #f5f3ff; border-left: 4px solid #7c3aed; padding: 8px 12px; border-radius: 6px; margin: 10px 0; font-size: 10.5pt; }
+  .warn { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 8px 12px; border-radius: 6px; margin: 10px 0; font-size: 10.5pt; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10.5pt; }
+  th { background: #ede9fe; color: #4C1D95; text-align: left; padding: 7px 10px; border: 1px solid #ddd6fe; }
+  td { padding: 7px 10px; border: 1px solid #e5e7eb; vertical-align: top; }
+  code { background: #f3f4f6; padding: 1px 6px; border-radius: 4px; font-size: 10pt; color: #4C1D95; font-weight: 600; }
+  .toc td { border: none; border-bottom: 1px dashed #e5e7eb; }
+  .footer-note { margin-top: 30px; text-align: center; color: #9ca3af; font-size: 9.5pt; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ COVER ═══════════ -->
+<div class="cover">
+  <img src="public/og-image.png" alt="PrimePasal">
+  <h1>User Guide</h1>
+  <p class="sub">How to use PrimePasal — for Customers, Sellers, Delivery Agents &amp; Admins</p>
+  <span class="url">www.primepasal.com</span>
+  <p class="date">Version 1.0 · June 2026</p>
+</div>
+
+<!-- ═══════════ CONTENTS ═══════════ -->
+<h1 class="section first">Contents</h1>
+<table class="toc">
+  <tr><td><b>1. For Customers</b> — register, shop, pay, track, return</td></tr>
+  <tr><td><b>2. For Sellers</b> — open a shop, list products, fulfil orders, get paid</td></tr>
+  <tr><td><b>3. For Delivery Agents</b> — deliver orders, share live GPS, collect cash</td></tr>
+  <tr><td><b>4. For Admins</b> — manage the whole marketplace</td></tr>
+  <tr><td><b>5. Quick Answers (FAQ)</b></td></tr>
+</table>
+
+<h2>The four roles</h2>
+<table>
+  <tr><th>Role</th><th>What they do</th><th>Where they work</th></tr>
+  <tr><td><b>Customer</b></td><td>Shop, order, pay, track deliveries</td><td>Main website</td></tr>
+  <tr><td><b>Seller</b></td><td>List products, accept &amp; ship orders, earn money</td><td><code>/seller</code> — Seller Hub</td></tr>
+  <tr><td><b>Delivery Agent</b></td><td>Deliver packages, share live location, collect COD cash</td><td><code>/delivery</code> — Delivery Dashboard</td></tr>
+  <tr><td><b>Admin</b></td><td>Approve products, manage users, money &amp; everything else</td><td><code>/admin</code> — Admin Panel</td></tr>
+</table>
+<div class="tip">💡 An admin changes a user's role at <b>Admin → User Management</b> using the role dropdown next to each user.</div>
+
+<!-- ═══════════ CUSTOMERS ═══════════ -->
+<h1 class="section">1 · For Customers</h1>
+
+<h2>1.1 Create an account &amp; sign in</h2>
+<ol>
+  <li>Click <b>Sign In → Create Account</b> in the top-right of the site.</li>
+  <li>Enter your name, email and a password (minimum 8 characters).</li>
+  <li>Open the verification email and click the link — then sign in.</li>
+</ol>
+<div class="tip">💡 Got a referral code from a friend? Open their referral link before registering — you both earn reward points.</div>
+
+<h2>1.2 Find products</h2>
+<ul>
+  <li><b>Search bar</b> (top of every page): type at least 2 letters to see live suggestions, brands and products.</li>
+  <li><b>All categories</b> menu and the quick links: Today's Deals, Lightning Deals, Best Sellers, Fresh, Renewed, Digital, Gift Cards, Live.</li>
+  <li>On a product page you can see photos, price, stock, reviews, questions &amp; answers, and similar products.</li>
+</ul>
+
+<h2>1.3 Buy something (step by step)</h2>
+<ol>
+  <li>On the product page choose quantity and press <b>Add to Cart</b> (or <b>Buy Now</b> to go straight to checkout).</li>
+  <li>Open the <b>Cart</b> (orange button, top-right). Check items, apply a <b>coupon code</b> or <b>gift card</b> if you have one.</li>
+  <li>Press <b>Checkout</b>. Enter or pick a saved <b>delivery address</b>.</li>
+  <li>Choose payment: <b>Cash on Delivery (COD)</b> — you pay in cash when the package arrives. The screen shows the exact amount to pay, including the COD handling fee.</li>
+  <li>Review the order and confirm. You get an order number and a confirmation email.</li>
+</ol>
+<div class="warn">⚠️ Keep the <b>5-digit delivery code</b> from your order page — the delivery agent will ask for it at hand-over. Never share it before receiving the package.</div>
+
+<h2>1.4 Track your order — with live GPS</h2>
+<ol>
+  <li>Go to <b>My Orders</b> and click the order → <b>Track</b>.</li>
+  <li>You will see the status timeline: Confirmed → Packed → Shipped → Out for Delivery → Delivered, each with the real time it happened.</li>
+  <li>The map first shows your <b>delivery destination</b>. The moment the courier starts the route, it switches to their <b>live GPS position</b> — updated every few seconds, with speed.</li>
+</ol>
+
+<h2>1.5 Returns &amp; refunds</h2>
+<ul>
+  <li>Returns are accepted within <b>30 days</b> of delivery (unused, original packaging).</li>
+  <li>Go to <b>My Orders → the order → Request Return</b>, choose the reason, and submit.</li>
+  <li>Refunds are processed in 5–7 business days after approval.</li>
+</ul>
+
+<h2>1.6 Gift cards, rewards &amp; referrals</h2>
+<ul>
+  <li><b>Buy a gift card</b> at <code>/gift-cards</code> — it is emailed to the recipient instantly with a code.</li>
+  <li><b>Redeem</b> a code on the same page — the value becomes store credit and applies automatically at your next COD checkout.</li>
+  <li><b>Reward points</b> (shown in the navbar) come from paid orders, reviews you write, and friends you refer at <code>/referral</code>.</li>
+</ul>
+
+<h2>1.7 Get help</h2>
+<ul>
+  <li>Click the purple <b>chat bubble</b> (bottom-right) — the assistant answers about orders, returns, payment and more.</li>
+  <li>Type <b>"agent"</b> in the chat to be connected to a human — a support ticket is created automatically.</li>
+  <li>Or open <code>/support</code> for help articles and your tickets.</li>
+</ul>
+
+<!-- ═══════════ SELLERS ═══════════ -->
+<h1 class="section">2 · For Sellers</h1>
+
+<h2>2.1 Become a seller</h2>
+<ol>
+  <li>Register at <code>/register?role=seller</code> (or ask the admin to change your role to Seller).</li>
+  <li>Sign in — you land on the <b>Seller Hub</b> (<code>/seller</code>) with your sales analytics.</li>
+  <li>Set up your <b>shop brand</b> (name, logo, banner) at Seller Hub → Brand.</li>
+</ol>
+
+<h2>2.2 Add products</h2>
+<ul>
+  <li><b>One product:</b> Seller Hub → Products → <b>Add New</b>. Fill title, category, price, stock, photos (upload from your device), description.</li>
+  <li><b>Many products at once:</b> Products → <b>Bulk Upload</b> — download the CSV template, fill it, upload it back. You will see how many were created and any errors.</li>
+</ul>
+<div class="warn">⚠️ New products need <b>admin approval</b> before customers can see them.</div>
+
+<h2>2.3 Handle orders</h2>
+<ol>
+  <li>You get a notification for every new order. Open <b>Seller Hub → Orders</b>.</li>
+  <li>Press <b>Accept</b> (do this within 24 hours — late orders are auto-reassigned to another seller).</li>
+  <li>Pack the item, then mark <b>Packed</b> and <b>Ship</b> (within 3 days).</li>
+  <li>Delivery is finished by a delivery agent with the customer's secret code + photo proof.</li>
+</ol>
+
+<h2>2.4 Money — earnings &amp; payouts</h2>
+<ul>
+  <li>When a COD order is delivered and cash collected, your share (after the platform commission) is credited to your <b>seller wallet</b>.</li>
+  <li>See balance and history at <b>Seller Hub → Earnings</b>.</li>
+  <li>Add your <b>bank / Khalti / eSewa account</b> there — the admin pays out to that account.</li>
+</ul>
+
+<h2>2.5 Grow your shop</h2>
+<ul>
+  <li><b>Brand Registry</b> — apply to register your trademark brand for a verified badge.</li>
+  <li><b>Ads</b> — create ad campaigns for your products at Seller Hub → Ads.</li>
+  <li><b>Reviews</b> — read and respond to customer reviews; good service = better placement.</li>
+</ul>
+
+<!-- ═══════════ DELIVERY AGENTS ═══════════ -->
+<h1 class="section">3 · For Delivery Agents</h1>
+
+<h2>3.1 Getting access</h2>
+<ol>
+  <li>The admin sets your account role to <b>Delivery Agent</b> (Admin → User Management).</li>
+  <li>When you sign in, you go straight to the <b>Delivery Dashboard</b>. It is also in your account menu (🛵).</li>
+  <li>You only see orders the admin has <b>assigned to you</b>.</li>
+</ol>
+
+<h2>3.2 Delivering an order (step by step)</h2>
+<ol>
+  <li>Open the order card and press <b>🛵 Start Route — share live GPS</b>. The customer is notified and can watch you approach on a live map. A green <b>LIVE</b> badge shows while sharing.</li>
+  <li>At the door, press <b>Verify &amp; Collect Cash</b>:</li>
+</ol>
+<ul>
+  <li><b>Step 1 — Confirm order:</b> check the Order ID matches the package label.</li>
+  <li><b>Step 2 — Secret code:</b> ask the customer for their 5-digit delivery code and enter it. (5 wrong tries locks the order — admin must unlock.)</li>
+  <li><b>Step 3 — Photo proof:</b> take a photo of the delivered package. GPS location is attached automatically.</li>
+</ul>
+<ol start="3">
+  <li>Collect the exact cash amount shown. The app records it and stops GPS sharing automatically.</li>
+  <li>If the customer refuses or is absent, press <b>✕</b> and give the reason — the order is marked failed for the admin to handle.</li>
+</ol>
+<div class="tip">💡 Allow <b>location permission</b> in your phone browser, or live tracking cannot work.</div>
+
+<h2>3.3 Cash rules</h2>
+<ul>
+  <li>The amount on screen already <b>includes</b> the COD fee — collect exactly that, nothing more.</li>
+  <li>Your collected total is shown at the top. Hand cash to the office; the admin records the <b>remittance</b> against your orders.</li>
+</ul>
+
+<!-- ═══════════ ADMIN ═══════════ -->
+<h1 class="section">4 · For Admins</h1>
+
+<h2>4.1 The dashboard</h2>
+<p>Sign in as admin → you land on <code>/admin</code>. Cards are grouped:</p>
+<table>
+  <tr><th>Group</th><th>What's inside</th></tr>
+  <tr><td><b>Analytics &amp; Intelligence</b></td><td>Advanced Analytics (cohorts, LTV, churn, forecast) · Customer Segments (RFM) · Fraud Detection · A/B Testing · Dynamic Pricing · Promo Calendar</td></tr>
+  <tr><td><b>Catalog</b></td><td>Products (approve/reject) · Categories · Banners · Brand Registry · Inventory Alerts</td></tr>
+  <tr><td><b>Orders &amp; Fulfillment</b></td><td>All Orders · Tracking &amp; SLA · Assignments · Returns · Delivery Agent App</td></tr>
+  <tr><td><b>Finance</b></td><td>Payouts · Commission · COD Management · COD Collections · Khalti verification · Seller Banks · Coupons</td></tr>
+  <tr><td><b>People &amp; Support</b></td><td>Users &amp; roles · Reviews moderation · Support tickets · Agent console · Push Notifications · GDPR</td></tr>
+</table>
+
+<h2>4.2 Daily tasks</h2>
+<ol>
+  <li><b>Approve new products</b> — Products page → Approve / Reject.</li>
+  <li><b>Assign COD orders to agents</b> — COD Management → 🚴 Assign Agent (only delivery-role users appear).</li>
+  <li><b>Update order status</b> — All Orders → change status; the customer sees it instantly on tracking.</li>
+  <li><b>Answer support</b> — Support page: tickets, escalated chats, help articles.</li>
+  <li><b>Reconcile cash</b> — COD Management → Reconciliation tab: select collected orders → Confirm Remittance.</li>
+  <li><b>Run payouts</b> — Payouts page → pays sellers from their wallet balance to their saved account.</li>
+</ol>
+
+<h2>4.3 Marketing tools</h2>
+<ul>
+  <li><b>Promo Calendar / Coupons</b> — schedule discount codes with dates, usage limits and overlap warnings. Codes work at checkout immediately.</li>
+  <li><b>Banners</b> — upload homepage hero banners with schedule dates.</li>
+  <li><b>Push Notifications</b> — send an announcement to all customers or one role.</li>
+  <li><b>A/B Testing</b> — create an experiment, record visitor/conversion numbers, and the page computes statistical confidence and the winner.</li>
+</ul>
+
+<h2>4.4 Safety</h2>
+<ul>
+  <li><b>Fraud Detection</b> flags risky orders (new account + big order + many failed payments…). Approve or block from the page.</li>
+  <li><b>SLA watchdog</b> runs automatically every day: late sellers are auto-reassigned or cancelled, and you get an alert.</li>
+  <li><b>Locked delivery codes</b> (5 wrong tries) are unlocked from COD Collections.</li>
+</ul>
+
+<!-- ═══════════ FAQ ═══════════ -->
+<h1 class="section">5 · Quick Answers (FAQ)</h1>
+<table>
+  <tr><th>Question</th><th>Answer</th></tr>
+  <tr><td>How do I pay?</td><td>Cash on Delivery — pay when the package arrives. The exact amount is shown at checkout.</td></tr>
+  <tr><td>Where is my delivery code?</td><td>On your order page (My Orders → the order). Give it to the agent only at hand-over.</td></tr>
+  <tr><td>Can I cancel?</td><td>Yes, before it ships: My Orders → Cancel Order.</td></tr>
+  <tr><td>How long is delivery?</td><td>Kathmandu Valley 1–2 days · major cities 2–4 · elsewhere 4–7 business days.</td></tr>
+  <tr><td>Free shipping?</td><td>Yes — on orders above Rs. 999.</td></tr>
+  <tr><td>How do I talk to a human?</td><td>Type <b>"agent"</b> in the chat bubble, or open a ticket at /support.</td></tr>
+  <tr><td>How do sellers get paid?</td><td>Wallet credit after delivery, then payout to their saved bank/Khalti/eSewa account.</td></tr>
+  <tr><td>Who can open /admin or /delivery?</td><td>Only accounts with the admin / delivery role. Everyone else is redirected away.</td></tr>
+</table>
+
+<p class="footer-note">PrimePasal · www.primepasal.com · This guide describes the platform as of June 2026.</p>
+
+</body>
+</html>

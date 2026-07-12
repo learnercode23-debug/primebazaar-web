@@ -151,10 +151,11 @@ export async function POST(req: NextRequest) {
       stripePaymentIntentId,
     })
 
-    // Decrement stock + alert seller when critically low
+    // Decrement stock atomically (only if enough remains) so concurrent last-unit
+    // orders can never drive inventory negative, then alert seller when low.
     for (const item of cart.items) {
-      const updated = await Product.findByIdAndUpdate(
-        item.product,
+      const updated = await Product.findOneAndUpdate(
+        { _id: item.product, stock: { $gte: item.quantity } },
         { $inc: { stock: -item.quantity } },
         { new: true }
       ).select('stock seller title')

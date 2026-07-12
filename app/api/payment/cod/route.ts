@@ -125,9 +125,13 @@ export async function POST(req: NextRequest) {
       await User.findByIdAndUpdate(user._id, { $inc: { storeCredit: -storeCreditUsed } })
     }
 
-    // Decrement stock
+    // Decrement stock atomically (only if enough remains) — prevents oversell on
+    // concurrent last-unit orders.
     for (const item of cart.items) {
-      await Product.findByIdAndUpdate(item.product, { $inc: { stock: -item.quantity } })
+      await Product.findOneAndUpdate(
+        { _id: item.product, stock: { $gte: item.quantity } },
+        { $inc: { stock: -item.quantity } }
+      )
     }
     await Cart.findOneAndUpdate({ user: user._id }, { items: [] })
 

@@ -5,6 +5,7 @@ import { getAuthUser } from '@/lib/auth'
 import Product from '@/models/Product'
 import Category from '@/models/Category'
 import { parse } from 'csv-parse/sync'
+import { escapeRegex } from '@/lib/utils'
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,8 +26,8 @@ export async function POST(req: NextRequest) {
 
     for (const row of records) {
       try {
-        // Find category by name
-        const category = await Category.findOne({ name: { $regex: row.category, $options: 'i' } })
+        // Find category by exact (case-insensitive) name — escape to avoid regex injection/ReDoS
+        const category = await Category.findOne({ name: { $regex: `^${escapeRegex(String(row.category || ''))}$`, $options: 'i' } })
         if (!category) {
           results.errors.push(`Row "${row.title}": category "${row.category}" not found`)
           continue
