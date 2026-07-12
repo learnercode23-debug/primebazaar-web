@@ -10,6 +10,12 @@ export function escapeRegex(input: string): string {
   return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+// True only for a well-formed 24-hex Mongo ObjectId. Guard route params with this
+// so a malformed id returns a clean 404 instead of a 500 (Mongoose CastError).
+export function isValidObjectId(id: string): boolean {
+  return typeof id === 'string' && /^[a-f\d]{24}$/i.test(id)
+}
+
 // Escape a value before interpolating it into raw HTML (prevents XSS).
 export function escapeHtml(input: unknown): string {
   return String(input ?? '')

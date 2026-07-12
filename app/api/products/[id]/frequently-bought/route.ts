@@ -4,9 +4,11 @@ import { connectDB } from '@/lib/mongodb'
 import { cacheGet, cacheSet } from '@/lib/redis'
 import { getFrequentlyBought } from '@/lib/apriori'
 import Product from '@/models/Product'
+import { isValidObjectId } from '@/lib/utils'
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   try {
+    if (!isValidObjectId(params.id)) return NextResponse.json({ success: true, data: [] })
     const cacheKey = `fbt:${params.id}`
     const cached = await cacheGet(cacheKey)
     if (cached) return NextResponse.json(JSON.parse(cached))

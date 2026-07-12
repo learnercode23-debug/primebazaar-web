@@ -4,11 +4,13 @@ import { connectDB } from '@/lib/mongodb'
 import Product from '@/models/Product'
 import Order from '@/models/Order'
 import { cacheGet, cacheSet } from '@/lib/redis'
+import { isValidObjectId } from '@/lib/utils'
 
 type LeanProduct = { category: unknown; price: number; _id: { toString: () => string } }
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   try {
+    if (!isValidObjectId(params.id)) return NextResponse.json({ success: true, data: [] })
     const cacheKey = `recommendations:${params.id}`
     const cached = await cacheGet(cacheKey)
     if (cached) return NextResponse.json(JSON.parse(cached))

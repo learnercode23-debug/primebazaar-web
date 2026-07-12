@@ -7,9 +7,13 @@ import Category from '@/models/Category'
 import StockAlert from '@/models/StockAlert'
 import { sendBackInStockEmail } from '@/lib/email'
 import { createNotification } from '@/lib/notifications'
+import { isValidObjectId } from '@/lib/utils'
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   try {
+    if (!isValidObjectId(params.id)) {
+      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 })
+    }
     await connectDB()
     const product = await Product.findById(params.id)
       .populate('seller', 'name email')

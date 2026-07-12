@@ -4,9 +4,11 @@ import { connectDB } from '@/lib/mongodb'
 import { getAuthUser } from '@/lib/auth'
 import ProductQA from '@/models/ProductQA'
 import Product from '@/models/Product'
+import { isValidObjectId } from '@/lib/utils'
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   try {
+    if (!isValidObjectId(params.id)) return NextResponse.json({ success: true, data: [] })
     await connectDB()
     const qas = await ProductQA.find({ product: params.id, isApproved: true })
       .populate('user', 'name avatar')
