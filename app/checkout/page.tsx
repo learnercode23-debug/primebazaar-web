@@ -3,7 +3,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import axios from 'axios'
@@ -70,6 +70,7 @@ export default function CheckoutPage() {
   const [couponData, setCouponData] = useState<{ discount: number; code: string } | null>(null)
   const [validatingCoupon, setValidatingCoupon] = useState(false)
   const [placing, setPlacing] = useState(false)
+  const orderPlacedRef = useRef(false)
   const [codEligible, setCodEligible] = useState(true)
   const [codFee, setCodFee] = useState(0)
   const [codIneligibleReason, setCodIneligibleReason] = useState('')
@@ -97,7 +98,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (authLoading || cartLoading) return
     if (!user && !isGuest) { setStep('guest'); return }
-    if (items.length === 0) { router.push('/cart'); return }
+    if (items.length === 0 && !orderPlacedRef.current) { router.push('/cart'); return }
     if (!user) return
     axios.get('/api/addresses').then((r) => {
       const addrs = r.data.data || []
@@ -166,6 +167,7 @@ export default function CheckoutPage() {
   }
 
   async function handlePlaceOrder() {
+    orderPlacedRef.current = true
     setPlacing(true)
     const payload = {
       shippingAddress: address,
@@ -181,6 +183,7 @@ export default function CheckoutPage() {
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to place order'
       toast.error(msg)
+      orderPlacedRef.current = false
       setPlacing(false)
     }
   }

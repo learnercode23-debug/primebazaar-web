@@ -147,7 +147,7 @@ function RegisterForm() {
                 {showPass ? <FiEyeOff /> : <FiEye />}
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-1.5">Passwords are case-sensitive and must be 6+ characters.</p>
+            <p className="text-xs text-gray-400 mt-1.5">Passwords are case-sensitive and must be 8+ characters.</p>
           </div>
 
           <button

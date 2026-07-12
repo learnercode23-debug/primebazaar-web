@@ -3,21 +3,32 @@
 import Link from 'next/link'
 import { FiFacebook, FiTwitter, FiInstagram, FiYoutube, FiMail, FiArrowUp, FiShield, FiTruck, FiRefreshCw, FiHeadphones } from 'react-icons/fi'
 import { useState } from 'react'
+import axios from 'axios'
+import toast from 'react-hot-toast'
 
 export default function Footer() {
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
   const [emailError, setEmailError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  function handleSubscribe(e: React.FormEvent) {
+  async function handleSubscribe(e: React.FormEvent) {
     e.preventDefault()
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
     if (!email) { setEmailError('Email is required'); return }
     if (!valid) { setEmailError('Enter a valid email address'); return }
     setEmailError('')
-    setSubscribed(true)
-    setEmail('')
-    setTimeout(() => setSubscribed(false), 4000)
+    setSubmitting(true)
+    try {
+      await axios.post('/api/newsletter', { email })
+      setSubscribed(true)
+      setEmail('')
+      setTimeout(() => setSubscribed(false), 4000)
+    } catch {
+      toast.error('Could not subscribe. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -68,9 +79,10 @@ export default function Footer() {
             </div>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap btn-gradient press-effect"
+              disabled={submitting}
+              className="px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap btn-gradient press-effect disabled:opacity-70"
             >
-              {subscribed ? '✓ Subscribed!' : 'Subscribe'}
+              {subscribed ? '✓ Subscribed!' : submitting ? 'Subscribing…' : 'Subscribe'}
             </button>
           </form>
         </div>

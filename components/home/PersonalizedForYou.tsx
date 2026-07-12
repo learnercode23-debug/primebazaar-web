@@ -75,7 +75,7 @@ export default function PersonalizedForYou() {
 
   const tabProducts = activeTab === 0
     ? products
-    : products.filter(p => p.reasonCategory === categories[activeTab])
+    : products.filter(p => p.reasonCategory === categories[activeTab - 1])
 
   return (
     <section className="mt-6">

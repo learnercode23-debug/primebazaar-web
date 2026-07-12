@@ -47,7 +47,7 @@ export default function FilterSidebar() {
 
   function clearFilters() {
     const search = params.get('search')
-    router.push(search ? `/products?search=${search}` : '/products')
+    router.push(search ? `/products?search=${encodeURIComponent(search)}` : '/products')
     setMinVal(PRICE_MIN)
     setMaxVal(PRICE_MAX)
   }
@@ -253,7 +253,6 @@ export default function FilterSidebar() {
         <Section title="Sort By" sectionKey="sort">
           <div className="space-y-1">
             {[
-              ['Best Match',          'createdAt',   'desc'],
               ['Best Sellers',        'salesCount',  'desc'],
               ['Top Rated',           'rating',      'desc'],
               ['Price: Low to High',  'price',       'asc'],

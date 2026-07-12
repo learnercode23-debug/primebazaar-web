@@ -10,8 +10,10 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { FiHeart } from 'react-icons/fi'
 
 export default function WishlistPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { items, loading } = useWishlist()
+
+  if (authLoading) return <LoadingSpinner fullPage />
 
   if (!user) return (
     <div className="min-h-[60vh] flex items-center justify-center">

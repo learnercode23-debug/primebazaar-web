@@ -123,6 +123,7 @@ export default function TrackingDashboard() {
 
   // Filters
   const [search,        setSearch]        = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filterSeller,  setFilterSeller]  = useState('')
   const [filterStatus,  setFilterStatus]  = useState('')
   const [filterFrom,    setFilterFrom]    = useState('')
@@ -145,8 +146,6 @@ export default function TrackingDashboard() {
   const [slaForm,     setSlaForm]     = useState(slaCfg)
   const [savingSLA,   setSavingSLA]   = useState(false)
 
-  const searchRef = useRef<ReturnType<typeof setTimeout>>()
-
   /* ── Auth guard ── */
   useEffect(() => {
     if (authLoading) return
@@ -162,7 +161,7 @@ export default function TrackingDashboard() {
       if (filterStatus) p.set('status', filterStatus)
       if (filterFrom)   p.set('from',   filterFrom)
       if (filterTo)     p.set('to',     filterTo)
-      if (search)       p.set('search', search)
+      if (debouncedSearch) p.set('search', debouncedSearch)
       if (filterSLA)    p.set('slaStatus', filterSLA)
 
       const res = await axios.get(`/api/admin/assignments?${p}`)
@@ -170,7 +169,7 @@ export default function TrackingDashboard() {
       setTotal(res.data.total || 0)
     } catch { toast.error('Failed to load orders') }
     finally  { setLoading(false) }
-  }, [page, filterSeller, filterStatus, filterFrom, filterTo, search, filterSLA])
+  }, [page, filterSeller, filterStatus, filterFrom, filterTo, debouncedSearch, filterSLA])
 
   /* ── Fetch sellers + SLA config ── */
   const fetchMeta = useCallback(async () => {
@@ -203,9 +202,14 @@ export default function TrackingDashboard() {
   /* ── Debounced search ── */
   function handleSearch(v: string) {
     setSearch(v); setPage(1)
-    clearTimeout(searchRef.current)
-    searchRef.current = setTimeout(fetchOrders, 400)
   }
+
+  // Debounce the search box: update debouncedSearch 400ms after typing stops.
+  // fetchOrders depends on debouncedSearch, so exactly one request fires per pause.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 400)
+    return () => clearTimeout(t)
+  }, [search])
 
   /* ── Stats row ── */
   const now = Date.now()

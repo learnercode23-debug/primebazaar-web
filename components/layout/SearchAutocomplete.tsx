@@ -29,6 +29,8 @@ export default function SearchAutocomplete({ className = '' }: { className?: str
     try {
       const res = await axios.get(`/api/products/search?q=${encodeURIComponent(q)}&limit=5`)
       setResults(res.data.data)
+    } catch {
+      setResults(null)
     } finally {
       setLoading(false)
     }

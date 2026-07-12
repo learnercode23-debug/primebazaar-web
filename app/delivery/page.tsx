@@ -147,7 +147,7 @@ export default function DeliveryAgentPage() {
     fetchOrders()
     const t = setInterval(fetchOrders, 30000)  // refresh every 30s
     return () => clearInterval(t)
-  }, [fetchOrders])
+  }, [fetchOrders, user])
 
   /* ── Open verification flow ── */
   function startVerify(order: CODOrder) {

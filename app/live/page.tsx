@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import axios from 'axios'
 import { FiShoppingCart, FiShare2, FiZap } from 'react-icons/fi'
+import toast from 'react-hot-toast'
 import { useCart } from '@/contexts/CartContext'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
@@ -98,6 +99,28 @@ export default function LivePage() {
     if (product) addToCart(product.id)
   }
 
+  async function handleShare() {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ url })
+        return
+      } catch {
+        return
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success('Link copied')
+    } catch {
+      toast.error('Could not copy link')
+    }
+  }
+
+  function handleRemindMe() {
+    toast.success("We'll remind you before it starts")
+  }
+
   if (loadingProducts) return <LoadingSpinner fullPage />
   if (products.length === 0) {
     return (
@@ -175,7 +198,7 @@ export default function LivePage() {
                 <span className="text-xl">{liked ? '❤️' : '🤍'}</span>
                 <span className="text-[10px] font-bold">{likes}</span>
               </button>
-              <button className="flex flex-col items-center gap-0.5 text-white/70">
+              <button onClick={handleShare} className="flex flex-col items-center gap-0.5 text-white/70">
                 <FiShare2 className="text-lg" />
                 <span className="text-[10px]">Share</span>
               </button>
@@ -298,7 +321,7 @@ export default function LivePage() {
                       <span className="text-[10px] text-gray-400">{u.viewers} interested</span>
                     </div>
                   </div>
-                  <button className="text-[11px] text-violet-600 font-bold hover:underline whitespace-nowrap">Remind me</button>
+                  <button onClick={handleRemindMe} className="text-[11px] text-violet-600 font-bold hover:underline whitespace-nowrap">Remind me</button>
                 </div>
               ))}
             </div>

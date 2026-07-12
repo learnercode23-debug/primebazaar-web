@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
+import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { formatPrice, formatDate } from '@/lib/utils'
@@ -33,6 +34,7 @@ export default function SellerDashboard() {
       return
     }
     axios.get('/api/seller/analytics').then((r) => setAnalytics(r.data.data))
+      .catch(() => toast.error('Failed to load dashboard'))
       .finally(() => setLoading(false))
   }, [user, router])
 

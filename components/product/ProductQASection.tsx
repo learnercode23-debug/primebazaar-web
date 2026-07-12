@@ -67,7 +67,7 @@ export default function ProductQASection({ productId }: { productId: string }) {
     try {
       const res = await axios.post(`/api/products/${productId}/qa`, { qaId, answer })
       setQas((p) => p.map((q) => q._id === qaId ? res.data.data : q))
-      setAnswerForms((p) => ({ ...p, [qaId]: '' }))
+      setAnswerForms((p) => { const n = { ...p }; delete n[qaId]; return n })
       toast.success('Answer submitted!')
     } catch {
       toast.error('Failed to submit answer')

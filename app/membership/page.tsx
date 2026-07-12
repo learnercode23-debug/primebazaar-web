@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
+import { useAuth } from '@/contexts/AuthContext'
 import { FiCheck, FiZap, FiShield, FiTruck, FiStar, FiHeadphones, FiGift } from 'react-icons/fi'
 
 const BENEFITS = [
@@ -18,9 +21,19 @@ const BENEFITS = [
 
 export default function MembershipPage() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly')
+  const router = useRouter()
+  const { user } = useAuth()
 
   const price = billing === 'yearly' ? 799 : 99
   const saving = billing === 'yearly' ? Math.round(((99 * 12 - 799) / (99 * 12)) * 100) : 0
+
+  const handleStartPlus = () => {
+    if (!user) {
+      router.push('/login?redirect=/membership')
+      return
+    }
+    toast('PrimePasal Plus is launching soon — we\'ll notify you the moment it goes live.', { icon: '⚡' })
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
@@ -94,7 +107,7 @@ export default function MembershipPage() {
             {billing === 'yearly' ? `Billed Rs.${price} once per year` : 'Billed monthly, cancel anytime'}
           </p>
 
-          <button className="w-full bg-amber-400 hover:bg-amber-300 text-gray-900 font-black py-3 rounded-full text-sm transition-colors mb-6 shadow-md">
+          <button onClick={handleStartPlus} className="w-full bg-amber-400 hover:bg-amber-300 text-gray-900 font-black py-3 rounded-full text-sm transition-colors mb-6 shadow-md">
             Start Plus — Rs.{price}/{billing === 'yearly' ? 'yr' : 'mo'}
           </button>
 

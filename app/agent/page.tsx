@@ -75,10 +75,11 @@ export default function AgentDashboard() {
   async function openTicket(ticket: Ticket) {
     setSelected(ticket)
     setNewStatus(ticket.status)
+    setDetail(null)
     try {
       const res = await axios.get(`/api/support/tickets/${ticket._id}`)
       setDetail(res.data.data)
-    } catch { toast.error('Failed to load ticket') }
+    } catch { setDetail(null); toast.error('Failed to load ticket') }
   }
 
   async function sendReply() {
@@ -228,6 +229,9 @@ export default function AgentDashboard() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {!detail && (
+                <div className="flex justify-center py-14"><div className="w-7 h-7 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"/></div>
+              )}
               {(detail?.messages as {_id:string;senderRole:string;body:string;isInternal:boolean;sender:{name:string};createdAt:string}[] || []).map(msg => (
                 <div key={msg._id} className={`rounded-xl p-3 text-sm ${
                   msg.isInternal ? 'bg-yellow-50 border border-yellow-200' :

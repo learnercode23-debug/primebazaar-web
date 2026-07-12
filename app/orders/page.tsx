@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import axios from 'axios'
@@ -97,16 +97,25 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function OrdersPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-  useEffect(() => {
+  const fetchOrders = useCallback(() => {
     if (!user) return
+    setLoading(true)
+    setError(false)
     axios.get('/api/orders').then((r) => setOrders(r.data.data || []))
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [user])
+
+  useEffect(() => {
+    fetchOrders()
+  }, [fetchOrders])
+
+  if (authLoading) return <LoadingSpinner fullPage />
 
   if (!user) return (
     <div className="min-h-[60vh] flex items-center justify-center">
@@ -123,7 +132,16 @@ export default function OrdersPage() {
     <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Your Orders</h1>
 
-      {orders.length === 0 ? (
+      {error ? (
+        <div className="text-center py-20">
+          <FiX className="text-6xl text-red-300 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Couldn&apos;t load your orders</h2>
+          <p className="text-gray-500 mb-6">Something went wrong. Please try again.</p>
+          <button onClick={fetchOrders} className="bg-amber-400 hover:bg-amber-500 text-gray-900 font-bold px-6 py-2.5 rounded-full transition-colors">
+            Retry
+          </button>
+        </div>
+      ) : orders.length === 0 ? (
         <div className="text-center py-20">
           <FiPackage className="text-6xl text-gray-300 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">No orders yet</h2>

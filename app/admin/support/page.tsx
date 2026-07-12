@@ -175,10 +175,21 @@ export default function AdminSupportPage() {
     fetchArticles()
   }
 
-  function openEdit(a: Article) {
-    setEditArticle(a)
-    setForm({ title: a.title, body: '', category: a.category, tags: '' })
-    setShowForm(true)
+  async function openEdit(a: Article) {
+    try {
+      const r = await axios.get(`/api/support/articles/${a._id}`)
+      const full = r.data.data
+      setEditArticle(a)
+      setForm({
+        title:    full.title ?? a.title,
+        body:     full.body ?? '',
+        category: full.category ?? a.category,
+        tags:     Array.isArray(full.tags) ? full.tags.join(', ') : '',
+      })
+      setShowForm(true)
+    } catch {
+      toast.error('Failed to load article')
+    }
   }
 
   async function seedSupport() {

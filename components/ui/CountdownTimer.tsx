@@ -12,9 +12,15 @@ export default function CountdownTimer({ endTime, onExpire }: CountdownTimerProp
   const [expired, setExpired] = useState(false)
 
   useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined
+    let done = false
+
     function calculate() {
       const diff = new Date(endTime).getTime() - Date.now()
       if (diff <= 0) {
+        if (interval) clearInterval(interval)
+        if (done) return
+        done = true
         setExpired(true)
         onExpire?.()
         return
@@ -27,7 +33,7 @@ export default function CountdownTimer({ endTime, onExpire }: CountdownTimerProp
     }
 
     calculate()
-    const interval = setInterval(calculate, 1000)
+    interval = setInterval(calculate, 1000)
     return () => clearInterval(interval)
   }, [endTime, onExpire])
 

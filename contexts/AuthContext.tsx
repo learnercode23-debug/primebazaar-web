@@ -11,6 +11,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string, role?: string, referralCode?: string) => Promise<void>
   logout: () => Promise<void>
   updateUser: (data: Partial<User>) => void
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -53,8 +54,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser((prev) => (prev ? { ...prev, ...data } : null))
   }
 
+  // Re-read the session from the server. Call after a login path that sets the
+  // auth cookie outside this context (e.g. phone-OTP verify) so the UI updates
+  // without a full page reload.
+  async function refreshUser() {
+    await fetchUser()
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

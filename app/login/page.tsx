@@ -26,7 +26,7 @@ function toE164(phone: string) {
 }
 
 function LoginPageInner() {
-  const { login, user } = useAuth()
+  const { login, user, refreshUser } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const verified = searchParams.get('verified') === '1'
@@ -142,6 +142,7 @@ function LoginPageInner() {
     try {
       const res = await axios.post('/api/auth/otp/verify', { phone, otp: code })
       toast.success(res.data.isNewUser ? 'Account created! Welcome!' : 'Welcome back!')
+      await refreshUser()
       router.push('/')
     } catch (err: unknown) {
       toast.error((err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Invalid OTP')

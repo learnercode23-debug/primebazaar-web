@@ -167,8 +167,20 @@ export default function ProductDetailPage() {
     trackView()
   }, [id, trackView])
 
+  // Clamp quantity to the active variant's stock whenever the selection changes,
+  // so switching from a high-stock variant to a low-stock one can't leave qty too high.
+  useEffect(() => {
+    const stock = selectedVariant ? selectedVariant.stock : product?.stock
+    if (stock == null) return
+    setQuantity((q) => Math.min(Math.max(1, q), stock || 1))
+  }, [selectedVariant, product])
+
   async function handleAddToCart() {
     if (!product) return
+    if (product.hasVariants && product.variants?.length && !selectedVariant) {
+      toast.error('Please select an option')
+      return
+    }
     await addToCart(product._id, quantity)
   }
 
@@ -177,6 +189,10 @@ export default function ProductDetailPage() {
 
   async function handleBuyNow() {
     if (!user) { router.push('/login'); return }
+    if (product?.hasVariants && product.variants?.length && !selectedVariant) {
+      toast.error('Please select an option')
+      return
+    }
     setOneClickOpen(true)
   }
 
@@ -195,19 +211,26 @@ export default function ProductDetailPage() {
     const file = e.target.files?.[0]
     if (!file) return
     setUploadingPhoto(true)
-    try {
-      const reader = new FileReader()
-      reader.onload = async (ev) => {
+    const reader = new FileReader()
+    // The upload happens inside the async onload callback, so its errors must be
+    // caught here — the outer sync try/catch never sees them. Always clear the
+    // uploading flag so a failed upload can't leave the tile spinning / Submit disabled.
+    reader.onload = async (ev) => {
+      try {
         const base64 = ev.target?.result as string
         const res = await axios.post('/api/upload', { image: base64, folder: 'primebazaar/reviews' })
         setReviewPhotos((p) => [...p, res.data.data.url])
+      } catch {
+        toast.error('Photo upload failed')
+      } finally {
         setUploadingPhoto(false)
       }
-      reader.readAsDataURL(file)
-    } catch {
-      toast.error('Photo upload failed')
+    }
+    reader.onerror = () => {
+      toast.error('Could not read the image')
       setUploadingPhoto(false)
     }
+    reader.readAsDataURL(file)
   }
 
   async function submitReview(e: React.FormEvent) {

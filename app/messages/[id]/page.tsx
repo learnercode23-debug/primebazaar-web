@@ -122,7 +122,9 @@ export default function ChatRoom() {
 
     try {
       const r = await axios.post(`/api/messages/${id}`, { body })
-      setMessages(p => p.map(m => m._id === temp._id ? r.data.data : m))
+      setMessages(p => p.some(m => m._id === r.data.data._id)
+        ? p.filter(m => m._id !== temp._id)
+        : [...p.filter(m => m._id !== temp._id), r.data.data])
     } catch {
       setMessages(p => p.filter(m => m._id !== temp._id))
       toast.error('Failed to send')

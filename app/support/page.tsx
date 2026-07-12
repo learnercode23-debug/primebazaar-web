@@ -85,9 +85,9 @@ export default function SupportPage() {
   }, [chatMsgs, chatOpen])
 
   // Send chat message
-  async function sendChat() {
-    if (!chatInput.trim() || chatBusy) return
-    const msg = chatInput.trim()
+  async function sendChat(override?: string) {
+    const msg = (override ?? chatInput).trim()
+    if (!msg || chatBusy) return
     setChatInput('')
     setChatMsgs(p => [...p, { role: 'user', text: msg }])
     setChatBusy(true)
@@ -352,7 +352,7 @@ export default function SupportPage() {
                 'Talk to agent',
               ].map(chip => (
                 <button key={chip}
-                  onClick={() => { setChatInput(chip); setTimeout(() => sendChat(), 50) }}
+                  onClick={() => sendChat(chip)}
                   className="text-[11px] bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-2.5 py-1 hover:bg-indigo-100 transition-colors">
                   {chip}
                 </button>
@@ -377,7 +377,7 @@ export default function SupportPage() {
               disabled={chatBusy || escalated}
               className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
             />
-            <button onClick={sendChat} disabled={chatBusy || !chatInput.trim() || escalated}
+            <button onClick={() => sendChat()} disabled={chatBusy || !chatInput.trim() || escalated}
               className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white p-2.5 rounded-xl flex-shrink-0">
               <FiSend className="text-sm"/>
             </button>

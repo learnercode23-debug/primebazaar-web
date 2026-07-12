@@ -1,7 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -28,7 +28,12 @@ export default function GDPRPage() {
   const [confirm, setConfirm] = useState<UserResult | null>(null)
   const [reason, setReason] = useState('')
 
-  if (user && user.role !== 'admin') { router.push('/'); return null }
+  useEffect(() => {
+    if (!user) return
+    if (user.role !== 'admin') { router.push('/'); return }
+  }, [user, router])
+
+  if (user && user.role !== 'admin') return null
 
   async function search() {
     if (!query.trim()) return

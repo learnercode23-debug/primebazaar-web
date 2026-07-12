@@ -19,7 +19,7 @@ interface Category {
   level: number
   isActive: boolean
   order: number
-  parent?: { name: string } | null
+  parent?: { _id: string; name: string } | null
   commission: number
 }
 
@@ -80,7 +80,7 @@ export default function AdminCategoriesPage() {
   }
 
   function openEdit(cat: Category) {
-    setForm({ name: cat.name, slug: cat.slug, icon: cat.icon || '', parent: '', commission: String(cat.commission), order: String(cat.order), isActive: cat.isActive })
+    setForm({ name: cat.name, slug: cat.slug, icon: cat.icon || '', parent: cat.parent?._id || '', commission: String(cat.commission), order: String(cat.order), isActive: cat.isActive })
     setEditId(cat._id)
     setShowForm(true)
   }
@@ -125,6 +125,9 @@ export default function AdminCategoriesPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amazon-orange">
                 <option value="">None (root)</option>
                 {rootCategories.map((c) => <option key={c._id} value={c._id}>{c.icon} {c.name}</option>)}
+                {form.parent && !rootCategories.some((c) => c._id === form.parent) && (
+                  <option value={form.parent}>{categories.find((c) => c._id === form.parent)?.name || 'Current parent'}</option>
+                )}
               </select>
             </div>
             <div>

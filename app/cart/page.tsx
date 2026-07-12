@@ -108,7 +108,7 @@ export default function CartPage() {
 
   const couponDiscount = appliedCoupon?.discount || 0
   const shippingCost = subtotal > 999 ? 0 : 99
-  const total = subtotal + shippingCost - couponDiscount
+  const total = Math.max(0, subtotal + shippingCost - Math.min(couponDiscount, subtotal))
 
   const cartProductIds = items
     .map((i) => { const p = i.product as Product; return p?._id || null })
